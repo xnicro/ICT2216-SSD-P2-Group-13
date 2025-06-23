@@ -1,0 +1,3 @@
+# Database files
+**/mysql_data/
+*.env

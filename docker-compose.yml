@@ -1,0 +1,44 @@
+services:
+  flask:
+    build: 
+      context: .
+      dockerfile: FlaskApp.Dockerfile
+    container_name: flask_app
+    env_file:
+      - .env
+    expose:
+      - 5000
+    networks:
+      - my_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - flask
+    networks:
+      - my_network
+  
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: '%'  # This allows root access from any host, remove if uneeded
+      MYSQL_DATABASE: flask_db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mysql_data:/var/lib/mysql #contains the local DB data
+    ports:
+    - "3307:3306" #Expose the port to access DB outside Docker
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
