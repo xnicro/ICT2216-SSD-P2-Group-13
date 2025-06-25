@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - Hazard Reports</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Dashboard - Hazard Reports</h1>
+
+    <!-- Search, Sort & Filter Controls -->
+    <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+
+    <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-2 mb-3 mb-md-0 border-end">
+      <h5 class="mb-3">Status</h5>
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link active" href="#">All Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Unresolved</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Pending</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Reviewing</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Emergency</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Resolved</a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="col-md-10">
+    <div class="controls mb-4">
+      <input id="searchInput" type="search" class="form-control" placeholder="Search reports..." aria-label="Search reports" />
+
+      <select id="sortSelect" class="form-select" aria-label="Sort reports">
+        <option value="id-asc">Sort by Report ID (Asc)</option>
+        <option value="id-desc">Sort by Report ID (Desc)</option>
+        <option value="desc-asc">Sort by Description (A-Z)</option>
+        <option value="desc-desc">Sort by Description (Z-A)</option>
+      </select>
+
+      <select id="filterCategory" class="form-select" aria-label="Filter by Category">
+        <option value="all">Filter: All Categories</option>
+        <option value="fires">Fires</option>
+        <option value="faculty">Faculty facilities/equipment</option>
+        <option value="vandalism">Vandalism</option>
+        <option value="suspicious">Suspicious Activity</option>
+      </select>
+    </div>
+
+    <!-- Table Content -->
+     <!-- Currently still hardcoded just for design gonna for loop the data in future -->
+    <table class="table table-striped table-hover align-middle" aria-describedby="reportsTableCaption">
+      <caption id="reportsTableCaption" class="visually-hidden">List of hazard reports with actions</caption>
+      <thead class="table-dark">
+        <tr>
+          <th scope="col">Report ID</th>
+          <th scope="col">Description</th>
+          <th scope="col">Category</th>
+          <th scope="col">Status</th>
+          <th scope="col" style="min-width: 180px;">Update Status</th>
+          <th scope="col">See More</th>
+        </tr>
+      </thead>
+      <tbody id="reportsTableBody">
+        <tr>
+          <td>101</td>
+          <td>Broken glass in hallway</td>
+          <td>Equipment</td>
+          <td><span class="status-badge status-pending">Pending</span></td>
+          <td>
+          <div class="select">
+            <div
+              class="selected"
+              data-default="All"
+              data-one="Unresolved"
+              data-two="Pending"
+              data-three="Reviewing"
+              data-four="Emergency"
+              data-five="Resolved"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                height="1em"
+                viewBox="0 0 512 512"
+                class="arrow"
+              >
+                <path
+                  d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"
+                ></path>
+              </svg>
+            </div>
+            <div class="options">
+              <div title="all">
+                <input id="all" name="option" type="radio" checked="" />
+                <label class="option" for="all" data-txt="All"></label>
+              </div>
+              <div title="option-1">
+                <input id="option-1" name="option" type="radio" />
+                <label class="option" for="option-1" data-txt="Unresolved"></label>
+              </div>
+              <div title="option-2">
+                <input id="option-2" name="option" type="radio" />
+                <label class="option" for="option-2" data-txt="Pending"></label>
+              </div>
+              <div title="option-3">
+                <input id="option-3" name="option" type="radio" />
+                <label class="option" for="option-3" data-txt="Reviewing"></label>
+              </div>
+              <div title="option-4">
+                <input id="option-4" name="option" type="radio" />
+                <label class="option" for="option-4" data-txt="Emergency"></label>
+              </div>
+              <div title="option-5">
+                <input id="option-5" name="option" type="radio" />
+                <label class="option" for="option-5" data-txt="Resolved"></label>
+              </div>
+            </div>
+          </div>
+
+          </td>
+          <td>
+            <button class="animated-button">
+            <svg xmlns="http://www.w3.org/2000/svg" class="arr-2" viewBox="0 0 24 24">
+              <path
+                d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+              ></path>
+            </svg>
+            <span class="text">View More Details</span>
+            <span class="circle"></span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="arr-1" viewBox="0 0 24 24">
+              <path
+                d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"
+              ></path>
+            </svg>
+          </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+  </div>
+  </div>
+
+  <!-- Report Details Modal (maybe using for view more details or another page not sure)-->
+  <div class="modal fade" id="reportDetailsModal" tabindex="-1" aria-labelledby="reportDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="reportDetailsModalLabel">Report Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modalContent">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
