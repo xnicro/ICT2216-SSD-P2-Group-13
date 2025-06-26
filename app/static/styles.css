@@ -325,3 +325,49 @@ body div.main {
     flex-grow: 1;
     padding: 20px;
 }
+
+/* —— Header wrapper for title + button —— */
+.main-content__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+/* —— Base button styles (if not already defined) —— */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  border: none;
+}
+
+/* —— Submit-Report button, urgent (red) styling —— */
+.btn--submit-report {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+  background-color: #dc3545;       /* bootstrap “danger” red */
+  color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Hover / active states */
+.btn--submit-report:hover {
+  background-color: #c82333;
+}
+.btn--submit-report:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* —— SVG icon sizing & spacing —— */
+.btn__icon {
+  width: 1.25em;    /* scales with font-size */
+  height: 1.25em;
+  margin-right: 0.9rem;
+  fill: currentColor;
+}
