@@ -145,6 +145,26 @@ h1 {
 .card-body {
     padding: 2rem;
 }
+.adminsidebar {
+  background-color: #212429;
+  padding: 0.7rem;
+  height: 100%;
+  border-radius: 5px;
+  color: white;
+}
+
+.adminsidebar .nav-link {
+  color: white;
+  padding: 0.8rem 0;
+}
+
+.adminsidebar .nav-link:hover,
+.adminsidebar .nav-link.active {
+  background-color: white;
+  border-radius: 4px;
+  color: var(--dark-blue);
+}
+
 
 .select {
     width: fit-content;
@@ -156,7 +176,7 @@ h1 {
 }
 
 .selected {
-    background-color: #1c3674;
+    background-color: #212429;
     padding: 5px;
     margin-bottom: 3px;
     border-radius: 5px;
@@ -184,7 +204,7 @@ h1 {
     flex-direction: column;
     border-radius: 5px;
     padding: 5px;
-    background-color: #1c3674;
+    background-color: #212429;
     position: relative;
     top: -100px;
     opacity: 0;
@@ -204,13 +224,14 @@ h1 {
     border-radius: 5px;
     padding: 5px;
     transition: 300ms;
-    background-color: #2a2f3b;
+    background-color: #212429;
     width: 150px;
     font-size: 15px;
 }
 
 .option:hover {
-    background-color: #323741;
+    background-color: #35524e;
+    cursor: pointer;
 }
 
 .options input[type="radio"] {

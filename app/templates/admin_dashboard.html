@@ -13,17 +13,19 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
-  <div class="container">
-    <h1>Admin Dashboard - Hazard Reports</h1>
+  <div class="container-fluid px-4">
+    <br>
+    <h2>Admin Dashboard - Hazard Reports</h2>
+    <br>
 
     <!-- Search, Sort & Filter Controls -->
-    <div class="card shadow-sm border-0 mb-4">
+    <div class="card shadow-sm border-0 mb-4 w-100">
     <div class="card-body">
 
     <div class="row">
     <!-- Sidebar -->
-    <div class="col-md-2 mb-3 mb-md-0 border-end">
-      <h5 class="mb-3">Status</h5>
+    <div class="col-md-2 mb-3 mb-md-0 border-end adminsidebar">
+      <h5 class="mb-3">Report by Status</h5>
       <ul class="nav flex-column">
         <li class="nav-item">
           <a class="nav-link active" href="#">All Reports</a>
@@ -68,7 +70,9 @@
 
     <!-- Table Content -->
      <!-- Currently still hardcoded just for design gonna for loop the data in future -->
-    <table class="table table-striped table-hover align-middle" aria-describedby="reportsTableCaption">
+    <!-- Table Content -->
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle" aria-describedby="reportsTableCaption">
       <caption id="reportsTableCaption" class="visually-hidden">List of hazard reports with actions</caption>
       <thead class="table-dark">
         <tr>
@@ -156,6 +160,7 @@
         </tr>
       </tbody>
     </table>
+  </div>
   </div>
   </div>
   </div>
