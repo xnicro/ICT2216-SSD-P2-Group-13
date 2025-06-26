@@ -24,21 +24,25 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    data = []
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM test;')
-        data = cursor.fetchall()
-        db_status = 'Connected to MySQL'
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        db_status = f'MySQL connection error: {str(e)}'
+    # data = []
+    # try:
+    #     conn = get_db_connection()
+    #     cursor = conn.cursor()
+    #     cursor.execute('SELECT * FROM test;')
+    #     data = cursor.fetchall()
+    #     db_status = 'Connected to MySQL'
+    #     cursor.close()
+    #     conn.close()
+    # except Exception as e:
+    #     db_status = f'MySQL connection error: {str(e)}'
     
-    return render_template('index.html', db_status=db_status, data=data)
-    #return render_template('index.html')
+    # return render_template('index.html', db_status=db_status, data=data)
+    return render_template('index.html')
 
 @app.route('/admin')
 def admin():
     return render_template('admin_dashboard.html')
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
+
