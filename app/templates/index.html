@@ -1,32 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Home</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
+    <div class="main">
+        <div class="sidebar" id="sidebar">
+            <div class="company-logo">
+                <div>
+                    <img class="logo" src="{{ url_for('static', filename='assets/logo.png') }}" />
+                    <p>SITSecure</p>
+                </div>
+                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+            </div>
+            <nav>
+                <a href="#">Home</a>
+                <a href="#">Dashboard</a>
+                <a href="#">Settings</a>
+            </nav>
+        </div>
 
-  <div class="sidebar" id="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <nav>
-      <a href="#">Home</a>
-      <a href="#">Dashboard</a>
-      <a href="#">Settings</a>
-    </nav>
-  </div>
+        <div class="main-content">
+            <h1>Welcome</h1>
+            <p>This is the main content area.</p>
+        </div>
+    </div>
 
-  <div class="main-content">
-    <h1>Welcome</h1>
-    <p>This is the main content areaaa.</p>
-  </div>
-
-  <script>
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-    }
-  </script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
 
 </body>
+
 </html>
