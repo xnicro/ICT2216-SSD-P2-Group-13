@@ -52,13 +52,15 @@ def register():
     return render_template('user_accounts/register.html')
 
 @app.route('/user')
-def register():
+def user():
     return render_template('user_accounts/user.html')
 
+# This route is the catch-all so u guys don't have to make a specific route for each page
+# Not secure, if u want ur page to be secure make a new route above
 @app.route('/<filename>')
 def catch_all(filename):
+    print(filename, flush=True)
     return render_template(filename)
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
