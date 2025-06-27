@@ -20,31 +20,35 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
     return conn
-# data = []
-    # try:
-    #     conn = get_db_connection()
-    #     cursor = conn.cursor()
-    #     cursor.execute('SELECT * FROM test;')
-    #     data = cursor.fetchall()
-    #     db_status = 'Connected to MySQL'
-    #     cursor.close()
-    #     conn.close()
-    # except Exception as e:
-    #     db_status = f'MySQL connection error: {str(e)}'
-    
-    # return render_template('index.html', db_status=db_status, data=data)
+
 
 @app.route('/')
 def index():
     return render_template('0_index.html')
 
 
-@app.route('/admin')
+@app.route('/admin_dashboard.html')
 def admin():
     return render_template('admin_dashboard.html')
 
-# This route is the catch-all so u guys don't have to make a specific route for each page
-# Not secure, if u want ur page to be secure or with custom logic make a new route above
+# custom route to test conn to db
+@app.route('/test_db.html')
+def test_db():
+    data = []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM test;')
+        data = cursor.fetchall()
+        db_status = 'Connected to MySQL'
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        db_status = f'MySQL connection error: {str(e)}'
+    return render_template('test_db.html', db_status=db_status, data=data)
+
+# This route is the catch-all so u guys don't have to make a specific route for each page everytime, IT HAS TO BE THE LAST ROUTE
+# Not secure, if u want a specific page to be secure OR with custom logic, make a new route above
 @app.route('/<filename>')
 def catch_all(filename):
     print(filename, flush=True)
