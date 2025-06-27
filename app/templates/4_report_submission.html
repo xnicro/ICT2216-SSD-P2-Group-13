@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Submit Incident Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+
+<body>
+    <div class="main">
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            <div class="main-content__header">
+                <h1>Submit Incident Report</h1>
+                <a href="{{ url_for('index') }}" class="btn btn--submit-report">
+                    <!-- reuse the red danger button style for “Cancel” -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="btn__icon" viewBox="0 0 16 16" aria-hidden="true">
+                        <path
+                            d="M1 8a7 7 0 1114 0A7 7 0 011 8zm4.646-2.646a.5.5 0 10-.708.708L7.293 8l-2.355 2.354a.5.5 0 10.708.708L8 8.707l2.354 2.355a.5.5 0 10.708-.708L8.707 8 11.061 5.646a.5.5 0 00-.708-.708L8 7.293 5.646 4.646z" />
+                    </svg>
+                    <span>Cancel</span>
+                </a>
+            </div>
+
+            <form method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data">
+                <!-- if you want CSRF, you’ll need to implement it yourself or ignore it -->
+                <div>
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+
+                <div>
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+
+                <!-- categories -->
+                <div>
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="fires">Fires</option>
+                        <option value="faulty_facilities">Faulty Facilities/Equipment</option>
+                        <option value="vandalism">Vandalism</option>
+                        <option value="suspicious_activity">Suspicious Activity</option>
+                        <option value="other">Others</option>
+                    </select>
+                </div>
+
+                <!-- conditional “other” description -->
+                <div id="other-desc-container" style="display: none;">
+                    <label for="category_description">Please specify</label>
+                    <input type="text" id="category_description" name="category_description"
+                        placeholder="Short description of category">
+                </div>
+
+                <div>
+                    <label>
+                        <input type="checkbox" name="anonymous" value="1"> Submit anonymously
+                    </label>
+                </div>
+
+                <div>
+                    <label for="attachments">Attachments</label>
+                    <input type="file" id="attachments" name="attachments" multiple>
+                </div>
+
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/report_submission.js') }}"></script>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+</body>
+
+</html>
