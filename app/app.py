@@ -36,27 +36,15 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('0_index.html')
 
 
 @app.route('/admin')
 def admin():
     return render_template('admin_dashboard.html')
 
-@app.route('/login')
-def login():
-    return render_template('user_accounts/login.html')
-
-@app.route('/register')
-def register():
-    return render_template('user_accounts/register.html')
-
-@app.route('/user')
-def user():
-    return render_template('user_accounts/user.html')
-
 # This route is the catch-all so u guys don't have to make a specific route for each page
-# Not secure, if u want ur page to be secure make a new route above
+# Not secure, if u want ur page to be secure or with custom logic make a new route above
 @app.route('/<filename>')
 def catch_all(filename):
     print(filename, flush=True)

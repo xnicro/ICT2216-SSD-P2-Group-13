@@ -15,22 +15,7 @@
 
 <body>
     <div class="main">
-        <div class="sidebar" id="sidebar">
-            <div class="company-logo">
-                <div>
-                    <img class="logo" src="{{ url_for('static', filename='assets/logo.png') }}" />
-                    <p>SITSecure</p>
-                </div>
-                <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-            </div>
-            <nav>
-                <a href="#">Home</a>
-                <a href="#">Dashboard</a>
-                <a href="#">Settings</a>
-                <a href="user_accounts/login.html">Login</a>
-                <a href="user_accounts/register.html">Register</a>
-            </nav>
-        </div>
+        {% include 'common/sidebar.html' %}
 
         <div class="main-content">
             <h1>Welcome</h1>
