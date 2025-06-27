@@ -20,11 +20,7 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
     return conn
-
-
-@app.route('/')
-def index():
-    # data = []
+# data = []
     # try:
     #     conn = get_db_connection()
     #     cursor = conn.cursor()
@@ -37,11 +33,32 @@ def index():
     #     db_status = f'MySQL connection error: {str(e)}'
     
     # return render_template('index.html', db_status=db_status, data=data)
+
+@app.route('/')
+def index():
     return render_template('index.html')
+
 
 @app.route('/admin')
 def admin():
     return render_template('admin_dashboard.html')
+
+@app.route('/login')
+def login():
+    return render_template('user_accounts/login.html')
+
+@app.route('/register')
+def register():
+    return render_template('user_accounts/register.html')
+
+@app.route('/user')
+def register():
+    return render_template('user_accounts/user.html')
+
+@app.route('/<filename>')
+def catch_all(filename):
+    return render_template(filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
