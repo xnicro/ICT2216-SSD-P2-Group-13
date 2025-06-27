@@ -4,6 +4,7 @@ import os
 
 app = Flask(__name__)
 
+# Initial Configs =================================================
 # MySQL configurations
 app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'mysql')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'x')
@@ -22,6 +23,7 @@ def get_db_connection():
     return conn
 
 
+# App routes ============================================================
 @app.route('/')
 def index():
     return render_template('0_index.html')
