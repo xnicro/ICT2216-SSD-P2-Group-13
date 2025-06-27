@@ -371,3 +371,56 @@ body div.main {
   margin-right: 0.9rem;
   fill: currentColor;
 }
+
+/* Form card spacing */
+.card-body {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* .controls already gives flex and gap, but ensure inputs stretch */
+.controls {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.controls label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #343a40;
+}
+
+.controls input[type="text"],
+.controls textarea,
+.controls select,
+.controls input[type="file"] {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.controls input[type="text"]:focus,
+.controls textarea:focus,
+.controls select:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  outline: none;
+}
+
+/* Small helper text */
+.controls small {
+  color: #6c757d;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Right-align the final button container */
+.controls--actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
