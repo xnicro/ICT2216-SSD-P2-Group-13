@@ -56,31 +56,20 @@ def submit_report():
     conn   = get_db_connection()
     cursor = conn.cursor(buffered=True, dictionary=True)
     try:
-        # ——— Always insert a new "submitted" status ———
-        default_status = 'submitted'
-        cursor.execute(
-            "INSERT INTO status (name) VALUES (%s)",
-            (default_status,)
-        )
-        status_id = cursor.lastrowid
-
-        # ——— Insert report (with inline category fields) ———
         user_id = None if is_anon else session.get('user_id')
         cursor.execute("""
             INSERT INTO reports
               (user_id,
                category_name,
                category_description,
-               status_id,
                is_anonymous,
                title,
                description)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             user_id,
             category_name,
             category_description,
-            status_id,
             int(is_anon),
             title,
             description
