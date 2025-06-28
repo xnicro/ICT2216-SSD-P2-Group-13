@@ -2,6 +2,8 @@ from flask import Flask, render_template
 import mysql.connector
 import os
 from report_submission import bp as reports_bp
+from admin_dashboard import get_statuses, get_all_reports
+from admin_dashboard import bp as admin_bp
 
 app = Flask(__name__)
 
@@ -18,6 +20,7 @@ print("aaa", flush=True)
 print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWORD'],app.config['MYSQL_DB'], flush=True)
 
 app.register_blueprint(reports_bp)
+app.register_blueprint(admin_bp)
 
 def get_db_connection():
     conn = mysql.connector.connect(
@@ -35,9 +38,12 @@ def index():
     return render_template('0_index.html')
 
 
-@app.route('/admin_dashboard.html')
+@app.route('/admin')
+# Add session check here when done 
 def admin():
-    return render_template('admin_dashboard.html')
+    statuses = get_statuses()
+    reports = get_all_reports()
+    return render_template('7_admin_dashboard.html', statuses=statuses, reports=reports)
 
 @app.route('/report')
 def report():

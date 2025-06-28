@@ -21,6 +21,10 @@ h1 {
 }
 
 /* Admin Dashboard */
+.adminheader{
+    color: var(--dark-blue);
+}
+/* Status Desing */
 .status-badge {
     font-weight: 600;
     padding: 0.4em 0.7em;
@@ -30,8 +34,8 @@ h1 {
 }
 
 .status-pending {
-    background-color: #ffc107;
-    color: #212529;
+    background-color: #dba400;
+    color: white;
 }
 
 .status-resolved {
@@ -39,8 +43,23 @@ h1 {
     color: white;
 }
 
+.status-emergency {
+    background-color: #db2929;
+    color: white;
+}
+
+.status-unresolved{
+    background-color: #383737;
+    color: white;
+}
+
+.status-reviewing{
+    background-color: #8100b4;
+    color: white;
+}
+
 /* Controls container */
-.controls {
+.controls-admin {
     margin-bottom: 1.5rem;
     display: flex;
     gap: 1rem;
@@ -48,7 +67,7 @@ h1 {
     align-items: center;
 }
 
-.controls>* {
+.controls-admin>* {
     flex: 1 1 200px;
     min-width: 150px;
 }
@@ -65,7 +84,7 @@ h1 {
     background-color: inherit;
     border-radius: 100px;
     font-weight: 600;
-    color: #1e1e1e;
+    color: var(--dark-blue);
     box-shadow: 0 0 0 2px #1e1e1e;
     cursor: pointer;
     overflow: hidden;
@@ -95,7 +114,7 @@ h1 {
     transform: translate(-50%, -50%);
     width: 15px;
     height: 15px;
-    background-color: #d96cfa;
+    background-color: var(--dark-blue);
     border-radius: 50%;
     opacity: 0;
     transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
@@ -112,6 +131,7 @@ h1 {
     box-shadow: 0 0 0 12px transparent;
     color: #1e1e1e;
     border-radius: 12px;
+    color: white;
 }
 
 .animated-button:hover .arr-1 {
@@ -121,6 +141,9 @@ h1 {
 .animated-button:hover .arr-2 {
     left: 16px;
 }
+.animated-button:hover svg {
+    fill: white;
+}
 
 .animated-button:hover .text {
     transform: translateX(12px);
@@ -128,7 +151,7 @@ h1 {
 
 .animated-button:active {
     scale: 0.95;
-    box-shadow: 0 0 0 4px #fd8a26;
+    box-shadow: 0 0 0 4px #ffffff;
 }
 
 .animated-button:hover .circle {
@@ -136,17 +159,25 @@ h1 {
     height: 220px;
     opacity: 1;
 }
-
-.card {
+/* Card and Table (admin) */
+.admin-card  {
     border-radius: 1rem;
     background-color: #ffffff;
 }
 
-.card-body {
+.card-body-admin {
     padding: 2rem;
 }
+
+.admintable, 
+.admintable th {
+  background-color: var(--dark-blue) !important;
+  color: white; 
+}
+
+/* Admin sidebar */
 .adminsidebar {
-  background-color: #212429;
+  background-color: var(--dark-blue);
   padding: 0.7rem;
   height: 100%;
   border-radius: 5px;
@@ -165,7 +196,7 @@ h1 {
   color: var(--dark-blue);
 }
 
-
+/* Options for update status */
 .select {
     width: fit-content;
     cursor: pointer;
@@ -176,12 +207,12 @@ h1 {
 }
 
 .selected {
-    background-color: #212429;
+    background-color: var(--dark-blue);
     padding: 5px;
     margin-bottom: 3px;
     border-radius: 5px;
     position: relative;
-    z-index: 100000;
+    z-index: 1;
     font-size: 15px;
     display: flex;
     align-items: center;
@@ -204,7 +235,7 @@ h1 {
     flex-direction: column;
     border-radius: 5px;
     padding: 5px;
-    background-color: #212429;
+    background-color: var(--dark-blue);
     position: relative;
     top: -100px;
     opacity: 0;
@@ -224,7 +255,7 @@ h1 {
     border-radius: 5px;
     padding: 5px;
     transition: 300ms;
-    background-color: #212429;
+    background-color: var(--dark-blue);
     width: 150px;
     font-size: 15px;
 }
