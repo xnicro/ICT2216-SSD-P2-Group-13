@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 // Update status part
   document.querySelectorAll(".options input[type='radio']").forEach(function (radio) {
     radio.addEventListener("change", function () {
@@ -14,6 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // Use CSRF token 
+          "X-CSRFToken": csrfToken
         },
         body: JSON.stringify({
           report_id: reportId,
@@ -147,5 +150,145 @@ document.addEventListener("DOMContentLoaded", function () {
     tableBody.textContent = "";
     filteredRows.forEach((row) => tableBody.appendChild(row));
   }
-//   For modal in the future, remember to use scape html when injecting html from JS
+  
+// More Details modal
+document.querySelectorAll(".animated-button").forEach(button => {
+  button.addEventListener("click", async function () {
+    const row = button.closest("tr");
+
+    // Get data attributes
+    const title = row.dataset.title || '';
+    const category = row.dataset.category || '';
+    const status = row.dataset.status || '';
+    const description = row.dataset.description || '';
+    const createdAt = row.dataset.createdat || '';
+    const reportId = row.dataset.reportid;
+
+    if (!reportId) {
+      console.warn("No report ID found for this row.");
+      return;
+    }
+
+    const modalContent = document.getElementById("modalContent");
+    modalContent.innerHTML = ''; 
+
+    // Create or clear the image container
+    let imgContainer = document.getElementById('modalImageContainer');
+    if (!imgContainer) {
+      imgContainer = document.createElement('div');
+      imgContainer.id = 'modalImageContainer';
+      modalContent.prepend(imgContainer); // Insert above all content
+    } else {
+      imgContainer.innerHTML = '';
+      modalContent.prepend(imgContainer);
+    }
+
+    // Fetch attachments
+    try {
+      const res = await fetch(`/admin/report_attachments/${reportId}`);
+      const attachments = await res.json();
+
+      if (!Array.isArray(attachments)) {
+        console.error("Attachments response is not an array");
+        return;
+      }
+
+      if (attachments.length > 0) {
+        attachments.forEach(att => {
+          const fileName = att.file_name;
+          const imageUrl = `/uploads/${fileName}`;
+
+          const img = document.createElement('img');
+          img.src = imageUrl;
+          img.alt = 'Report Attachment';
+          img.style.maxHeight = "200px";
+          img.style.borderRadius = "8px";
+          img.style.objectFit = "contain";
+          img.style.cursor = "pointer";
+          img.style.marginRight = "1rem";
+
+          imgContainer.appendChild(img);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load attachment image");
+    }
+
+    // Show text fields below the images
+    const fields = [
+      { label: 'Title', value: title },
+      { label: 'Category', value: category },
+      { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
+      { label: 'Description', value: description },
+      { label: 'Created At', value: createdAt }
+    ];
+
+    const infoSection = document.createElement('div');
+    infoSection.className = "info-section"; // Add a container
+
+    fields.forEach(field => {
+      const fieldContainer = document.createElement('div');
+      fieldContainer.className = 'info-field';
+
+      const label = document.createElement('div');
+      label.className = 'info-label';
+      label.textContent = field.label;
+
+      const value = document.createElement('div');
+      value.className = 'info-value';
+      value.textContent = field.value;
+
+      fieldContainer.appendChild(label);
+      fieldContainer.appendChild(value);
+      infoSection.appendChild(fieldContainer);
+    });
+
+    modalContent.appendChild(infoSection);
+
+    // Show modal
+    const bootstrapModal = new bootstrap.Modal(document.getElementById("reportDetailsModal"));
+    bootstrapModal.show();
+  });
+});
+
+// Delete Functions 
+let selectedReportId = null;
+let selectedRow = null;
+
+document.querySelectorAll(".bin-button").forEach(button => {
+  button.addEventListener("click", function () {
+    selectedReportId = this.dataset.reportid;
+    selectedRow = this.closest("tr");
+
+    const confirmModal = new bootstrap.Modal(document.getElementById("deleteConfirmModal"));
+    confirmModal.show();
+  });
+});
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async function () {
+  if (!selectedReportId) return;
+
+  try {
+    const res = await fetch(`/admin/delete_report/${selectedReportId}`, {
+      method: "DELETE",
+      headers: {
+        // Use CSRF token 
+        "X-CSRFToken": csrfToken
+      }
+    });
+
+    if (res.ok) {
+      // Remove row from DOM
+      if (selectedRow) selectedRow.remove();
+
+      // Close modal
+      bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal")).hide();
+    } else {
+      console.error("Failed to delete report");
+    }
+  } catch (err) {
+    console.error("Error deleting report");
+  }
+});
+
 });

@@ -31,6 +31,7 @@
             </div>
 
             <form method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <!-- if you want CSRF, you’ll need to implement it yourself or ignore it -->
                 <div>
                     <label for="title">Title</label>
