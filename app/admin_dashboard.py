@@ -33,7 +33,7 @@ def get_all_reports():
     cursor = conn.cursor(dictionary=True)
     try:
         query = """
-        SELECT r.report_id, r.title, r.category_name, s.name AS status_name
+        SELECT r.report_id, r.title, r.description, r.category_name, r.is_anonymous, r.created_at, s.name AS status_name
         FROM reports r
         JOIN status s ON r.status_id = s.status_id
         ORDER BY r.report_id
@@ -44,6 +44,24 @@ def get_all_reports():
     finally:
         cursor.close()
         conn.close()
+
+def get_report_attachments(report_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+        SELECT file_name
+        FROM report_attachments
+        WHERE report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        results = cursor.fetchall()
+        
+        return results
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @bp.route("/update_status", methods=["POST"])
 def update_status():
@@ -71,6 +89,38 @@ def update_status():
     except Exception as e:
         print("Update failed:", e)
         return jsonify(success=False), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@bp.route("/admin/report_attachments/<int:report_id>", methods=["GET"])
+def fetch_report_attachments(report_id):
+    attachments = get_report_attachments(report_id)
+    return jsonify(attachments)
+
+# Delete Functions
+
+@bp.route("/admin/delete_report/<int:report_id>", methods=["DELETE"])
+def delete_report(report_id):
+    # Add session check here in future
+
+    report_id = is_valid_integer(report_id)
+    if not report_id:
+        return jsonify({"error": "Invalid report ID"}), 400
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM report_attachments WHERE report_id = %s", (report_id,))
+
+        cursor.execute("DELETE FROM reports WHERE report_id = %s", (report_id,))
+        conn.commit()
+
+        return '', 204 
+    except Exception as e:
+        current_app.logger.error(f"Failed to delete report {report_id}: {e}")
+        return jsonify({"error": "Failed to delete report"}), 500
     finally:
         cursor.close()
         conn.close()

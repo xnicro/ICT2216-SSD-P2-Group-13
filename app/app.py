@@ -1,14 +1,24 @@
-from flask import Flask, render_template
+from flask import Flask, abort, render_template
 import mysql.connector
 import os
 from report_submission import bp as reports_bp
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
+from flask import send_from_directory
+import os
+from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+
 
 app = Flask(__name__)
 
+# Added CSRF 
+csrf = CSRFProtect()
+csrf.init_app(app)
+
 # SECRET_KEY (for flash messages & sessions)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
+csrf = CSRFProtect(app)
 
 # Initial Configs =================================================
 # MySQL configurations
@@ -21,6 +31,12 @@ print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWO
 
 app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
+
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 def get_db_connection():
     conn = mysql.connector.connect(
@@ -48,6 +64,22 @@ def admin():
 @app.route('/report')
 def report():
     return redirect(url_for('reports.submit_report'))
+
+# Temporary as will change images location in future 
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    # Check allowed extensions (security will remove when change to cloud)
+    def is_allowed_file(filename):
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    if not is_allowed_file(filename):
+        abort(400, description="Invalid file type.")
+
+    # Secure filename by not allowing dangerous chars
+    safe_filename = secure_filename(filename)
+    safe_path = os.path.join(app.root_path, 'uploads')
+    return send_from_directory(safe_path, safe_filename)
 
 # custom route to test conn to db
 @app.route('/test_db.html')

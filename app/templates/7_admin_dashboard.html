@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Admin Dashboard - Hazard Reports</title>
 
   <!-- Bootstrap 5 CSS -->
@@ -80,11 +81,18 @@
           <th scope="col">Status</th>
           <th scope="col" style="min-width: 180px;">Update Status</th>
           <th scope="col">See More</th>
+          <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody id="reportsTableBody">
         {% for report in reports %}
-        <tr data-status="{{ report.status_name | lower }}">
+        <tr 
+        data-reportid="{{ report.report_id }}"
+        data-title="{{ report.title }}" 
+        data-category="{{ report.category_name.replace('_', ' ').title() }}" 
+        data-status="{{ report.status_name | lower }}" 
+        data-description="{{ report.description | e }}" 
+        data-createdat="{{report.created_at | e}}">
           <td>{{ report.report_id }}</td>
           <td>{{ report.title }}</td>
           <td>{{ report.category_name.replace('_', ' ').title() }}</td>
@@ -116,7 +124,6 @@
               </div>
             </div>
           </td>
-
           <td>
             <button class="animated-button">
             <svg xmlns="http://www.w3.org/2000/svg" class="arr-2" viewBox="0 0 24 24">
@@ -133,6 +140,45 @@
             </svg>
           </button>
           </td>
+          <td>
+          <button class="bin-button" data-reportid="{{ report.report_id }}">
+          <svg
+            class="bin-top"
+            viewBox="0 0 39 7"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <line y1="5" x2="39" y2="5" stroke="white" stroke-width="4"></line>
+            <line
+              x1="12"
+              y1="1.5"
+              x2="26.0357"
+              y2="1.5"
+              stroke="white"
+              stroke-width="3"
+            ></line>
+          </svg>
+          <svg
+            class="bin-bottom"
+            viewBox="0 0 33 39"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <mask id="path-1-inside-1_8_19" fill="white">
+              <path
+                d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"
+              ></path>
+            </mask>
+            <path
+              d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
+              fill="white"
+              mask="url(#path-1-inside-1_8_19)"
+            ></path>
+            <path d="M12 6L12 29" stroke="white" stroke-width="4"></path>
+            <path d="M21 6V29" stroke="white" stroke-width="4"></path>
+          </svg>
+        </button>
+        </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -143,7 +189,7 @@
   </div>
   </div>
 
-  <!-- Report Details Modal (maybe using for view more details or another page not sure)-->
+  <!-- Report Details Modal -->
   <div class="modal fade" id="reportDetailsModal" tabindex="-1" aria-labelledby="reportDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
@@ -157,9 +203,32 @@
       </div>
     </div>
   </div>
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: white; border-radius: 10px;">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteReportConfirmModal">Confirm Deletion</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete this report? This action cannot be undone.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="confirmDeleteBtn" type="button" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const ALL_STATUSES = JSON.parse('{{ statuses | tojson | safe }}');
   </script>
+  <script>
+    const csrfToken = "{{ csrf_token() }}";
+  </script>
+
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 

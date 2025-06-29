@@ -159,6 +159,38 @@ h1 {
     height: 220px;
     opacity: 1;
 }
+/* From Uiverse.io by vinodjangid07 */ 
+.bin-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 55px;
+  height: 55px;
+  border-radius: 15px;
+  background-color: rgb(255, 95, 95);
+  cursor: pointer;
+  border: 3px solid rgb(255, 201, 201);
+  transition-duration: 0.3s;
+}
+.bin-bottom {
+  width: 15px;
+}
+.bin-top {
+  width: 17px;
+  transform-origin: right;
+  transition-duration: 0.3s;
+}
+.bin-button:hover .bin-top {
+  transform: rotate(45deg);
+}
+.bin-button:hover {
+  background-color: rgb(255, 0, 0);
+}
+.bin-button:active {
+  transform: scale(0.9);
+}
+
 /* Card and Table (admin) */
 .admin-card  {
     border-radius: 1rem;
@@ -300,6 +332,71 @@ h1 {
 .select:has(.options input[type="radio"]#option-3:checked) .selected::before {
     content: attr(data-three);
 }
+/* Modal Design (Admin) */
+.modal-header{
+    background-color: var(--dark-blue);
+}
+#reportDetailsModalLabel{
+    color: white;
+}
+#deleteReportConfirmModal{
+  color: white;
+}
+#modalImageContainer {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding: 1rem 0;
+  justify-content: center;
+  align-items: center;
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+#modalImageContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+#modalImageContainer::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 3px;
+}
+/* Container for all info fields */
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Each field row */
+.info-field {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--dark-blue);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+/* Label on the left */
+.info-label {
+  font-weight: bold;
+  color: var(--dark-blue);
+  flex: 1;
+}
+
+/* Value on the right */
+.info-value {
+  text-align: right;
+  color: var(--dark-blue);
+  flex: 2;
+  word-break: break-word;
+}
+
 
 /* Homepage */
 body div.main {
