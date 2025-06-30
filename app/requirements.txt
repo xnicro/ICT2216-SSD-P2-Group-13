@@ -2,3 +2,4 @@ flask
 gunicorn
 mysql-connector-python
 flask-wtf
+argon2-cffi
