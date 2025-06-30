@@ -65,6 +65,27 @@ def admin():
 def report():
     return redirect(url_for('reports.submit_report'))
 
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    try:
+        # Test database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        cursor.fetchone()
+        cursor.close()
+        conn.close()
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "database": db_status,
+        "timestamp": datetime.now().isoformat()
+    }, 200 if db_status == "healthy" else 503
+
 # Temporary as will change images location in future 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
