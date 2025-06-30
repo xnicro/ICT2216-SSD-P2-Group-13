@@ -111,7 +111,7 @@ def login_user():
 
 
 @bp.route('/register_success')
-def success():
+def register_success():
     return """
     <!DOCTYPE html>
     <html>
