@@ -5,6 +5,7 @@ import os
 from report_submission import bp as reports_bp
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
+from accounts import bp as accounts_bp
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
@@ -30,6 +31,7 @@ print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWO
 
 app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(accounts_bp)
 
 @app.context_processor
 def inject_csrf_token():
