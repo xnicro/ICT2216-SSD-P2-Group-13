@@ -51,7 +51,8 @@ def get_db_connection():
 # App routes ============================================================
 @app.route('/')
 def index():
-    return render_template('0_index.html')
+    reports = get_all_reports()
+    return render_template('0_index.html', reports=reports)
 
 
 @app.route('/admin')
