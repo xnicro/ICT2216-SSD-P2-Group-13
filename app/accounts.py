@@ -44,12 +44,12 @@ def register_user():
             return "Email cannot be empty", 400
         if not password:
             return "Password cannot be empty", 400
+        #elif len(password) < 8:
+        #    return "Password must be at least 8 characters", 400
         if not confirm_password:
             return "Confirm Password cannot be empty", 400
         if password != confirm_password:
             return "Passwords don't match", 400
-        
-        
         
         try:
             conn = get_db_connection()
@@ -85,7 +85,6 @@ def login_user():
             return "Username cannot be empty", 400
         if not password:
             return "Password cannot be empty", 400
-        hashed = ph.hash(password)
         
         try:
             conn = get_db_connection()
@@ -109,7 +108,7 @@ def login_user():
         except Exception as e:
             return f'MySQL connection error: {str(e)}'    
 
-
+# Success routes ====================================================
 @bp.route('/register_success')
 def register_success():
     return """
