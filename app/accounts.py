@@ -89,7 +89,7 @@ def login_user():
         
         try:
             conn = get_db_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(dictionary=True)
             # Get user by username
             query = "SELECT * FROM users WHERE username = %s"
             cursor.execute(query, (username,))
