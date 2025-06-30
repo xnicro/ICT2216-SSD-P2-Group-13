@@ -71,7 +71,7 @@ def register_user():
             conn.close()
             return redirect(url_for('accounts.register_success'))
         except Exception as e:
-            return f'MySQL connection error: {str(e)}'
+            return f'MySQL connection error: {str(e)}' #change this error msg b4 submit
         
         
 @bp.route("/login", methods=["POST"])
@@ -106,7 +106,7 @@ def login_user():
                 return "Invalid username or password"
             
         except Exception as e:
-            return f'MySQL connection error: {str(e)}'    
+            return f'MySQL connection error: {str(e)}'  #change this error msg b4 submit
 
 # Success routes ====================================================
 @bp.route('/register_success')
