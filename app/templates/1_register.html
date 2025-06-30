@@ -19,8 +19,8 @@
 
         <div class="main-content">
             <h1>Register Account</h1>
-            <form action="/register" method="post" class="register">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <form action="{{ url_for('accounts.register_user') }}" method="post" class="register">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required><br>
 
