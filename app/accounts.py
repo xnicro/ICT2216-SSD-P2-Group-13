@@ -6,6 +6,15 @@ from argon2.exceptions import VerifyMismatchError
 
 bp = Blueprint('accounts', __name__)
 
+# Create an Argon2 hasher instance (customizable parameters)
+ph = PasswordHasher(
+    time_cost=3,       # number of iterations (default: 2)
+    memory_cost=65536, # memory usage in kibibytes (64 MB)
+    parallelism=4,     # number of threads
+    hash_len=32,       # length of the hash
+    salt_len=16        # length of random salt
+)
+
 def get_db_connection():
     cfg = current_app.config
     return mysql.connector.connect(
@@ -39,6 +48,9 @@ def register_user():
             return "Confirm Password cannot be empty", 400
         if password != confirm_password:
             return "Passwords don't match", 400
+        
+        
+        
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -51,7 +63,8 @@ def register_user():
             else:
                 # Insert new user with prepared statement
                 insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
-                cursor.execute(insert_query, (username, email, password))
+                hashed = ph.hash(password)
+                cursor.execute(insert_query, (username, email, hashed))
                 conn.commit()
                 
             cursor.close()
@@ -67,6 +80,7 @@ def success():
     <html>
     <head>
         <title>Registration Successful</title>
+        <h1>Registration Successful</h1>
         <style>
             body {
                 font-family: Arial, sans-serif;
