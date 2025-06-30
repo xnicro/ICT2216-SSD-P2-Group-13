@@ -10,6 +10,15 @@ bp = Blueprint('reports', __name__, template_folder='templates')
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+# Mapping of form values to their display names
+CATEGORY_MAPPING = {
+    'fires': 'Fires',
+    'faulty_facilities': 'Faulty Facilities/Equipment',
+    'vandalism': 'Vandalism',
+    'suspicious_activity': 'Suspicious Activity',
+    'other': 'Others'
+}
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
@@ -33,30 +42,34 @@ def submit_report():
         return render_template('4_report_submission.html')
 
     # ——— POST ———
-    title                = request.form.get('title', '').strip()
-    description          = request.form.get('description', '').strip()
-    category_name        = request.form.get('category', '')
-    is_anon              = bool(request.form.get('anonymous'))
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    # raw category value from the select
+    category_value = request.form.get('category', '')
+    # lookup human-readable label
+    category_name = CATEGORY_MAPPING.get(category_value, category_value)
+    is_anon = bool(request.form.get('anonymous'))
     # Only pull category_description if “other” is selected
     category_description = (
         request.form.get('category_description', '').strip()
-        if category_name == 'other'
+        if category_value == 'other'
         else None
     )
 
     # Server-side validation: require a description for “other”
-    if category_name == 'other' and not category_description:
+    if category_value == 'other' and not category_description:
         flash('Please provide a short description when you select "Others".', 'danger')
         return render_template('4_report_submission.html',
                                title=title,
                                description=description,
-                               selected_category=category_name,
+                               selected_category=category_value,
                                category_description=category_description)
 
-    conn   = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(buffered=True, dictionary=True)
     try:
         user_id = None if is_anon else session.get('user_id')
+        # insert using the human-readable category_name
         cursor.execute("""
             INSERT INTO reports
               (user_id,
@@ -80,7 +93,7 @@ def submit_report():
         attachments = []
         for f in request.files.getlist('attachments'):
             if f and allowed_file(f.filename):
-                fn        = secure_filename(f.filename)
+                fn = secure_filename(f.filename)
                 save_name = f"{report_id}_{fn}"
                 save_path = os.path.join(UPLOAD_FOLDER, save_name)
                 f.save(save_path)

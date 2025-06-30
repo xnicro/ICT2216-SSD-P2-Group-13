@@ -55,10 +55,11 @@
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
     </script>
+    <!-- category mapping for frontend display -->
     <script>
         const home_reports = {{ reports | tojson }};
     </script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 
-</html>"<!-- CI/CD is working! -->" 
+</html>
