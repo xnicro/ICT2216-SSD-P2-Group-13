@@ -1,3 +1,4 @@
 # Database files
+**/__pycache__/
 **/mysql_data/
 *.env
