@@ -27,6 +27,16 @@ def register_user():
         confirm_password = request.form['confirm_password']
 
         # Basic validation
+        if len(username) < 3:
+            return "Username must be at least 3 characters", 400
+        if not username.isalnum():  # Only allow letters and numbers
+            return "Username can only contain letters and numbers", 400
+        if not email:
+            return "Email cannot be empty", 400
+        if not password:
+            return "Password cannot be empty", 400
+        if not confirm_password:
+            return "Confirm Password cannot be empty", 400
         if password != confirm_password:
             return "Passwords don't match", 400
         try:
@@ -46,7 +56,41 @@ def register_user():
                 
             cursor.close()
             conn.close()
-            return "Registration Success"
+            return redirect(url_for('accounts.success'))
         except Exception as e:
             return f'MySQL connection error: {str(e)}'
 
+@bp.route('/success')
+def success():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Registration Successful</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 50px;
+            }
+            .back-button {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .back-button:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
+    <body>
+        <a href="/" class="back-button">Go Back to Home</a>
+    </body>
+    </html>
+    """
