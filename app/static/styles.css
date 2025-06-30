@@ -621,3 +621,22 @@ th, td {
   justify-content: flex-end;
   margin-top: 1.5rem;
 }
+
+/* Login Forms */
+.register input{
+  width: 100%;
+  display: inline-block;
+  border: 1px solid #ccc;
+  padding: 14px 20px;
+  margin: 8px 0;
+}
+.register button{
+  background-color: #04AA6D;
+  color: white;
+  font-size: 100%;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}

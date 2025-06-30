@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /app
 
 # For production, use gunicorn instead of flask run
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+# CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
 
 # For development, you can use:
-# CMD ["flask", "run", "--host=0.0.0.0", "--debug"]
+CMD ["flask", "run", "--host=0.0.0.0", "--debug"]

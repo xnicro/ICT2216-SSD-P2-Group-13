@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <div class="main">
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            <h1>Register Account</h1>
+            <form action="/register" method="post" class="register">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required><br>
+
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required><br>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br>
+
+                <label for="confirm_password">Confirm Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required><br>
+
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+
+</body>
+
+</html>
