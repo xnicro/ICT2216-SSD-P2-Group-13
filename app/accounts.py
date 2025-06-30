@@ -63,17 +63,54 @@ def register_user():
             else:
                 # Insert new user with prepared statement
                 insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
-                hashed = ph.hash(password)
+                hashed = ph.hash(password) #hash password
                 cursor.execute(insert_query, (username, email, hashed))
                 conn.commit()
                 
             cursor.close()
             conn.close()
-            return redirect(url_for('accounts.success'))
+            return redirect(url_for('accounts.register_success'))
         except Exception as e:
             return f'MySQL connection error: {str(e)}'
+        
+        
+@bp.route("/login", methods=["POST"])
+def login_user():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-@bp.route('/success')
+         # Basic validation
+        if not username:
+            return "Username cannot be empty", 400
+        if not password:
+            return "Password cannot be empty", 400
+        hashed = ph.hash(password)
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            # Get user by username
+            query = "SELECT * FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
+            verify_user = cursor.fetchone()
+            cursor.close()
+            conn.close()
+
+            if not verify_user: #if no such user
+                return "Invalid username or password"
+            try: # Verify password
+                ph.verify(verify_user['pwd'], password)
+                return "Login successful"
+            
+            except VerifyMismatchError:
+                return "Invalid username or password"
+            
+        except Exception as e:
+            return f'MySQL connection error: {str(e)}'    
+
+
+@bp.route('/register_success')
 def success():
     return """
     <!DOCTYPE html>

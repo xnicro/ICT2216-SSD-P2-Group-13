@@ -623,14 +623,14 @@ th, td {
 }
 
 /* Login Forms */
-.register input{
+.register input, .login input{
   width: 100%;
   display: inline-block;
   border: 1px solid #ccc;
   padding: 14px 20px;
   margin: 8px 0;
 }
-.register button{
+.register button, .login button{
   background-color: #04AA6D;
   color: white;
   font-size: 100%;

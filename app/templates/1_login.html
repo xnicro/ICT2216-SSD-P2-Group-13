@@ -19,7 +19,16 @@
 
         <div class="main-content">
             <h1>Login</h1>
-            <p>This is the main content area.</p>
+            <form action="{{ url_for('accounts.login_user') }}" method="post" class="login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required><br>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br>
+
+                <button type="submit">Login</button>
+            </form>
         </div>
     </div>
 

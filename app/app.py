@@ -103,11 +103,6 @@ def uploaded_file(filename):
     safe_path = os.path.join(app.root_path, 'uploads')
     return send_from_directory(safe_path, safe_filename)
 
-@app.route('/register.html')
-def register_user():
-    return redirect(url_for('accounts.register_user'))
-
-
 # custom route to test conn to db
 @app.route('/test_db.html')
 def test_db():
