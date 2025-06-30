@@ -5,8 +5,6 @@ import os
 from report_submission import bp as reports_bp
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
-from flask import send_from_directory
-import os
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
@@ -103,6 +101,10 @@ def uploaded_file(filename):
     safe_filename = secure_filename(filename)
     safe_path = os.path.join(app.root_path, 'uploads')
     return send_from_directory(safe_path, safe_filename)
+
+#@app.route('/register.html')
+#def register_user():
+
 
 # custom route to test conn to db
 @app.route('/test_db.html')
