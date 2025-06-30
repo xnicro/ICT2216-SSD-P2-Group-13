@@ -1,16 +1,19 @@
 <div class="sidebar" id="sidebar">
     <div class="company-logo">
-        <div>
-            <img class="logo" src="{{ url_for('static', filename='assets/logo.png') }}" />
-            <p>SITSecure</p>
-        </div>
+        <a href="\">
+            <div>
+                <img class="logo" src="{{ url_for('static', filename='assets/logo.png') }}" />
+                <p>SITSecure</p>
+            </div>
+        </a>
+
         <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     </div>
     <nav>
-        <a href="#">Home</a>
         <a href="#">Dashboard</a>
         <a href="#">Settings</a>
         <a href="1_login.html">Login</a>
         <a href="1_register.html">Register</a>
+        <a href="/admin">Admin</a>
     </nav>
 </div>
