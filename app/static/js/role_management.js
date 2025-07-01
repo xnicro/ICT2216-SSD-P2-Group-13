@@ -1,4 +1,5 @@
 function handleRoleChange(event) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   const label = event.currentTarget;
   const newRole = label.dataset.role;
   const selectContainer = label.closest(".select");
