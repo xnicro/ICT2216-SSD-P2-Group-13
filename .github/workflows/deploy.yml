@@ -102,114 +102,114 @@ jobs:
         name: docker-images
         path: flask-app.tar
 
-  # Job 3: Deploy to server
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Download Docker image artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: docker-images
-
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-    - name: Create .env file locally
-      run: |
-        cat > .env << EOF
-        MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-        MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-        MYSQL_USER=${{ secrets.MYSQL_USER }}
-        MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-        SECRET_KEY=${{ secrets.SECRET_KEY }}
-        MYSQL_HOST=mysql
-        MYSQL_DB=${{ secrets.MYSQL_DATABASE }}
-        EOF
-
-    - name: Transfer files to server
-      run: |
-        # Create directory on server
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/app"
-        
-        # Transfer docker image
-        scp flask-app.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/app/
-        
-        # Transfer necessary files
-        scp -r docker-compose.yml .env nginx app ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/app/
-
-    - name: Deploy on server
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
-          cd ~/app
-          
-          # Load Docker image
-          docker load < flask-app.tar
-          
-          # Stop existing containers
-          docker-compose down || true
-          
-          # Clean up old images and volumes
-          docker system prune -f
-          
-          # Start services
-          docker-compose up -d --build
-          
-          # Wait for services to be healthy
-          sleep 10
-          
-          # Check if services are running
-          docker-compose ps
-          
-          # Show logs for debugging
-          docker-compose logs --tail=50
-          
-          # Health check
-          curl -f http://localhost || exit 1
-          
-          echo "Deployment completed successfully!"
-        ENDSSH
-
-    - name: Cleanup
-      if: always()
-      run: |
-        rm -f ~/.ssh/id_rsa
-        rm -f .env
-
-  # Job 4: Post-deployment health check
-  health-check:
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Wait for deployment
-      run: sleep 30
-
-    - name: Check application health
-      run: |
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SSH_HOST }})
-        if [ $response -eq 200 ]; then
-          echo "Application is healthy!"
-        else
-          echo "Health check failed with status code: $response"
-          exit 1
-        fi
-
-    - name: Send notification
-      if: always()
-      run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Deployment successful!"
-        else
-          echo "❌ Deployment failed!"
-        fi
+  # Job 3: Deploy to server (COMMENTED OUT UNTIL SERVER IS READY)
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v3
+  #
+  #   - name: Download Docker image artifact
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       name: docker-images
+  #
+  #   - name: Setup SSH
+  #     run: |
+  #       mkdir -p ~/.ssh
+  #       echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+  #       chmod 600 ~/.ssh/id_rsa
+  #       ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+  #
+  #   - name: Create .env file locally
+  #     run: |
+  #       cat > .env << EOF
+  #       MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+  #       MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+  #       MYSQL_USER=${{ secrets.MYSQL_USER }}
+  #       MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+  #       SECRET_KEY=${{ secrets.SECRET_KEY }}
+  #       MYSQL_HOST=mysql
+  #       MYSQL_DB=${{ secrets.MYSQL_DATABASE }}
+  #       EOF
+  #
+  #   - name: Transfer files to server
+  #     run: |
+  #       # Create directory on server
+  #       ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/app"
+  #       
+  #       # Transfer docker image
+  #       scp flask-app.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/app/
+  #       
+  #       # Transfer necessary files
+  #       scp -r docker-compose.yml .env nginx app ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/app/
+  #
+  #   - name: Deploy on server
+  #     run: |
+  #       ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+  #         cd ~/app
+  #         
+  #         # Load Docker image
+  #         docker load < flask-app.tar
+  #         
+  #         # Stop existing containers
+  #         docker-compose down || true
+  #         
+  #         # Clean up old images and volumes
+  #         docker system prune -f
+  #         
+  #         # Start services
+  #         docker-compose up -d --build
+  #         
+  #         # Wait for services to be healthy
+  #         sleep 10
+  #         
+  #         # Check if services are running
+  #         docker-compose ps
+  #         
+  #         # Show logs for debugging
+  #         docker-compose logs --tail=50
+  #         
+  #         # Health check
+  #         curl -f http://localhost || exit 1
+  #         
+  #         echo "Deployment completed successfully!"
+  #       ENDSSH
+  #
+  #   - name: Cleanup
+  #     if: always()
+  #     run: |
+  #       rm -f ~/.ssh/id_rsa
+  #       rm -f .env
+  #
+  # # Job 4: Post-deployment health check (COMMENTED OUT UNTIL SERVER IS READY)
+  # health-check:
+  #   needs: deploy
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   
+  #   steps:
+  #   - name: Wait for deployment
+  #     run: sleep 30
+  #
+  #   - name: Check application health
+  #     run: |
+  #       response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SSH_HOST }})
+  #       if [ $response -eq 200 ]; then
+  #         echo "Application is healthy!"
+  #       else
+  #         echo "Health check failed with status code: $response"
+  #         exit 1
+  #       fi
+  #
+  #   - name: Send notification
+  #     if: always()
+  #     run: |
+  #       if [ "${{ job.status }}" == "success" ]; then
+  #         echo "✅ Deployment successful!"
+  #       else
+  #         echo "❌ Deployment failed!"
+  #       fi
