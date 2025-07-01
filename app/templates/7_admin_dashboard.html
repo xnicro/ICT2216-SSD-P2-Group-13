@@ -15,9 +15,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
-  <div class="d-flex">
+  <div class="main">
+ 
     {% include 'common/sidebar.html' %}
-  <div class="flex-grow-1 container-fluid px-4">
+    <div class="main-content">
+
     {% include 'common/topbar.html' %}
     <div class="admin-card shadow-sm border-0 mb-4 w-100"> 
     <div class="card-body-admin">
@@ -25,7 +27,8 @@
     <hr>
     <div class="row">
     <div class="admin-content-row">
-    <!-- Sidebar -->
+
+    <!-- Status Sidebar -->
     <div class="col-md-2 mb-3 mb-md-0 border-end adminsidebar">
       <h4 class="mb-3">Filter Status</h4>
       <ul class="nav flex-column" id="statusFilterSidebar">
@@ -55,6 +58,7 @@
       </ul>
     </div>
     
+    <!-- Search, Sort, Filter -->
     <div class="col-md-10">
     <div class="controls-admin mb-4">
       <input id="searchInput" type="search" class="form-control" placeholder="Search reports..." aria-label="Search reports" />
@@ -69,7 +73,7 @@
       <select id="filterCategory" class="form-select" aria-label="Filter by Category">
         <option value="all">Filter: All Categories</option>
         <option value="fires">Fires</option>
-        <option value="faulty_facilities">Faulty Facilities</option>
+        <option value="faulty_facilities">Faulty Facilities/Equipments</option>
         <option value="vandalism">Vandalism</option>
         <option value="suspicious_activity">Suspicious Activity</option>
       </select>
@@ -94,8 +98,6 @@
         </tr>
       </thead>
       <tbody id="reportsTableBody">
-        
-
         {% for report in reports %}
         <tr 
         data-reportid="{{ report.report_id }}"
@@ -234,6 +236,8 @@
         </div>
       </div>
     </div>
+  </div>
+  </div>
   </div>
 
   <script>
