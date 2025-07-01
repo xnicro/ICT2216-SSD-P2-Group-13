@@ -6,6 +6,7 @@ from report_submission import bp as reports_bp
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
 from accounts import bp as accounts_bp
+from accounts import get_all_users
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 
@@ -54,13 +55,17 @@ def index():
     reports = get_all_reports()
     return render_template('0_index.html', reports=reports)
 
-
 @app.route('/admin')
 # Add session check here when done 
 def admin():
     statuses = get_statuses()
     reports = get_all_reports()
     return render_template('7_admin_dashboard.html', statuses=statuses, reports=reports)
+
+@app.route('/role')
+def role():
+    users = get_all_users()
+    return render_template('1_role_management.html', users=users)
 
 @app.route('/report')
 def report():

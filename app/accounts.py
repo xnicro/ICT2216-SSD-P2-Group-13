@@ -1,6 +1,6 @@
 import mysql.connector
 import os
-from flask import Flask, Blueprint, current_app, request, session, redirect, url_for
+from flask import Flask, Blueprint, current_app, jsonify, request, session, redirect, url_for
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -24,7 +24,22 @@ def get_db_connection():
         database=cfg['MYSQL_DB'],
     )
 
-
+# GET routes =============================================   
+def get_all_users():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+        SELECT user_id, username, email, role
+        FROM users 
+        ORDER BY user_id
+        """
+        cursor.execute(query)
+        users = cursor.fetchall()
+        return users
+    finally:
+        cursor.close()
+        conn.close()
 
 # POST routes =============================================    
 @bp.route("/register", methods=["POST"])
@@ -108,6 +123,35 @@ def login_user():
         except Exception as e:
             return f'MySQL connection error: {str(e)}'  #change this error msg b4 submit
 
+@bp.route("/update_role", methods=["POST"])
+def update_role():
+    data = request.get_json()
+
+    user_id = is_valid_integer(data.get("user_id"))
+    user_role = data.get("role")
+
+    if not user_id:
+        current_app.logger.warning("Invalid or missing user id")
+        return jsonify(success=False, error="Invalid input."), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users
+            SET role = %s
+            WHERE user_id = %s
+        """, (user_role, user_id))
+        conn.commit()
+        print("Update successful")
+        return jsonify(success=True)
+    except Exception as e:
+        print("Update failed:", e)
+        return jsonify(success=False), 500
+    finally:
+        cursor.close()
+        conn.close()
+        
 # Success routes ====================================================
 @bp.route('/register_success')
 def register_success():
@@ -144,3 +188,10 @@ def register_success():
     </body>
     </html>
     """
+
+# Validation and Security Functions
+def is_valid_integer(val):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None

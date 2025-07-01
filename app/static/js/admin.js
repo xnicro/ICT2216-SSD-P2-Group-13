@@ -1,294 +1,318 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-// Update status part
-  document.querySelectorAll(".options input[type='radio']").forEach(function (radio) {
-    radio.addEventListener("change", function () {
-      const reportId = this.name.split('-')[1];
-      const selectedLabel = document.querySelector(`label[for='${this.id}']`);
-      const statusText = selectedLabel.dataset.txt;
-      const statusId = parseInt(this.id.split('-')[1]);
+  // === State & References ===
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  const tableBody = document.getElementById("reportsTableBody");
+  const originalRows = Array.from(tableBody.querySelectorAll("tr"));
+  const rowsPerPage = 7;
+  const allRows = [...originalRows];
+  let currentStatusFilter = "all";
+  let selectedReportId = null;
+  let selectedRow = null;
 
-      const selectedDiv = this.closest(".select").querySelector(".selected");
-      selectedDiv.textContent = statusText;
-
-      fetch("/update_status", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Use CSRF token 
-          "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify({
-          report_id: reportId,
-          status_id: statusId
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          console.log("Status updated");
-          const row = selectedDiv.closest("tr");
-          const badge = row.querySelector(".status-badge");
-          badge.textContent = statusText;
-          badge.className = "status-badge status-" + statusText.toLowerCase();
-
-          const optionsDiv = row.querySelector(".options");
-          optionsDiv.textContent  = ""; 
-
-          ALL_STATUSES.forEach(status => {
-            if (status.name.toLowerCase() !== statusText.toLowerCase()) {
-
-              const div = document.createElement("div");
-              div.title = `option-${status.status_id}`;
-
-              const input = document.createElement("input");
-              input.type = "radio";
-              input.name = `option-${reportId}`;
-              input.id = `option-${status.status_id}-${reportId}`;
-
-              const label = document.createElement("label");
-              label.className = "option";
-              label.htmlFor = input.id;
-              label.dataset.txt = status.name.charAt(0).toUpperCase() + status.name.slice(1);
-
-              div.appendChild(input);
-              div.appendChild(label);
-              optionsDiv.appendChild(div);
-
-              // Add event listener for new radio input
-              input.addEventListener("change", arguments.callee); 
-            }
-          });
-
-        } else {
-          alert("Failed to update status");
-        }
-      });
-    });
-  });
-
-//   For side bar filtering
-  const sidebarLinks = document.querySelectorAll("#statusFilterSidebar a");
-  const tableRows = document.querySelectorAll("#reportsTableBody tr");
-
-  sidebarLinks.forEach(link => {
-    link.addEventListener("click", function(event) {
-      event.preventDefault();
-
-      sidebarLinks.forEach(l => l.classList.remove("active"));
-      // Add active class to the clicked link
-      this.classList.add("active");
-
-      const filterStatus = this.dataset.status.toLowerCase();
-
-      tableRows.forEach(row => {
-        const rowStatus = row.dataset.status.toLowerCase();
-
-        // Show row if filter is 'all' or matches row status, else hide
-        if (filterStatus === "all" || rowStatus === filterStatus) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
-      });
-    });
-  });
-
-//   For search, sort, filter functionalities
   const searchInput = document.getElementById("searchInput");
   const sortSelect = document.getElementById("sortSelect");
   const filterCategory = document.getElementById("filterCategory");
-  const tableBody = document.getElementById("reportsTableBody");
+  const paginationContainer = document.getElementById("paginationContainer");
 
-  // Get original data from table on load
-  const originalRows = Array.from(tableBody.querySelectorAll("tr"));
+  // === Status Update ===
+  document.querySelectorAll(".options input[type='radio']").forEach(radio => {
+    radio.addEventListener("change", handleStatusChange);
+  });
 
-  // Event listeners
-  // Sanitisation for inputs    
+  function handleStatusChange(event) {
+    const radio = event.target;
+    const reportId = radio.name.split('-')[1];
+    const selectedLabel = document.querySelector(`label[for='${radio.id}']`);
+    const statusText = selectedLabel?.dataset.txt;
+    const statusId = parseInt(radio.id.split('-')[1]);
+
+    const selectedDiv = radio.closest(".select")?.querySelector(".selected");
+    if (!selectedDiv || !statusText) return;
+
+    const arrowSvg = selectedDiv.querySelector("svg");
+    selectedDiv.textContent = ""; 
+    selectedDiv.append(document.createTextNode(statusText));
+    if (arrowSvg) selectedDiv.appendChild(arrowSvg); 
+    selectedDiv.dataset.default = statusText;
+
+    fetch("/update_status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
+      },
+      body: JSON.stringify({ report_id: reportId, status_id: statusId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) return alert("Failed to update status");
+
+      const row = selectedDiv.closest("tr");
+      const badge = row.querySelector(".status-badge");
+      badge.textContent = statusText;
+      badge.className = `status-badge status-${statusText.toLowerCase()}`;
+
+      const optionsDiv = row.querySelector(".options");
+      optionsDiv.textContent = "";
+
+      ALL_STATUSES.forEach(status => {
+        if (status.name.toLowerCase() !== statusText.toLowerCase()) {
+          const div = document.createElement("div");
+          div.title = `option-${status.status_id}`;
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `option-${reportId}`;
+          input.id = `option-${status.status_id}-${reportId}`;
+
+          const label = document.createElement("label");
+          label.className = "option";
+          label.htmlFor = input.id;
+          label.dataset.txt = status.name.charAt(0).toUpperCase() + status.name.slice(1);
+
+          div.appendChild(input);
+          div.appendChild(label);
+          optionsDiv.appendChild(div);
+
+          input.addEventListener("change", handleStatusChange);
+        }
+      });
+    });
+  }
+
+  // === Sidebar Filtering ===
+  document.querySelectorAll("#statusFilterSidebar a").forEach(link => {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      document.querySelectorAll("#statusFilterSidebar a").forEach(l => l.classList.remove("active"));
+      this.classList.add("active");
+      currentStatusFilter = this.dataset.status.toLowerCase();
+      updateTable();
+    });
+  });
+
+  // === Search, Sort, Category Filtering ===
   searchInput.addEventListener("input", () => {
-    let val = searchInput.value;
-    val = val.slice(0, 100); // max length
-    val = val.replace(/[^\w\s\-]/g, ''); // only allow alphanumeric, spaces
+    let val = searchInput.value.slice(0, 100).replace(/[^\w\s\-]/g, '');
     searchInput.value = val;
     updateTable();
-    });
+  });
   sortSelect.addEventListener("change", updateTable);
   filterCategory.addEventListener("change", updateTable);
 
   function updateTable() {
-    const searchValue = searchInput.value.toLowerCase();
-    const sortValue = sortSelect.value;
-    const categoryValue = filterCategory.value;
+    const searchVal = searchInput.value.toLowerCase();
+    const sortVal = sortSelect.value;
+    const categoryVal = filterCategory.value;
 
-    let filteredRows = originalRows.filter((row) => {
+    let filteredRows = originalRows.filter(row => {
       const title = row.children[1].textContent.toLowerCase();
-      const category = row.children[2].textContent.toLowerCase();
+      const category = row.children[2].textContent.toLowerCase().replace(/\s+/g, '_');
+      const status = row.dataset.status.toLowerCase();
 
-      const matchesSearch = title.includes(searchValue);
-      const matchesCategory =
-        categoryValue === "all" ||
-        category.replace(/\s+/g, "_") === categoryValue;
-
-
-      return matchesSearch && matchesCategory;
+      return (
+        title.includes(searchVal) &&
+        (categoryVal === "all" || category === categoryVal) &&
+        (currentStatusFilter === "all" || status === currentStatusFilter)
+      );
     });
 
-    // Sorting
     filteredRows.sort((a, b) => {
-      if (sortValue === "id-asc") {
-        return +a.children[0].textContent - +b.children[0].textContent;
-      } else if (sortValue === "id-desc") {
-        return +b.children[0].textContent - +a.children[0].textContent;
-      } else if (sortValue === "desc-asc") {
-        return a.children[1].textContent.localeCompare(b.children[1].textContent);
-      } else if (sortValue === "desc-desc") {
-        return b.children[1].textContent.localeCompare(a.children[1].textContent);
+      const getId = row => +row.children[0].textContent;
+      const getTitle = row => row.children[1].textContent;
+      switch (sortVal) {
+        case "id-asc": return getId(a) - getId(b);
+        case "id-desc": return getId(b) - getId(a);
+        case "desc-asc": return getTitle(a).localeCompare(getTitle(b));
+        case "desc-desc": return getTitle(b).localeCompare(getTitle(a));
+        default: return 0;
       }
     });
 
-    // Clear and repopulate the table
     tableBody.textContent = "";
-    filteredRows.forEach((row) => tableBody.appendChild(row));
+    filteredRows.forEach(row => tableBody.appendChild(row));
+    allRows.length = 0;
+    allRows.push(...filteredRows);
+    showPage(1);
   }
-  
-// More Details modal
-document.querySelectorAll(".animated-button").forEach(button => {
-  button.addEventListener("click", async function () {
-    const row = button.closest("tr");
 
-    // Get data attributes
-    const title = row.dataset.title || '';
-    const category = row.dataset.category || '';
-    const status = row.dataset.status || '';
-    const description = row.dataset.description || '';
-    const createdAt = row.dataset.createdat || '';
-    const reportId = row.dataset.reportid;
+  // === View More Modal ===
+  document.querySelectorAll(".animated-button").forEach(button => {
+    button.addEventListener("click", async function () {
+      const row = this.closest("tr");
+      const {
+        title = "", category = "", status = "", description = "", createdat = "", reportid
+      } = row.dataset;
 
-    if (!reportId) {
-      console.warn("No report ID found for this row.");
-      return;
-    }
+      if (!reportid) return;
 
-    const modalContent = document.getElementById("modalContent");
-    modalContent.innerHTML = ''; 
+      const modalContent = document.getElementById("modalContent");
+      modalContent.innerHTML = "";
 
-    // Create or clear the image container
-    let imgContainer = document.getElementById('modalImageContainer');
-    if (!imgContainer) {
-      imgContainer = document.createElement('div');
-      imgContainer.id = 'modalImageContainer';
-      modalContent.prepend(imgContainer); // Insert above all content
-    } else {
-      imgContainer.innerHTML = '';
+      let imgContainer = document.getElementById("modalImageContainer") || document.createElement("div");
+      imgContainer.id = "modalImageContainer";
+      imgContainer.innerHTML = "";
       modalContent.prepend(imgContainer);
-    }
 
-    // Fetch attachments
-    try {
-      const res = await fetch(`/admin/report_attachments/${reportId}`);
-      const attachments = await res.json();
-
-      if (!Array.isArray(attachments)) {
-        console.error("Attachments response is not an array");
-        return;
+      try {
+        const res = await fetch(`/admin/report_attachments/${reportid}`);
+        const attachments = await res.json();
+        if (Array.isArray(attachments)) {
+          attachments.forEach(att => {
+            const img = document.createElement("img");
+            img.src = `/uploads/${att.file_name}`;
+            Object.assign(img.style, {
+              maxHeight: "200px",
+              borderRadius: "8px",
+              objectFit: "contain",
+              cursor: "pointer",
+              marginRight: "1rem"
+            });
+            img.alt = "Report Attachment";
+            imgContainer.appendChild(img);
+          });
+        }
+      } catch {
+        console.error("Failed to load attachment image");
       }
 
-      if (attachments.length > 0) {
-        attachments.forEach(att => {
-          const fileName = att.file_name;
-          const imageUrl = `/uploads/${fileName}`;
+      const infoSection = document.createElement('div');
+      infoSection.className = "info-section";
 
-          const img = document.createElement('img');
-          img.src = imageUrl;
-          img.alt = 'Report Attachment';
-          img.style.maxHeight = "200px";
-          img.style.borderRadius = "8px";
-          img.style.objectFit = "contain";
-          img.style.cursor = "pointer";
-          img.style.marginRight = "1rem";
+      [
+        { label: 'Title', value: title },
+        { label: 'Category', value: category },
+        { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
+        { label: 'Description', value: description },
+        { label: 'Created At', value: createdat }
+      ].forEach(field => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'info-field';
 
-          imgContainer.appendChild(img);
-        });
+        const lbl = document.createElement('div');
+        lbl.className = 'info-label';
+        lbl.textContent = field.label;
+
+        const val = document.createElement('div');
+        val.className = 'info-value';
+        val.textContent = field.value;
+
+        wrapper.appendChild(lbl);
+        wrapper.appendChild(val);
+        infoSection.appendChild(wrapper);
+      });
+
+      modalContent.appendChild(infoSection);
+      new bootstrap.Modal(document.getElementById("reportDetailsModal")).show();
+    });
+  });
+
+  // === Delete Flow ===
+  document.querySelectorAll(".bin-button").forEach(button => {
+    button.addEventListener("click", function () {
+      selectedReportId = this.dataset.reportid;
+      selectedRow = this.closest("tr");
+      new bootstrap.Modal(document.getElementById("deleteConfirmModal")).show();
+    });
+  });
+
+  document.getElementById("confirmDeleteBtn").addEventListener("click", async function () {
+    if (!selectedReportId) return;
+    try {
+      const res = await fetch(`/admin/delete_report/${selectedReportId}`, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrfToken }
+      });
+
+      if (res.ok) {
+        selectedRow?.remove();
+        bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal"))?.hide();
+      } else {
+        console.error("Failed to delete report");
       }
     } catch (err) {
-      console.error("Failed to load attachment image");
+      console.error("Error deleting report", err);
     }
+  });
 
-    // Show text fields below the images
-    const fields = [
-      { label: 'Title', value: title },
-      { label: 'Category', value: category },
-      { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
-      { label: 'Description', value: description },
-      { label: 'Created At', value: createdAt }
-    ];
+  // === Pagination ===
+  function showPage(page) {
+    const totalPages = Math.ceil(allRows.length / rowsPerPage);
+    page = Math.min(Math.max(page, 1), totalPages);
 
-    const infoSection = document.createElement('div');
-    infoSection.className = "info-section"; // Add a container
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
 
-    fields.forEach(field => {
-      const fieldContainer = document.createElement('div');
-      fieldContainer.className = 'info-field';
-
-      const label = document.createElement('div');
-      label.className = 'info-label';
-      label.textContent = field.label;
-
-      const value = document.createElement('div');
-      value.className = 'info-value';
-      value.textContent = field.value;
-
-      fieldContainer.appendChild(label);
-      fieldContainer.appendChild(value);
-      infoSection.appendChild(fieldContainer);
+    allRows.forEach((row, i) => {
+      row.style.display = i >= start && i < end ? "" : "none";
     });
 
-    modalContent.appendChild(infoSection);
-
-    // Show modal
-    const bootstrapModal = new bootstrap.Modal(document.getElementById("reportDetailsModal"));
-    bootstrapModal.show();
-  });
-});
-
-// Delete Functions 
-let selectedReportId = null;
-let selectedRow = null;
-
-document.querySelectorAll(".bin-button").forEach(button => {
-  button.addEventListener("click", function () {
-    selectedReportId = this.dataset.reportid;
-    selectedRow = this.closest("tr");
-
-    const confirmModal = new bootstrap.Modal(document.getElementById("deleteConfirmModal"));
-    confirmModal.show();
-  });
-});
-
-document.getElementById("confirmDeleteBtn").addEventListener("click", async function () {
-  if (!selectedReportId) return;
-
-  try {
-    const res = await fetch(`/admin/delete_report/${selectedReportId}`, {
-      method: "DELETE",
-      headers: {
-        // Use CSRF token 
-        "X-CSRFToken": csrfToken
-      }
-    });
-
-    if (res.ok) {
-      // Remove row from DOM
-      if (selectedRow) selectedRow.remove();
-
-      // Close modal
-      bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal")).hide();
-    } else {
-      console.error("Failed to delete report");
-    }
-  } catch (err) {
-    console.error("Error deleting report");
+    renderPaginationButtons(page);
   }
-});
+  function renderPaginationButtons(currentPage) {
+    const totalPages = Math.ceil(allRows.length / rowsPerPage);
+    const maxVisible = 5;
+    paginationContainer.innerHTML = "";
 
+    const ul = document.createElement("ul");
+    ul.className = "pagination";
+
+    const createPageItem = (text, page = null, disabled = false, active = false, isEllipsis = false, isIcon = false) => {
+      const li = document.createElement("li");
+      li.className = "page-item";
+      if (disabled) li.classList.add("disabled");
+      if (active) li.classList.add("active");
+      if (isEllipsis) li.classList.add("disabled");
+
+      const btn = document.createElement("button");
+      btn.className = "page-link";
+
+      if (isEllipsis) {
+        btn.textContent = "...";
+      } else if (isIcon) {
+        const icon = document.createElement("i");
+        icon.className = text; // expects Font Awesome class string
+        btn.appendChild(icon);
+      } else {
+        btn.textContent = text;
+      }
+
+      if (!disabled && page !== null && !isEllipsis) {
+        btn.addEventListener("click", () => showPage(page));
+      }
+
+      li.appendChild(btn);
+      return li;
+    };
+
+    // Left arrow
+    ul.appendChild(createPageItem("fa-solid fa-chevron-left", currentPage - 1, currentPage === 1, false, false, true));
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = startPage + maxVisible - 1;
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+      ul.appendChild(createPageItem("1", 1));
+      if (startPage > 2) ul.appendChild(createPageItem("...", null, true, false, true));
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      ul.appendChild(createPageItem(i, i, false, i === currentPage));
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) ul.appendChild(createPageItem("...", null, true, false, true));
+      ul.appendChild(createPageItem(totalPages, totalPages));
+    }
+
+    // Right arrow
+    ul.appendChild(createPageItem("fa-solid fa-chevron-right", currentPage + 1, currentPage === totalPages, false, false, true));
+
+    paginationContainer.appendChild(ul);
+  }
+  showPage(1);
 });
