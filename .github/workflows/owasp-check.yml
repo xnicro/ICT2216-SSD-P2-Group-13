@@ -1,0 +1,75 @@
+name: OWASP Dependency Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r app/requirements.txt
+        pip install safety pip-audit
+
+    - name: Run Safety check (Python vulnerabilities)
+      run: |
+        # Safety checks Python dependencies for known vulnerabilities
+        safety check --json --output safety-report.json || true
+        
+        # Display results
+        echo "=== Safety Check Results ==="
+        safety check || true
+
+    - name: Run pip-audit
+      run: |
+        # pip-audit is the official PyPA tool for scanning Python packages
+        pip-audit --desc --format json --output pip-audit-report.json || true
+        
+        # Display results
+        echo "=== Pip Audit Results ==="
+        pip-audit --desc || true
+
+    - name: Upload vulnerability reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: vulnerability-reports
+        path: |
+          safety-report.json
+          pip-audit-report.json
+
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'ICT2216-SSD-P2-Group-13'
+        path: '.'
+        format: 'HTML,JSON'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --scan app/
+          --scan requirements*.txt
+          --out reports
+
+    - name: Upload OWASP reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: owasp-dependency-check-reports
+        path: reports/
