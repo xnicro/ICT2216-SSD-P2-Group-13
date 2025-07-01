@@ -100,20 +100,22 @@
       <tbody id="reportsTableBody">
         {% for report in reports %}
         <tr 
-        data-reportid="{{ report.report_id }}"
-        data-title="{{ report.title }}" 
-        data-category="{{ report.category_name.replace('_', ' ').title() }}" 
-        data-status="{{ report.status_name | lower }}" 
+        data-reportid="{{ report.report_id | e}}"
+        data-title="{{ report.title | e}}" 
+        data-category="{{ report.category_name.replace('_', ' ').title() | e}}" 
+        data-status="{{ report.status_name | lower | e}}" 
         data-description="{{ report.description | e }}" 
         data-createdat="{{report.created_at | e}}">
-          <td>{{ report.report_id }}</td>
-          <td><div class="ellipsis-admin-title">{{ report.title }}</div></td>
-          <td>{{ report.category_name.replace('_', ' ').title() }}</td>
-          <td><span class="status-badge status-{{ report.status_name | lower }}">{{ report.status_name | capitalize }}</span></td>
+          <td>{{ report.report_id | e}}</td>
+          <td><div class="ellipsis-admin-title">{{ report.title | e}}</div></td>
+          <td>{{ report.category_name.replace('_', ' ').title() | e}}</td>
+          <td><span class="status-badge status-{{ report.status_name | lower | e}}">
+            {{ report.status_name | capitalize | e}}
+          </span></td>
           <td>
             <div class="select">
-              <div class="selected" data-default="{{ report.status_name | capitalize }}">
-                {{ report.status_name | capitalize }}
+              <div class="selected" data-default="{{ report.status_name | capitalize | e}}">
+                {{ report.status_name | capitalize | e}}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   height="1em"
@@ -128,9 +130,9 @@
               <div class="options">
                 {% for status in statuses %}
                   {% if status.name != report.status_name %}
-                  <div title="option-{{ status.status_id }}">
-                    <input id="option-{{ status.status_id }}-{{ report.report_id }}" name="option-{{ report.report_id }}" type="radio" />
-                    <label class="option" for="option-{{ status.status_id }}-{{ report.report_id }}" data-txt="{{ status.name | capitalize }}"></label>
+                  <div title="option-{{ status.status_id | e}}">
+                    <input id="option-{{ status.status_id | e}}-{{ report.report_id | e}}" name="option-{{ report.report_id | e}}" type="radio" />
+                    <label class="option" for="option-{{ status.status_id | e}}-{{ report.report_id | e}}" data-txt="{{ status.name | capitalize | e}}"></label>
                   </div>
                   {% endif %}
                 {% endfor %}
@@ -154,7 +156,7 @@
           </button>
           </td>
           <td>
-          <button class="bin-button" data-reportid="{{ report.report_id }}">
+          <button class="bin-button" data-reportid="{{ report.report_id | e}}">
           <svg
             class="bin-top"
             viewBox="0 0 39 7"
@@ -243,13 +245,6 @@
   <script>
     const ALL_STATUSES = JSON.parse('{{ statuses | tojson | safe }}');
   </script>
-  <script>
-    const csrfToken = "{{ csrf_token }}";
-  </script>
-  <script>
-
-</script>
-
 
   <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

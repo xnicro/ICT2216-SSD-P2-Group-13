@@ -48,7 +48,6 @@ def get_db_connection():
     )
     return conn
 
-
 # App routes ============================================================
 @app.route('/')
 def index():
@@ -65,7 +64,7 @@ def admin():
 @app.route('/role')
 def role():
     users = get_all_users()
-    return render_template('1_role_management.html', users=users)
+    return render_template('1_role_management.html', users=users, roles=["user","admin"])
 
 @app.route('/report')
 def report():
