@@ -261,23 +261,20 @@ button {
   padding: 2rem;
 }
 
-.admintable,
+/* .admintable,
 .admintable th {
   background-color: var(--dark-blue) !important;
   color: white;
-}
+} */
 
 /* Admin sidebar */
 .adminsidebar {
-  background-color: var(--dark-blue);
   padding: 0.7rem;
   height: 100%;
   border-radius: 5px;
-  color: white;
 }
 
 .adminsidebar .nav-link {
-  color: white;
   padding: 0.8rem 0;
 }
 
@@ -285,7 +282,6 @@ button {
 .adminsidebar .nav-link.active {
   background-color: white;
   border-radius: 4px;
-  color: var(--dark-blue);
 }
 
 /* Options for update status */
@@ -294,12 +290,10 @@ button {
   cursor: pointer;
   position: relative;
   transition: 300ms;
-  color: white;
   overflow: hidden;
 }
 
 .selected {
-  background-color: var(--dark-blue);
   padding: 5px;
   margin-bottom: 3px;
   border-radius: 5px;
@@ -327,7 +321,6 @@ button {
   flex-direction: column;
   border-radius: 5px;
   padding: 5px;
-  background-color: var(--dark-blue);
   position: relative;
   top: -100px;
   opacity: 0;
@@ -347,7 +340,6 @@ button {
   border-radius: 5px;
   padding: 5px;
   transition: 300ms;
-  background-color: var(--dark-blue);
   width: 150px;
   font-size: 15px;
 }
@@ -394,17 +386,9 @@ button {
 }
 
 /* Modal Design (Admin) */
-.modal-header {
+/* .modal-header {
   background-color: var(--dark-blue);
-}
-
-#reportDetailsModalLabel {
-  color: white;
-}
-
-#deleteReportConfirmModal {
-  color: white;
-}
+} */
 
 #modalImageContainer {
   display: flex;
