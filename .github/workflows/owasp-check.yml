@@ -59,7 +59,7 @@ jobs:
       with:
         project: 'ICT2216-SSD-P2-Group-13'
         path: '.'
-        format: 'HTML,JSON'
+        format: 'ALL'
         args: >
           --enableRetired
           --enableExperimental
