@@ -39,6 +39,7 @@
             </thead>
             <tbody>
               {% for user in users %}
+              {% if user.role != 'superadmin' %}
               <tr>
                 <td>{{ user.user_id }}</td>
                 <td>{{ user.username }}</td>
@@ -73,8 +74,8 @@
                       </div>
                   </div>
                   </td>
-
               </tr>
+              {% endif %}
               {% endfor %}
             </tbody>
           </table>
