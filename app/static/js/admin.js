@@ -4,6 +4,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const tableBody = document.getElementById("reportsTableBody");
   const originalRows = Array.from(tableBody.querySelectorAll("tr"));
   const rowsPerPage = 7;
+  const CATEGORY_MAPPING = {
+    'fires': 'Fires',
+    'faulty_facilities': 'Faulty Facilities/Equipment',
+    'vandalism': 'Vandalism',
+    'suspicious_activity': 'Suspicious Activity',
+    'other': 'Others'
+  };
   const allRows = [...originalRows];
   let currentStatusFilter = "all";
   let selectedReportId = null;
@@ -26,13 +33,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusText = selectedLabel?.dataset.txt;
     const statusId = parseInt(radio.id.split('-')[1]);
 
+    if (!/^\d+$/.test(reportId) || isNaN(statusId)) return;
+
     const selectedDiv = radio.closest(".select")?.querySelector(".selected");
     if (!selectedDiv || !statusText) return;
 
     const arrowSvg = selectedDiv.querySelector("svg");
-    selectedDiv.textContent = ""; 
+    selectedDiv.textContent = "";
     selectedDiv.append(document.createTextNode(statusText));
-    if (arrowSvg) selectedDiv.appendChild(arrowSvg); 
+    if (arrowSvg) selectedDiv.appendChild(arrowSvg);
     selectedDiv.dataset.default = statusText;
 
     fetch("/update_status", {
@@ -43,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({ report_id: reportId, status_id: statusId })
     })
-    .then(res => res.json())
+    .then(res => res.ok ? res.json() : Promise.reject(res))
     .then(data => {
       if (!data.success) return alert("Failed to update status");
 
@@ -77,7 +86,8 @@ document.addEventListener("DOMContentLoaded", function () {
           input.addEventListener("change", handleStatusChange);
         }
       });
-    });
+    })
+    .catch(err => console.error("Update status error:", err));
   }
 
   // === Sidebar Filtering ===
@@ -91,12 +101,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // === Search, Sort, Category Filtering ===
+
+  // === Search, Sort, Filter ===
   searchInput.addEventListener("input", () => {
-    let val = searchInput.value.slice(0, 100).replace(/[^\w\s\-]/g, '');
+    let val = searchInput.value
+      .slice(0, 100)
+      .replace(/[^\w\s\-]/g, '')
+      .trim();
     searchInput.value = val;
     updateTable();
   });
+
   sortSelect.addEventListener("change", updateTable);
   filterCategory.addEventListener("change", updateTable);
 
@@ -107,7 +122,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let filteredRows = originalRows.filter(row => {
       const title = row.children[1].textContent.toLowerCase();
-      const category = row.children[2].textContent.toLowerCase().replace(/\s+/g, '_');
+      const categoryText = row.children[2]?.textContent.trim();
+      const category = Object.keys(CATEGORY_MAPPING).find(
+        key => CATEGORY_MAPPING[key] === categoryText
+      ) || '';
+
       const status = row.dataset.status.toLowerCase();
 
       return (
@@ -140,22 +159,21 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".animated-button").forEach(button => {
     button.addEventListener("click", async function () {
       const row = this.closest("tr");
-      const {
-        title = "", category = "", status = "", description = "", createdat = "", reportid
-      } = row.dataset;
+      const { title = "", category = "", status = "", description = "", createdat = "", reportid } = row.dataset;
 
-      if (!reportid) return;
+      if (!/^\d+$/.test(reportid)) return;
 
       const modalContent = document.getElementById("modalContent");
-      modalContent.innerHTML = "";
+      modalContent.textContent = "";
 
       let imgContainer = document.getElementById("modalImageContainer") || document.createElement("div");
       imgContainer.id = "modalImageContainer";
-      imgContainer.innerHTML = "";
+      imgContainer.textContent = "";
       modalContent.prepend(imgContainer);
 
       try {
         const res = await fetch(`/admin/report_attachments/${reportid}`);
+        if (!res.ok) throw new Error("Failed to load attachments");
         const attachments = await res.json();
         if (Array.isArray(attachments)) {
           attachments.forEach(att => {
@@ -172,8 +190,8 @@ document.addEventListener("DOMContentLoaded", function () {
             imgContainer.appendChild(img);
           });
         }
-      } catch {
-        console.error("Failed to load attachment image");
+      } catch (err) {
+        console.error("Attachment load error:", err);
       }
 
       const infoSection = document.createElement('div');
@@ -212,12 +230,13 @@ document.addEventListener("DOMContentLoaded", function () {
     button.addEventListener("click", function () {
       selectedReportId = this.dataset.reportid;
       selectedRow = this.closest("tr");
+      if (!/^\d+$/.test(selectedReportId)) return;
       new bootstrap.Modal(document.getElementById("deleteConfirmModal")).show();
     });
   });
 
   document.getElementById("confirmDeleteBtn").addEventListener("click", async function () {
-    if (!selectedReportId) return;
+    if (!/^\d+$/.test(selectedReportId)) return;
     try {
       const res = await fetch(`/admin/delete_report/${selectedReportId}`, {
         method: "DELETE",
@@ -249,6 +268,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     renderPaginationButtons(page);
   }
+
   function renderPaginationButtons(currentPage) {
     const totalPages = Math.ceil(allRows.length / rowsPerPage);
     const maxVisible = 5;
@@ -271,7 +291,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.textContent = "...";
       } else if (isIcon) {
         const icon = document.createElement("i");
-        icon.className = text; // expects Font Awesome class string
+        icon.className = text;
         btn.appendChild(icon);
       } else {
         btn.textContent = text;
@@ -285,7 +305,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return li;
     };
 
-    // Left arrow
     ul.appendChild(createPageItem("fa-solid fa-chevron-left", currentPage - 1, currentPage === 1, false, false, true));
 
     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
@@ -309,10 +328,10 @@ document.addEventListener("DOMContentLoaded", function () {
       ul.appendChild(createPageItem(totalPages, totalPages));
     }
 
-    // Right arrow
     ul.appendChild(createPageItem("fa-solid fa-chevron-right", currentPage + 1, currentPage === totalPages, false, false, true));
 
     paginationContainer.appendChild(ul);
   }
+
   showPage(1);
 });
