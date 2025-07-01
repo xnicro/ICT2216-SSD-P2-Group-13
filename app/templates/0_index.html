@@ -10,6 +10,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
@@ -18,35 +19,33 @@
         {% include 'common/sidebar.html' %}
 
         <div class="main-content">
-            <div class="main-content__header">
-                <h1>Reports</h1>
-                <a href="{{ url_for('report') }}" class="btn btn--submit-report" role="button"
-                    aria-label="Submit Report">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="btn__icon" viewBox="0 0 16 16" fill="currentColor"
-                        aria-hidden="true">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                        <path
-                            d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-.354.436.896.896 0 0 1-.49.11.905.905 0 0 1-.49-.11.552.552 0 0 1-.354-.436z" />
-                    </svg>
-                    <span>Submit Report</span>
-                </a>
-            </div>
-            <div class="table-container">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Date</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Owner</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            {% include 'common/topbar.html' %}
+            <div class="reports-section">
+                <div class="reports-section-header">
+                    <h1>Reports</h1>
+                    <a href="{{ url_for('report') }}" class="upload-btn" role="button"
+                        aria-label="Submit Report">
+                        <span><i class="fa-sharp fa-solid fa-arrow-up-from-bracket"></i>Upload</span>
+                    </a>
+                </div>
+                <div class="reports-table-container">
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
 
-                <div class="pagination" id="pagination"></div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
             </div>
+
         </div>
     </div>
 

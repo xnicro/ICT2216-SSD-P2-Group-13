@@ -1,170 +1,220 @@
+@import url('https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-chubby/css/uicons-regular-chubby.css');
+
 /* All pages affected */
 :root {
-    --dark-blue: #2c3e50;
+  --light-blue: #ECEFF8;
+  --black: #343a40;
+  --green: #467B65;
+  --hover-green: #3B6755;
+  --border: #e3e4e8;
+  --hover: #ECEFF8;
+  --gray: #364153;
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-html, body {
-    background: #f8f9fa;
-    font-family: 'Inter', sans-serif;
+html,
+body {
+  background: white;
+  font-family: 'Inter', sans-serif;
+  color: var(--black);
+  font-size: 14px;
 }
 
 a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
 }
 
 h1 {
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    color: #343a40;
+  font-weight: 600;
+  font-size: 28px;
+}
+
+h2 {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+label, input, textarea, select {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  background: none;
+  box-shadow: none;
+  outline: none;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
 }
 
 /* Admin Dashboard */
-.adminheader{
-    color: var(--dark-blue);
+.adminheader {
+  color: var(--dark-blue);
 }
+
 /* Status Desing */
 .status-badge {
-    font-weight: 600;
-    padding: 0.4em 0.7em;
-    border-radius: 0.5rem;
-    font-size: 0.9rem;
-    user-select: none;
+  font-weight: 600;
+  padding: 0.4em 0.7em;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  user-select: none;
 }
 
 .status-pending {
-    background-color: #dba400;
-    color: white;
+  background-color: #dba400;
+  color: white;
 }
 
 .status-resolved {
-    background-color: #198754;
-    color: white;
+  background-color: #198754;
+  color: white;
 }
 
 .status-emergency {
-    background-color: #db2929;
-    color: white;
+  background-color: #db2929;
+  color: white;
 }
 
-.status-unresolved{
-    background-color: #383737;
-    color: white;
+.status-unresolved {
+  background-color: #383737;
+  color: white;
 }
 
-.status-reviewing{
-    background-color: #8100b4;
-    color: white;
+.status-reviewing {
+  background-color: #8100b4;
+  color: white;
 }
 
 /* Controls container */
 .controls-admin {
-    margin-bottom: 1.5rem;
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    align-items: center;
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .controls-admin>* {
-    flex: 1 1 200px;
-    min-width: 150px;
+  flex: 1 1 200px;
+  min-width: 150px;
 }
 
 .animated-button {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 7px 27px;
-    border: 4px solid;
-    border-color: transparent;
-    font-size: 16px;
-    background-color: inherit;
-    border-radius: 100px;
-    font-weight: 600;
-    color: var(--dark-blue);
-    box-shadow: 0 0 0 2px #1e1e1e;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 27px;
+  border: 4px solid;
+  border-color: transparent;
+  font-size: 16px;
+  background-color: inherit;
+  border-radius: 100px;
+  font-weight: 600;
+  color: var(--dark-blue);
+  box-shadow: 0 0 0 2px #1e1e1e;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .animated-button svg {
-    position: absolute;
-    width: 24px;
-    fill: #1e1e1e;
-    z-index: 9;
-    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  position: absolute;
+  width: 24px;
+  fill: #1e1e1e;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .animated-button .arr-1 {
-    right: 16px;
+  right: 16px;
 }
 
 .animated-button .arr-2 {
-    left: -25%;
+  left: -25%;
 }
 
 .animated-button .circle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 15px;
-    height: 15px;
-    background-color: var(--dark-blue);
-    border-radius: 50%;
-    opacity: 0;
-    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 15px;
+  height: 15px;
+  background-color: var(--dark-blue);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .animated-button .text {
-    position: relative;
-    z-index: 1;
-    transform: translateX(-12px);
-    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .animated-button:hover {
-    box-shadow: 0 0 0 12px transparent;
-    color: #1e1e1e;
-    border-radius: 12px;
-    color: white;
+  box-shadow: 0 0 0 12px transparent;
+  color: #1e1e1e;
+  border-radius: 12px;
+  color: white;
 }
 
 .animated-button:hover .arr-1 {
-    right: -25%;
+  right: -25%;
 }
 
 .animated-button:hover .arr-2 {
-    left: 16px;
+  left: 16px;
 }
+
 .animated-button:hover svg {
-    fill: white;
+  fill: white;
 }
 
 .animated-button:hover .text {
-    transform: translateX(12px);
+  transform: translateX(12px);
 }
 
 .animated-button:active {
-    scale: 0.95;
-    box-shadow: 0 0 0 4px #ffffff;
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #ffffff;
 }
 
 .animated-button:hover .circle {
-    width: 220px;
-    height: 220px;
-    opacity: 1;
+  width: 220px;
+  height: 220px;
+  opacity: 1;
 }
-/* From Uiverse.io by vinodjangid07 */ 
+
+/* From Uiverse.io by vinodjangid07 */
 .bin-button {
   display: flex;
   flex-direction: column;
@@ -178,38 +228,43 @@ h1 {
   border: 3px solid rgb(255, 201, 201);
   transition-duration: 0.3s;
 }
+
 .bin-bottom {
   width: 15px;
 }
+
 .bin-top {
   width: 17px;
   transform-origin: right;
   transition-duration: 0.3s;
 }
+
 .bin-button:hover .bin-top {
   transform: rotate(45deg);
 }
+
 .bin-button:hover {
   background-color: rgb(255, 0, 0);
 }
+
 .bin-button:active {
   transform: scale(0.9);
 }
 
 /* Card and Table (admin) */
-.admin-card  {
-    border-radius: 1rem;
-    background-color: #ffffff;
+.admin-card {
+  border-radius: 1rem;
+  background-color: #ffffff;
 }
 
 .card-body-admin {
-    padding: 2rem;
+  padding: 2rem;
 }
 
-.admintable, 
+.admintable,
 .admintable th {
   background-color: var(--dark-blue) !important;
-  color: white; 
+  color: white;
 }
 
 /* Admin sidebar */
@@ -235,118 +290,122 @@ h1 {
 
 /* Options for update status */
 .select {
-    width: fit-content;
-    cursor: pointer;
-    position: relative;
-    transition: 300ms;
-    color: white;
-    overflow: hidden;
+  width: fit-content;
+  cursor: pointer;
+  position: relative;
+  transition: 300ms;
+  color: white;
+  overflow: hidden;
 }
 
 .selected {
-    background-color: var(--dark-blue);
-    padding: 5px;
-    margin-bottom: 3px;
-    border-radius: 5px;
-    position: relative;
-    z-index: 1;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  background-color: var(--dark-blue);
+  padding: 5px;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .arrow {
-    position: relative;
-    right: 0px;
-    height: 10px;
-    transform: rotate(-90deg);
-    width: 25px;
-    fill: white;
-    z-index: 100000;
-    transition: 300ms;
+  position: relative;
+  right: 0px;
+  height: 10px;
+  transform: rotate(-90deg);
+  width: 25px;
+  fill: white;
+  z-index: 100000;
+  transition: 300ms;
 }
 
 .options {
-    display: flex;
-    flex-direction: column;
-    border-radius: 5px;
-    padding: 5px;
-    background-color: var(--dark-blue);
-    position: relative;
-    top: -100px;
-    opacity: 0;
-    transition: 300ms;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  padding: 5px;
+  background-color: var(--dark-blue);
+  position: relative;
+  top: -100px;
+  opacity: 0;
+  transition: 300ms;
 }
 
 .select:hover>.options {
-    opacity: 1;
-    top: 0;
+  opacity: 1;
+  top: 0;
 }
 
 .select:hover>.selected .arrow {
-    transform: rotate(0deg);
+  transform: rotate(0deg);
 }
 
 .option {
-    border-radius: 5px;
-    padding: 5px;
-    transition: 300ms;
-    background-color: var(--dark-blue);
-    width: 150px;
-    font-size: 15px;
+  border-radius: 5px;
+  padding: 5px;
+  transition: 300ms;
+  background-color: var(--dark-blue);
+  width: 150px;
+  font-size: 15px;
 }
 
 .option:hover {
-    background-color: #35524e;
-    cursor: pointer;
+  background-color: #35524e;
+  cursor: pointer;
 }
 
 .options input[type="radio"] {
-    display: none;
+  display: none;
 }
 
 .options label {
-    display: inline-block;
+  display: inline-block;
 }
 
 .options label::before {
-    content: attr(data-txt);
+  content: attr(data-txt);
 }
 
 .options input[type="radio"]:checked+label {
-    display: none;
+  display: none;
 }
 
 .options input[type="radio"]#all:checked+label {
-    display: none;
+  display: none;
 }
 
 .select:has(.options input[type="radio"]#all:checked) .selected::before {
-    content: attr(data-default);
+  content: attr(data-default);
 }
 
 .select:has(.options input[type="radio"]#option-1:checked) .selected::before {
-    content: attr(data-one);
+  content: attr(data-one);
 }
 
 .select:has(.options input[type="radio"]#option-2:checked) .selected::before {
-    content: attr(data-two);
+  content: attr(data-two);
 }
 
 .select:has(.options input[type="radio"]#option-3:checked) .selected::before {
-    content: attr(data-three);
+  content: attr(data-three);
 }
+
 /* Modal Design (Admin) */
-.modal-header{
-    background-color: var(--dark-blue);
+.modal-header {
+  background-color: var(--dark-blue);
 }
-#reportDetailsModalLabel{
-    color: white;
-}
-#deleteReportConfirmModal{
+
+#reportDetailsModalLabel {
   color: white;
 }
+
+#deleteReportConfirmModal {
+  color: white;
+}
+
 #modalImageContainer {
   display: flex;
   overflow-x: auto;
@@ -366,6 +425,7 @@ h1 {
   background-color: #888;
   border-radius: 3px;
 }
+
 /* Container for all info fields */
 .info-section {
   display: flex;
@@ -403,171 +463,272 @@ h1 {
 }
 
 
-/* Homepage */
+/* Side Bar */
 body div.main {
-    display: flex;
+  display: flex;
+
 }
 
 .sidebar {
-    width: 250px;
-    background-color: var(--dark-blue);
-    color: white;
-    height: 100vh;
-    padding: 12px;
-    transition: width 0.3s ease;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  width: 300px;
+  height: 100vh;
+  padding: 12px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
 }
 
 .sidebar.collapsed {
-    width: 60px;
+  width: 60px;
 }
 
 .sidebar div.company-logo {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  margin-bottom: 16px;
 }
 
 .sidebar div.company-logo div {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 10px;
 }
 
 .sidebar div.company-logo p {
-    font-weight: 500;
-    font-size: 24px;
+  font-weight: 700;
+  font-size: 24px;
 }
 
 .sidebar img.logo {
-    width: 24px;
-    height: 24px;
+  width: 24px;
+  height: 24px;
 }
 
 .sidebar .toggle-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
 }
 
 .sidebar nav a {
-    display: block;
-    color: white;
-    text-decoration: none;
-    padding: 8px;
-    transition: padding 0.3s;
-}
-
-.sidebar.collapsed nav a {
-    text-align: center;
-    padding: 8px 0;
-    font-size: 0;
-}
-
-.sidebar.collapsed nav a::before {
-    content: "•";
-    font-size: 20px;
-}
-
-.main-content {
-    flex-grow: 1;
-    padding: 20px;
-}
-
-.table-container {
-  max-width: 900px;
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background-color: #007BFF;
-  color: white;
-}
-
-th, td {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
   padding: 10px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-.pagination {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.pagination button {
-  margin: 0 5px;
-  padding: 6px 12px;
-  border: none;
-  background-color: #007BFF;
-  color: white;
-  cursor: pointer;
+  transition: padding 0.3s;
+  font-weight: 500;
   border-radius: 4px;
 }
 
-.pagination button.active {
-  background-color: #0056b3;
+.sidebar nav a:hover {
+  background-color: var(--hover);
+}
+
+.sidebar nav i {
+  padding-right: 10px;
+  font-size: 16px;
+}
+
+.sidebar.collapsed nav a {
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0;
+}
+
+.sidebar.collapsed nav a::before {
+  content: "•";
+  font-size: 20px;
+}
+
+/* Top Bar */
+.top-bar {
+  border-bottom: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  justify-content: end;
+  min-height: 64px;
+}
+
+.top-bar i {
+  font-size: 18px;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.top-bar p {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
 }
 
 /* —— Header wrapper for title + button —— */
-.main-content__header {
+.reports-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 16px;
 }
 
 /* —— Base button styles (if not already defined) —— */
-.btn {
-  display: inline-flex;
+.upload-btn {
+  display: flex;
   align-items: center;
-  font-weight: 600;
-  text-align: center;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  background-color: var(--green);
+  color: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.upload-btn:hover {
+  background-color: var(--hover-green);
+}
+
+.upload-btn i {
+  padding-right: 8px;
+}
+
+/* Reports for users (homepage) */
+.main-content {
+  flex-grow: 1;
+}
+
+.reports-section {
+  padding: 22px;
+}
+
+.reports-table-container {
+  width: 100%;
+  background: white;
+  padding-bottom: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+table#reportTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table#reportTable th,
+td {
+  text-align: left;
+}
+
+table#reportTable thead th {
+  font-weight: 600;
+  padding: 12px;
+  font-size: 14px;
+}
+
+table#reportTable tbody td {
+  padding: 12px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 1rem;
+}
+
+.pagination button {
+  padding: 6px 11px;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--black);
+  background-color: white;
+  border: 1.5px solid var(--border);
 }
 
-/* —— Submit-Report button, urgent (red) styling —— */
-.btn--submit-report {
-  padding: 0.75rem 1.5rem;
-  font-size: 1.125rem;
-  background-color: #dc3545;       /* bootstrap “danger” red */
-  color: #fff;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+.pagination button.active {
+  background-color: var(--green);
+  color: white;
+  border: 1.5px solid var(--green);
 }
 
-/* Hover / active states */
-.btn--submit-report:hover {
-  background-color: #c82333;
-}
-.btn--submit-report:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+.pagination button:disabled {
+  cursor: default;
+  color: var(--border);
 }
 
-/* —— SVG icon sizing & spacing —— */
-.btn__icon {
-  width: 1.25em;    /* scales with font-size */
-  height: 1.25em;
-  margin-right: 0.9rem;
-  fill: currentColor;
+/* Submit Report Section */
+.submit-report-section {
+  padding: 22px;
+  max-width: 640px;
+  width: 100%;
+  margin: auto;
 }
+
+.submit-report-section > h1 {
+ margin-bottom: 16px;
+}
+
+.submit-report-section form {
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+}
+
+.submit-report-section form div {
+  display: flex;
+  flex-direction: column;
+}
+
+.submit-report-section form div.check-container {
+  flex-direction: row;
+  column-gap: 8px;
+  margin-top: 16px;
+}
+
+.submit-report-section form div label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.submit-report-section form div input, .submit-report-section form div select {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.submit-report-section form div textarea {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+  height: 150px;
+  resize: vertical;
+}
+
+.submit-report-section form div input.check {
+  height: 16px;
+  width: 16px;
+  border: 1px solid var(--border);
+  outline-style: none;;
+}
+
+/* button.upload-btn {
+  width: 84px;
+} */
 
 /* Form card spacing */
 .card-body {
@@ -604,7 +765,7 @@ th, td {
 .controls textarea:focus,
 .controls select:focus {
   border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
   outline: none;
 }
 
@@ -623,14 +784,17 @@ th, td {
 }
 
 /* Login Forms */
-.register input, .login input{
+.register input,
+.login input {
   width: 100%;
   display: inline-block;
   border: 1px solid #ccc;
   padding: 14px 20px;
   margin: 8px 0;
 }
-.register button, .login button{
+
+.register button,
+.login button {
   background-color: #04AA6D;
   color: white;
   font-size: 100%;
