@@ -52,42 +52,42 @@ document.addEventListener("DOMContentLoaded", function () {
       },
       body: JSON.stringify({ report_id: reportId, status_id: statusId })
     })
-    .then(res => res.ok ? res.json() : Promise.reject(res))
-    .then(data => {
-      if (!data.success) return alert("Failed to update status");
+      .then(res => res.ok ? res.json() : Promise.reject(res))
+      .then(data => {
+        if (!data.success) return alert("Failed to update status");
 
-      const row = selectedDiv.closest("tr");
-      const badge = row.querySelector(".status-badge");
-      badge.textContent = statusText;
-      badge.className = `status-badge status-${statusText.toLowerCase()}`;
+        const row = selectedDiv.closest("tr");
+        const badge = row.querySelector(".status-badge");
+        badge.textContent = statusText;
+        badge.className = `status-badge status-${statusText.toLowerCase()}`;
 
-      const optionsDiv = row.querySelector(".options");
-      optionsDiv.textContent = "";
+        const optionsDiv = row.querySelector(".options");
+        optionsDiv.textContent = "";
 
-      ALL_STATUSES.forEach(status => {
-        if (status.name.toLowerCase() !== statusText.toLowerCase()) {
-          const div = document.createElement("div");
-          div.title = `option-${status.status_id}`;
+        ALL_STATUSES.forEach(status => {
+          if (status.name.toLowerCase() !== statusText.toLowerCase()) {
+            const div = document.createElement("div");
+            div.title = `option-${status.status_id}`;
 
-          const input = document.createElement("input");
-          input.type = "radio";
-          input.name = `option-${reportId}`;
-          input.id = `option-${status.status_id}-${reportId}`;
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = `option-${reportId}`;
+            input.id = `option-${status.status_id}-${reportId}`;
 
-          const label = document.createElement("label");
-          label.className = "option";
-          label.htmlFor = input.id;
-          label.dataset.txt = status.name.charAt(0).toUpperCase() + status.name.slice(1);
+            const label = document.createElement("label");
+            label.className = "option";
+            label.htmlFor = input.id;
+            label.dataset.txt = status.name.charAt(0).toUpperCase() + status.name.slice(1);
 
-          div.appendChild(input);
-          div.appendChild(label);
-          optionsDiv.appendChild(div);
+            div.appendChild(input);
+            div.appendChild(label);
+            optionsDiv.appendChild(div);
 
-          input.addEventListener("change", handleStatusChange);
-        }
-      });
-    })
-    .catch(err => console.error("Update status error:", err));
+            input.addEventListener("change", handleStatusChange);
+          }
+        });
+      })
+      .catch(err => console.error("Update status error:", err));
   }
 
   // === Sidebar Filtering ===
