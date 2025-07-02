@@ -18,10 +18,25 @@
             <div class="reports-section">
                 <div class="reports-section-header">
                     <h1>Reports</h1>
-                    <a href="{{ url_for('report') }}" class="upload-btn" role="button"
-                        aria-label="Submit Report">
+                    <a href="{{ url_for('report') }}" class="upload-btn" role="button" aria-label="Submit Report">
                         <span><i class="fa-sharp fa-solid fa-arrow-up-from-bracket"></i>Upload</span>
                     </a>
+                </div>
+                <div class="filters">
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Fires">Fires</option>
+                        <option value="Faulty Facilities/Equipment">Faulty Facilities/Equipment</option>
+                        <option value="Vandalism">Vandalism</option>
+                        <option value="Suspicious Activity">Suspicious Activity</option>
+                        <option value="Others">Others</option>
+                    </select>
+
+                    <select id="dateFilter">
+                        <option value="">All Dates</option>
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
                 </div>
                 <div class="reports-table-container">
                     <table id="reportTable">
