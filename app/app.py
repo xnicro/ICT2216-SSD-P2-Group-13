@@ -61,6 +61,33 @@ def admin():
     reports = get_all_reports()
     return render_template('7_admin_dashboard.html', statuses=statuses, reports=reports)
 
+@app.route('/profile')
+# @login_required
+def profile():
+    """User profile page with reports"""
+    # Create dummy user data matching your DB schema
+    dummy_user = {
+        'user_id': 1,
+        'username': 'johndoe',  # Added to match your accounts.py
+        'email': 'john.doe@example.com',
+        'role': 'user',
+        'created_at': datetime.now()
+    }
+    
+    # Create dummy reports data
+    dummy_reports = [
+        {
+            'title': 'Broken Elevator',
+            'created_at': datetime(2023, 5, 15),
+            'status': 'Pending',
+            'category': 'Facilities'
+        }
+    ]
+    
+    return render_template('5_profile.html', 
+                         current_user=dummy_user,
+                         user_reports=dummy_reports)
+
 @app.route('/role')
 def role():
     users = get_all_users()
