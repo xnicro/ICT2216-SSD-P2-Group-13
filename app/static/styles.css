@@ -707,6 +707,22 @@ body div.main {
   border: 1px solid var(--border);
 }
 
+div.filters {
+  display: flex;
+  justify-content: end;
+  column-gap: 16px;
+  margin-bottom: 16px;
+}
+
+div.filters select {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
 table#reportTable {
   width: 100%;
   border-collapse: separate;

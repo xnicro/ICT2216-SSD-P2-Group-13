@@ -1,44 +1,82 @@
 // Mapping of category values to display labels
-const CATEGORY_LABELS = {
-  fires: 'Fires',
-  faulty_facilities: 'Faulty Facilities/Equipment',
-  vandalism: 'Vandalism',
-  suspicious_activity: 'Suspicious Activity',
-  other: 'Others'
-};
+// const CATEGORY_LABELS = {
+//   fires: 'Fires',
+//   faulty_facilities: 'Faulty Facilities/Equipment',
+//   vandalism: 'Vandalism',
+//   suspicious_activity: 'Suspicious Activity',
+//   other: 'Others'
+// };
 
 const rowsPerPage = 7;
 let currentPage = 1;
+let currentCategory = "";
+let currentDateSort = "";
+
 
 function renderTable(page) {
   const tableBody = document.querySelector("#reportTable tbody");
   tableBody.innerHTML = "";
 
+  // Filter by category
+  let filteredData = home_reports.filter(row => {
+    return !currentCategory || row.category_name === currentCategory;
+  });
+
+  console.log(filteredData);
+
+  // Sort by date
+  filteredData.sort((a, b) => {
+    if (currentDateSort === "oldest") {
+      return new Date(a.created_at) - new Date(b.created_at);
+    } else {
+      return new Date(b.created_at) - new Date(a.created_at); // newest first
+    }
+  });
+  
+  // Paginate
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  page = Math.min(Math.max(page, 1), totalPages);
   const start = (page - 1) * rowsPerPage;
   const end = start + rowsPerPage;
-  const pageData = home_reports.slice(start, end);
+  const pageData = filteredData.slice(start, end);
 
   pageData.forEach(row => {
-    const displayCategory = CATEGORY_LABELS[row.category_name] || row.category_name;
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${row.title}</td>
-      <td>${row.created_at}</td>
-      <td>${displayCategory}</td>
-      <td>${row.status_name}</td>
-      <td>${row.user_id}</td>
-    `;
+
+    const titleCell = document.createElement("td");
+    titleCell.textContent = row.title;
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = row.created_at;
+
+    const categoryCell = document.createElement("td");
+    categoryCell.textContent = row.category_name;
+
+    const statusCell = document.createElement("td");
+    statusCell.textContent = row.status_name;
+
+    const ownerCell = document.createElement("td");
+    ownerCell.textContent = row.user_id;
+    console.log(row);
+
+    // Append cells to the row
+    tr.appendChild(titleCell);
+    tr.appendChild(dateCell);
+    tr.appendChild(categoryCell);
+    tr.appendChild(statusCell);
+    tr.appendChild(ownerCell);
+
     tableBody.appendChild(tr);
   });
 
-  renderPagination();
+  renderPagination(filteredData.length);
 }
 
-function renderPagination() {
+function renderPagination(dataLength) {
   const pagination = document.getElementById("pagination");
   pagination.innerHTML = "";
 
-  const totalPages = Math.ceil(home_reports.length / rowsPerPage);
+  const totalPages = Math.ceil(dataLength / rowsPerPage);
   const maxVisible = 5;
 
   const createButton = (text, page = null, disabled = false, active = false) => {
@@ -59,33 +97,15 @@ function renderPagination() {
   pagination.appendChild(createButton('<i class="fa-solid fa-chevron-left"></i>', currentPage - 1, currentPage === 1));
 
   let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-  console.log(startPage);
   let endPage = startPage + maxVisible - 1;
-  console.log(endPage);
 
   if (endPage > totalPages) {
     endPage = totalPages;
     startPage = Math.max(1, endPage - maxVisible + 1);
   }
 
-  // Leading ellipsis
-  if (startPage > 1) {
-    pagination.appendChild(createButton("1", 1));
-    if (startPage > 2) {
-      pagination.appendChild(createButton("...", null, true));
-    }
-  }
-
   for (let i = startPage; i <= endPage; i++) {
     pagination.appendChild(createButton(i, i, false, i === currentPage));
-  }
-
-  // Trailing ellipsis
-  if (endPage < totalPages) {
-    if (endPage < totalPages - 1) {
-      pagination.appendChild(createButton("...", null, true));
-    }
-    pagination.appendChild(createButton(totalPages, totalPages));
   }
 
   // Next button
@@ -94,3 +114,15 @@ function renderPagination() {
 
 // Initial render
 renderTable(currentPage);
+
+document.getElementById("categoryFilter").addEventListener("change", (e) => {
+  currentCategory = e.target.value;
+  currentPage = 1;
+  renderTable(currentPage);
+});
+
+document.getElementById("dateFilter").addEventListener("change", (e) => {
+  currentDateSort = e.target.value;
+  currentPage = 1;
+  renderTable(currentPage);
+});
