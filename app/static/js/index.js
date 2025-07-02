@@ -11,7 +11,7 @@ const rowsPerPage = 7;
 let currentPage = 1;
 let currentCategory = "";
 let currentDateSort = "";
-
+let currentStatus = "";
 
 function renderTable(page) {
   const tableBody = document.querySelector("#reportTable tbody");
@@ -19,10 +19,10 @@ function renderTable(page) {
 
   // Filter by category
   let filteredData = home_reports.filter(row => {
-    return !currentCategory || row.category_name === currentCategory;
+    const categoryMatch = !currentCategory || row.category_name === currentCategory;
+    const statusMatch = !currentStatus || row.status_name.toLowerCase() === currentStatus.toLowerCase();
+    return categoryMatch && statusMatch;
   });
-
-  console.log(filteredData);
 
   // Sort by date
   filteredData.sort((a, b) => {
@@ -32,7 +32,7 @@ function renderTable(page) {
       return new Date(b.created_at) - new Date(a.created_at); // newest first
     }
   });
-  
+
   // Paginate
   const totalPages = Math.ceil(filteredData.length / rowsPerPage);
   page = Math.min(Math.max(page, 1), totalPages);
@@ -53,7 +53,11 @@ function renderTable(page) {
     categoryCell.textContent = row.category_name;
 
     const statusCell = document.createElement("td");
-    statusCell.textContent = row.status_name;
+    const statusSpan = document.createElement("span");
+    statusSpan.textContent = row.status_name;
+    const statusClass = `status-${row.status_name.toLowerCase().replace(/\s+/g, '-')}`;
+    statusSpan.classList.add("status-badge", statusClass);
+    statusCell.appendChild(statusSpan);
 
     const ownerCell = document.createElement("td");
     ownerCell.textContent = row.user_id;
@@ -117,6 +121,12 @@ renderTable(currentPage);
 
 document.getElementById("categoryFilter").addEventListener("change", (e) => {
   currentCategory = e.target.value;
+  currentPage = 1;
+  renderTable(currentPage);
+});
+
+document.getElementById("statusFilter").addEventListener("change", (e) => {
+  currentStatus = e.target.value;
   currentPage = 1;
   renderTable(currentPage);
 });
