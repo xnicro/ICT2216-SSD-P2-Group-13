@@ -17,6 +17,7 @@
             {% include 'common/topbar.html' %}
 
             <div class="submit-report-section">
+                <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
                 <h1>Add Incident Report</h1>
                 <form method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
