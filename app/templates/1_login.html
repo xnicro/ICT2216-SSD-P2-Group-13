@@ -4,32 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Home</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-        rel="stylesheet">
+    <title>SITSecure | Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-    <div class="main">
-        {% include 'common/sidebar.html' %}
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="{{ url_for('static', filename='assets/tree.mp4') }}" type="video/mp4" />
+        Your browser does not support HTML5 video.
+    </video>
+    <div class="login-container">
+        <div class="login-form-container">
+            <div>
+                <div class="company-logo">
+                    <a href="\">
+                        <div>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <p>SITSecure</p>
+                        </div>
+                    </a>
+                </div>
+                <h1>Hello,<br> Welcome Back</h1>
+                <form action="{{ url_for('accounts.login_user') }}" method="post" class="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div>
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
 
-        <div class="main-content">
-            <h1>Login</h1>
-            <form action="{{ url_for('accounts.login_user') }}" method="post" class="login">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required><br>
+                    <div>
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
 
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br>
+                    <button type="submit">Sign In</button>
 
-                <button type="submit">Login</button>
-            </form>
+                    <p class="already">Don't have an account? <a href="1_register.html">Sign up</a></p>
+                </form>
+            </div>
+            <div class="campus-container">
+                <img src="{{ url_for('static', filename='assets/campus.svg') }}" alt="Logo" id="campus">
+            </div>
+
         </div>
+
     </div>
 
     <script>

@@ -22,7 +22,6 @@
 
 html,
 body {
-  background: white;
   font-family: 'Inter', sans-serif;
   color: var(--black);
   font-size: 14px;
@@ -33,7 +32,8 @@ a {
   color: inherit;
 }
 
-ul, li {
+ul,
+li {
   list-style: none;
 }
 
@@ -57,7 +57,10 @@ h2 {
   font-size: 18px;
 }
 
-label, input, textarea, select {
+label,
+input,
+textarea,
+select {
   margin: 0;
   padding: 0;
   border: none;
@@ -273,14 +276,14 @@ button {
   padding-bottom: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  overflow-x: auto; 
+  overflow-x: auto;
 }
 
 table.admintable {
   width: 100%;
   border-collapse: separate;
-  border: none !important;      
-  border-collapse: collapse; 
+  border: none !important;
+  border-collapse: collapse;
   border-spacing: 0;
 }
 
@@ -303,20 +306,21 @@ table.admintable {
 .admintable tbody td {
   padding: 12px;
 }
+
 .ellipsis-admin-title {
-  max-width: 155px;      
+  max-width: 155px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#paginationContainer li.active > button {
+#paginationContainer li.active>button {
   background-color: var(--green);
   color: white;
   border: 1.5px solid var(--green);
 }
 
-#role-pagination li.active > button {
+#role-pagination li.active>button {
   background-color: var(--green);
   color: white;
   border: 1.5px solid var(--green);
@@ -325,8 +329,8 @@ table.admintable {
 /* Admin sidebar */
 .admin-content-row {
   display: flex;
-  height: 685px; 
-  gap: 1rem; 
+  height: 685px;
+  gap: 1rem;
 }
 
 .adminsidebar {
@@ -335,8 +339,8 @@ table.admintable {
   height: 100%;
   border-radius: 5px;
   color: var(--dark-blue);
-  height: 100%;     
-  overflow-y: auto;  
+  height: 100%;
+  overflow-y: auto;
 }
 
 .adminsidebar .nav-link {
@@ -355,18 +359,18 @@ table.admintable {
 /* Options for update status */
 .select {
   position: relative;
-  display: inline-block; 
-  width: 150px; 
+  display: inline-block;
+  width: 150px;
   background-color: white;
-  border: 2px solid var(--dark-blue);  
+  border: 2px solid var(--dark-blue);
   border-radius: 5px;
-  box-sizing: border-box;        
+  box-sizing: border-box;
 }
 
 .selected {
   background-color: white;
   color: var(--dark-blue);
-  padding: 6px 10px; 
+  padding: 6px 10px;
   border-radius: 5px;
   font-size: 15px;
   color: var(--dark-blue);
@@ -375,7 +379,7 @@ table.admintable {
   align-items: center;
   justify-content: space-between;
   user-select: none;
-  border: none; 
+  border: none;
 }
 
 .arrow {
@@ -386,32 +390,32 @@ table.admintable {
   transform: rotate(-90deg);
 }
 
-.select:hover > .selected .arrow {
+.select:hover>.selected .arrow {
   transform: rotate(0deg);
 }
 
 .options {
   position: absolute;
-  top: 100%; 
+  top: 100%;
   left: 0;
-  background-color: white; 
+  background-color: white;
   border: 2px solid var(--dark-blue);
   color: var(--dark-blue);
   border-radius: 5px;
   padding: 5px 0;
   margin-top: 1px;
-  width: 150px; 
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  
+  width: 150px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
   opacity: 0;
   pointer-events: none;
   transition: opacity 300ms ease;
   z-index: 1000;
   max-height: 200px;
-  overflow-y: auto; 
+  overflow-y: auto;
 }
 
-.select:hover > .options,
+.select:hover>.options,
 .options:hover {
   opacity: 1;
   pointer-events: auto;
@@ -437,6 +441,7 @@ table.admintable {
 .options label::before {
   content: attr(data-txt);
 }
+
 .options label.option {
   display: block;
   width: 100%;
@@ -589,9 +594,8 @@ body div.main {
   font-size: 24px;
 }
 
-.sidebar img.logo {
-  width: 24px;
-  height: 24px;
+.sidebar i {
+  font-size: 24px;
 }
 
 .sidebar .toggle-btn {
@@ -628,7 +632,7 @@ body div.main {
 }
 
 .sidebar.collapsed nav a::before {
-  content: "•";
+  content: "";
   font-size: 20px;
 }
 
@@ -674,6 +678,8 @@ body div.main {
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 14px;
+  width: fit-content;
+  margin-top: 16px;
 }
 
 .upload-btn:hover {
@@ -759,8 +765,8 @@ table#reportTable tbody td {
   margin: auto;
 }
 
-.submit-report-section > h1 {
- margin-bottom: 16px;
+.submit-report-section>h1 {
+  margin-bottom: 16px;
 }
 
 .submit-report-section form {
@@ -787,7 +793,8 @@ table#reportTable tbody td {
   margin-bottom: 16px;
 }
 
-.submit-report-section form div input, .submit-report-section form div select {
+.submit-report-section form div input,
+.submit-report-section form div select {
   display: block;
   outline-style: solid;
   outline-color: var(--border);
@@ -811,7 +818,8 @@ table#reportTable tbody td {
   height: 16px;
   width: 16px;
   border: 1px solid var(--border);
-  outline-style: none;;
+  outline-style: none;
+  ;
 }
 
 /* Form card spacing */
@@ -867,24 +875,187 @@ table#reportTable tbody td {
   margin-top: 1.5rem;
 }
 
-/* Login Forms */
-.register input,
-.login input {
-  width: 100%;
-  display: inline-block;
-  border: 1px solid #ccc;
-  padding: 14px 20px;
-  margin: 8px 0;
+/* Login Page */
+
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100vw;
+  min-height: 100vh;
+  object-fit: cover;
+  z-index: -1;
 }
 
-.register button,
-.login button {
-  background-color: #04AA6D;
-  color: white;
-  font-size: 100%;
-  padding: 14px 20px;
-  margin: 8px 0;
-  border: none;
-  cursor: pointer;
+/* Login container: centers form */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-form-container {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  min-width: 300px;
+  display: flex;
+  column-gap: 64px;
+  min-width: 960px;
+}
+
+@media (max-width: 1536px) {
+
+  /* Styles for screens ≤ 768px (e.g., tablets, phones) */
+  .login-form-container {
+    column-gap: 48px;
+    min-width: 860px;
+  }
+}
+
+@media (max-width: 1280px) {
+
+  /* Styles for screens ≤ 768px (e.g., tablets, phones) */
+  .login-form-container {
+    column-gap: 32px;
+  }
+}
+
+@media (max-width: 1024px) {
+
+  /* Styles for screens ≤ 768px (e.g., tablets, phones) */
+  .login-form-container {
+    column-gap: 24px;
+    min-width: 0px;
+    padding: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+
+  /* Styles for screens ≤ 768px (e.g., tablets, phones) */
+  .login-form-container {
+    flex-direction: column;
+    column-gap: 24px;
+    min-width: 0px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Styles for screens ≤ 768px (e.g., tablets, phones) */
+  .login-form-container {
+    flex-direction: column;
+    column-gap: 24px;
+    min-width: 0px;
+    margin: 8px;
+    padding: 16px;
+  }
+}
+
+.login-form-container div.company-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+.login-form-container div.company-logo div {
+  display: flex;
+  gap: 10px;
+}
+
+.login-form-container div.company-logo p {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.login-form-container i {
+  font-size: 14px;
+  color: var(--green)
+}
+
+.login-form-container h1 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 48px;
+}
+
+.login-form-container img#campus {
   width: 100%;
+  height: auto;
+  max-width: 480px;
+}
+
+.login-form-container>div {
+  flex: 1;
+}
+
+form.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form.login-form div {
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+}
+
+form.login-form div>label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 16px;
+  display: block;
+}
+
+form.login-form div>input {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.login-form-container div.campus-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+form.login-form button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--green);
+  color: white;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+form.login-form button:hover {
+  background-color: var(--hover-green);
+}
+
+p.already {
+  text-align: center;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+p.already a {
+  text-decoration: underline;
+  cursor: pointer; /* optional if it's clickable */
 }
