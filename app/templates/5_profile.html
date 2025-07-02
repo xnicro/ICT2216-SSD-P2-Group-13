@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - SITSecure</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+        }
+
+        .main {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .profile-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-pic {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 20px;
+        }
+
+        .profile-info h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .profile-info p {
+            margin: 5px 0 0;
+            color: #7f8c8d;
+        }
+
+        /* Profile Edit Form Styles */
+        .profile-edit-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .profile-edit-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #27ae60;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #e74c3c;
+            color: #721c24;
+        }
+
+        /* Reports Section */
+        .reports-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .reports-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .reports-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--secondary-color), #3498db);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Filter Controls */
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        /* Report Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-in-progress {
+            background-color: #cce5ff;
+            color: #0056b3;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-resolved {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Report Actions */
+        .report-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* Delete Account Section */
+        .danger-zone {
+            background: white;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .danger-zone h3 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .danger-zone p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Edit/Cancel Mode Toggle */
+        .edit-mode {
+            display: none;
+        }
+
+        .edit-mode.active {
+            display: block;
+        }
+
+        .view-mode.active {
+            display: block;
+        }
+
+        .view-mode {
+            display: none;
+        }
+
+        /* Report Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .status-timeline {
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .timeline-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .timeline-icon.submitted {
+            background-color: var(--secondary-color);
+        }
+
+        .timeline-icon.in-progress {
+            background-color: var(--warning-color);
+        }
+
+        .timeline-icon.resolved {
+            background-color: var(--success-color);
+        }
+
+        @media (max-width: 768px) {
+            .form-row, .filter-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .reports-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <!-- Include your sidebar -->
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            <!-- Include your topbar -->
+            {% include 'common/topbar.html' %}
+
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-pic">JD</div>
+                    <div class="profile-info">
+                        <h2 id="displayFullName">John Doe</h2>
+                        <p id="displayEmail">student@example.com</p>
+                        <p>Student • Member since Jan 2023</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Edit Section -->
+            <div class="profile-edit-section">
+                <h3>Profile Information</h3>
+                
+                <!-- Success/Error Messages -->
+                <div id="alertContainer"></div>
+
+                <!-- View Mode -->
+                <div id="viewMode" class="view-mode active">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name:</label>
+                            <p id="viewFirstName">John</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name:</label>
+                            <p id="viewLastName">Doe</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address:</label>
+                        <p id="viewEmail">student@example.com</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number:</label>
+                        <p id="viewPhone">+65 9123 4567</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="toggleEditMode()">Edit Profile</button>
+                    <button class="btn btn-secondary" onclick="togglePasswordMode()">Change Password</button>
+                </div>
+
+                <!-- Edit Mode -->
+                <div id="editMode" class="edit-mode">
+                    <form id="profileForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name *</label>
+                                <input type="text" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name *</label>
+                                <input type="text" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+                    </form>
+                </div>
+
+                <!-- Password Change Mode -->
+                <div id="passwordMode" class="edit-mode">
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password *</label>
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newPassword">New Password *</label>
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <small style="color: #666; font-size: 12px;">
+                                Password must be at least 8 characters with uppercase, lowercase, number, and special character
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password *</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelPasswordEdit()">Cancel</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div class="reports-container">
+                <div class="reports-header">
+                    <h2>My Reports</h2>
+                </div>
+
+                <!-- Report Statistics -->
+                <div class="reports-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalReports">3</div>
+                        <div class="stat-label">Total Reports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingReports">1</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="inProgressReports">1</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="resolvedReports">1</div>
+                        <div class="stat-label">Resolved</div>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label for="statusFilter">Filter by Status</label>
+                            <select id="statusFilter" onchange="filterReports()">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter" onchange="filterReports()">
+                                <option value="">All Categories</option>
+                                <option value="facilities">Facilities</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="plumbing">Plumbing</option>
+                                <option value="security">Security</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="searchReports">Search Reports</label>
+                            <input type="text" id="searchReports" placeholder="Search by title or description..." onkeyup="searchReports()">
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Table -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <tr data-status="pending" data-category="facilities" data-title="Broken Elevator in Block A">
+                            <td>#RPT001</td>
+                            <td>Broken Elevator in Block A</td>
+                            <td>Facilities</td>
+                            <td><span class="status-pending">Pending</span></td>
+                            <td>15 May 2023</td>
+                            <td>15 May 2023</td>
+                            <td>
+                                <div class="report-actions">
+                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('RPT001')">View</button>
+                                    <button class="btn btn-secondary btn-small" onclick="editReport('RPT001')">Edit</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-status="in-progress" data-category="electrical" data-title="Flickering Lights in Classroom 302">
+                            <td>#RPT002</td>
+                            <td>Flickering Lights in Classroom 302</td>
+                            <td>Electrical</td>
+                            <td><span class="status-in-progress">In Progress</span></td>
+                            <td>10 May 2023</td>
+                            <td>12 May 2023</td>
+                            <td>
+                                <div class="report-actions">
+                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('RPT002')">View</button>
+                                    <button class="btn btn-secondary btn-small" disabled>Edit</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-status="resolved" data-category="plumbing" data-title="Leaky Pipe in Mens Restroom">
+                            <td>#RPT003</td>
+                            <td>Leaky Pipe in Mens Restroom</td>
+                            <td>Plumbing</td>
+                            <td><span class="status-resolved">Resolved</span></td>
+                            <td>28 Apr 2023</td>
+                            <td>02 May 2023</td>
+                            <td>
+                                <div class="report-actions">
+                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('RPT003')">View</button>
+                                    <button class="btn btn-secondary btn-small" disabled>Edit</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Delete Account Section -->
+            <div class="danger-zone">
+                <h3>⚠️ Delete Account</h3>
+                <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+                <button class="btn btn-danger" onclick="deleteAccount()">Delete My Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalReportTitle">Report Details</h3>
+                <span class="close" onclick="closeReportModal()">&times;</span>
+            </div>
+            
+            <div id="modalReportContent">
+                <div class="form-group">
+                    <label>Report ID:</label>
+                    <p id="modalReportId">#RPT001</p>
+                </div>
+                <div class="form-group">
+                    <label>Category:</label>
+                    <p id="modalReportCategory">Facilities</p>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <p id="modalReportDescription">The elevator in Block A has been out of service since this morning. Students are having to use the stairs to reach upper floors.</p>
+                </div>
+                <div class="form-group">
+                    <label>Location:</label>
+                    <p id="modalReportLocation">Block A, Level 1</p>
+                </div>
+                <div class="form-group">
+                    <label>Current Status:</label>
+                    <p id="modalReportStatus"><span class="status-pending">Pending</span></p>
+                </div>
+                
+                <!-- Status Timeline -->
+                <div class="status-timeline">
+                    <h4>Status History</h4>
+                    <div class="timeline-item">
+                        <div class="timeline-icon submitted">📝</div>
+                        <div>
+                            <strong>Report Submitted</strong><br>
+                            <small>15 May 2023, 10:30 AM</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="timelineInProgress" style="display: none;">
+                        <div class="timeline-icon in-progress">🔧</div>
+                        <div>
+                            <strong>Under Review</strong><br>
+                            <small>16 May 2023, 2:15 PM</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item" id="timelineResolved" style="display: none;">
+                        <div class="timeline-icon resolved">✅</div>
+                        <div>
+                            <strong>Resolved</strong><br>
+                            <small>18 May 2023, 4:00 PM</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Admin Comments:</label>
+                    <p id="modalAdminComments">No comments yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store current profile data
+        let profileData = {
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'student@example.com',
+            phone: '+65 9123 4567'
+        };
+
+        // Test report data
+        const reportData = {
+            'RPT001': {
+                id: 'RPT001',
+                title: 'Broken Elevator in Block A',
+                category: 'Facilities',
+                description: 'The elevator in Block A has been out of service since this morning. Students are having to use the stairs to reach upper floors.',
+                location: 'Block A, Level 1',
+                status: 'pending',
+                submitted: '15 May 2023, 10:30 AM',
+                adminComments: 'Maintenance team has been notified. Waiting for technician assignment.'
+            },
+            'RPT002': {
+                id: 'RPT002',
+                title: 'Flickering Lights in Classroom 302',
+                category: 'Electrical',
+                description: 'The lights in classroom 302 have been flickering intermittently for the past week.',
+                location: 'Block B, Level 3, Room 302',
+                status: 'in-progress',
+                submitted: '10 May 2023, 2:15 PM',
+                adminComments: 'Electrician scheduled for inspection on 13 May 2023.'
+            },
+            'RPT003': {
+                id: 'RPT003',
+                title: 'Leaky Pipe in Mens Restroom',
+                category: 'Plumbing',
+                description: 'Water leak detected under sink in mens restroom, causing water damage to floor.',
+                location: 'Block C, Level 2, Mens Restroom',
+                status: 'resolved',
+                submitted: '28 Apr 2023, 9:00 AM',
+                adminComments: 'Pipe has been repaired and floor restored. Issue resolved.'
+            }
+        };
+
+        // Toggle between view and edit modes
+        function toggleEditMode() {
+            document.getElementById('viewMode').classList.remove('active');
+            document.getElementById('editMode').classList.add('active');
+            document.getElementById('passwordMode').classList.remove('active');
+            
+            // Populate form with current data
+            document.getElementById('firstName').value = profileData.firstName;
+            document.getElementById('lastName').value = profileData.lastName;
+            document.getElementById('email').value = profileData.email;
+            document.getElementById('phone').value = profileData.phone;
+        }
+
+        // Toggle to password change mode
+        function togglePasswordMode() {
+            document.getElementById('viewMode').classList.remove('active');
+            document.getElementById('editMode').classList.remove('active');
+            document.getElementById('passwordMode').classList.add('active');
+            clearAlerts();
+        }
+
+        // Cancel edit and return to view mode
+        function cancelEdit() {
+            document.getElementById('editMode').classList.remove('active');
+            document.getElementById('viewMode').classList.add('active');
+            clearAlerts();
+        }
+
+        // Cancel password edit and return to view mode
+        function cancelPasswordEdit() {
+            document.getElementById('passwordMode').classList.remove('active');
+            document.getElementById('viewMode').classList.add('active');
+            document.getElementById('passwordForm').reset();
+            clearAlerts();
+        }
+
+        // Update profile display
+        function updateProfileDisplay() {
+            document.getElementById('viewFirstName').textContent = profileData.firstName;
+            document.getElementById('viewLastName').textContent = profileData.lastName;
+            document.getElementById('viewEmail').textContent = profileData.email;
+            document.getElementById('viewPhone').textContent = profileData.phone || 'Not provided';
+            
+            // Update header
+            document.getElementById('displayFullName').textContent = `${profileData.firstName} ${profileData.lastName}`;
+            document.getElementById('displayEmail').textContent = profileData.email;
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                clearAlerts();
+            }, 3000);
+        }
+
+        // Clear alert messages
+        function clearAlerts() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        // Validate password
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+            const errors = [];
+            
+            if (password.length < minLength) {
+                errors.push('Password must be at least 8 characters long');
+            }
+            if (!hasUpperCase) {
+                errors.push('Password must contain at least one uppercase letter');
+            }
+            if (!hasLowerCase) {
+                errors.push('Password must contain at least one lowercase letter');
+            }
+            if (!hasNumbers) {
+                errors.push('Password must contain at least one number');
+            }
+            if (!hasSpecialChar) {
+                errors.push('Password must contain at least one special character');
+            }
+
+            return errors;
+        }
+
+        // Validate form data
+        function validateForm(formData) {
+            const errors = [];
+            
+            if (!formData.firstName.trim()) {
+                errors.push('First name is required');
+            }
+            
+            if (!formData.lastName.trim()) {
+                errors.push('Last name is required');
+            }
+            
+            if (!formData.email.trim()) {
+                errors.push('Email address is required');
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                errors.push('Please enter a valid email address');
+            }
+            
+            if (formData.phone && !/^[\+]?[0-9\s\-\(\)]+$/.test(formData.phone)) {
+                errors.push('Please enter a valid phone number');
+            }
+            
+            return errors;
+        }
+
+        // Filter reports functionality
+        function filterReports() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const rows = document.querySelectorAll('#reportsTableBody tr');
