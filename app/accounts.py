@@ -23,7 +23,13 @@ def get_db_connection():
         password=cfg['MYSQL_PASSWORD'],
         database=cfg['MYSQL_DB'],
     )
-
+# Validation and Security Functions
+def is_valid_integer(val):
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None
+    
 # GET routes =============================================   
 def get_all_users():
     conn = get_db_connection()
@@ -147,7 +153,7 @@ def login_user():
 
 @bp.route("/logout")
 def logout():
-    """Logout user and clear session"""
+    # Logout user and clear session
     session.clear()
     flash("You have been logged out successfully", "info")
     return redirect(url_for('catch_all', filename='1_login.html'))
@@ -218,9 +224,3 @@ def register_success():
     </html>
     """
 
-# Validation and Security Functions
-def is_valid_integer(val):
-    try:
-        return int(val)
-    except (TypeError, ValueError):
-        return None
