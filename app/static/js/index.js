@@ -91,7 +91,7 @@ function renderTable(page) {
     statusCell.appendChild(statusSpan);
 
     const ownerCell = document.createElement("td");
-    ownerCell.textContent = row.user_id;
+    ownerCell.textContent = row.username || 'Anonymous';
     console.log(row);
 
     // Append cells to the row

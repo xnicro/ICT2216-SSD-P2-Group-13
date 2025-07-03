@@ -32,15 +32,26 @@ def get_all_reports():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        query = """
-        SELECT r.report_id, r.title, r.description, r.category_name, r.is_anonymous, r.created_at, s.name AS status_name
-        FROM reports r
-        JOIN status s ON r.status_id = s.status_id
-        ORDER BY r.report_id
-        """
-        cursor.execute(query)
+        cursor.execute("""
+            SELECT r.report_id, r.title, r.description, r.category_name, r.is_anonymous, r.created_at, s.name AS status_name, u.username
+            FROM reports r
+            JOIN status s
+              ON r.status_id = s.status_id
+            LEFT JOIN users u
+              ON r.user_id = u.user_id
+            ORDER BY r.report_id
+        """)
         reports = cursor.fetchall()
+
+        # Override username if anonymous, or supply a placeholder
+        for r in reports:
+            if r['is_anonymous']:
+                r['username'] = 'Anonymous'
+            elif r.get('username') is None:
+                r['username'] = '—'
+
         return reports
+
     finally:
         cursor.close()
         conn.close()
