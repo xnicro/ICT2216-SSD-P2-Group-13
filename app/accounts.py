@@ -1,6 +1,6 @@
 import mysql.connector
 import os
-from flask import Flask, Blueprint, current_app, jsonify, request, session, redirect, url_for
+from flask import Flask, Blueprint, current_app, jsonify, request, session, redirect, url_for, flash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
@@ -52,19 +52,23 @@ def register_user():
 
         # Basic validation
         if len(username) < 3:
-            return "Username must be at least 3 characters", 400
+            flash("Username must be at least 3 characters", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         if not username.isalnum():  # Only allow letters and numbers
-            return "Username can only contain letters and numbers", 400
+            flash("Username can only contain letters and numbers", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         if not email:
-            return "Email cannot be empty", 400
+            flash("Email cannot be empty", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         if not password:
-            return "Password cannot be empty", 400
-        #elif len(password) < 8:
-        #    return "Password must be at least 8 characters", 400
+            flash("Password cannot be empty", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         if not confirm_password:
-            return "Confirm Password cannot be empty", 400
+            flash("Confirm Password cannot be empty", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         if password != confirm_password:
-            return "Passwords don't match", 400
+            flash("Passwords don't match", "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         
         try:
             conn = get_db_connection()
@@ -74,7 +78,8 @@ def register_user():
             check_query = "SELECT * FROM users WHERE username = %s OR email = %s"
             cursor.execute(check_query, (username, email))
             if cursor.fetchone():
-                return "Username or email already exists", 400
+                flash("Username or email already exists", "error")
+                return redirect(url_for('catch_all', filename='1_register.html'))
             else:
                 # Insert new user with prepared statement
                 insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
@@ -84,9 +89,11 @@ def register_user():
                 
             cursor.close()
             conn.close()
-            return redirect(url_for('accounts.register_success'))
+            flash("Registration successful! Please login.", "success")
+            return redirect(url_for('catch_all', filename='1_login.html'))
         except Exception as e:
-            return f'MySQL connection error: {str(e)}' #change this error msg b4 submit
+            flash(f'Registration error: {str(e)}', "error")
+            return redirect(url_for('catch_all', filename='1_register.html'))
         
         
 @bp.route("/login", methods=["POST"])
@@ -97,9 +104,11 @@ def login_user():
 
          # Basic validation
         if not username:
-            return "Username cannot be empty", 400
+            flash("Username cannot be empty", "error")
+            return redirect(url_for('catch_all', filename='1_login.html'))
         if not password:
-            return "Password cannot be empty", 400
+            flash("Password cannot be empty", "error")
+            return redirect(url_for('catch_all', filename='1_login.html'))
         
         try:
             conn = get_db_connection()
@@ -112,16 +121,36 @@ def login_user():
             conn.close()
 
             if not verify_user: #if no such user
-                return "Invalid username or password"
+                flash("Invalid username or password", "error")
+                return redirect(url_for('catch_all', filename='1_login.html'))
+            
             try: # Verify password
                 ph.verify(verify_user['pwd'], password)
-                return "Login successful"
+                
+                # Password is correct, set up session
+                session['user_id'] = verify_user['user_id']
+                session['username'] = verify_user['username']
+                session['email'] = verify_user['email']
+                session['role'] = verify_user['role']
+                session['verified'] = verify_user.get('verified', 0)  # Default to 0 if column doesn't exist
+                
+                flash("Login successful!", "success")
+                return redirect(url_for('profile'))  # Redirect to profile page
             
             except VerifyMismatchError:
-                return "Invalid username or password"
+                flash("Invalid username or password", "error")
+                return redirect(url_for('catch_all', filename='1_login.html'))
             
         except Exception as e:
-            return f'MySQL connection error: {str(e)}'  #change this error msg b4 submit
+            flash(f'Login error: {str(e)}', "error")
+            return redirect(url_for('catch_all', filename='1_login.html'))
+
+@bp.route("/logout")
+def logout():
+    """Logout user and clear session"""
+    session.clear()
+    flash("You have been logged out successfully", "info")
+    return redirect(url_for('catch_all', filename='1_login.html'))
 
 @bp.route("/update_role", methods=["POST"])
 def update_role():

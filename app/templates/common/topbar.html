@@ -1,3 +1,51 @@
 <div class="top-bar">
-    <p><i class="fi fi-rc-circle-user"></i>Jason Ray</p>
+    <div class="user-info">
+        <p><i class="fi fi-rc-circle-user"></i>{{ session.username if session.username else 'Guest' }}</p>
+        {% if session.username %}
+            <a href="{{ url_for('accounts.logout') }}" class="logout-btn">
+                <i class="fi fi-rc-sign-out-alt"></i> Logout
+            </a>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+.top-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 20px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-info p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+    text-decoration: none;
+    color: white;
+}
+</style>
