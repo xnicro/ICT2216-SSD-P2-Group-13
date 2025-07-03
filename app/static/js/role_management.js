@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function filterTable() {
         let val = searchInput.value
             .slice(0, 100)
-            .replace(/[^\w\s\-]/g, '')
+            .replace(/[^\w\s\-@.]/g, '')
             .trim();
         searchInput.value = val;
 
@@ -189,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
             row.style.display = (matchesSearch && matchesRole) ? "" : "none";
         });
     }
+
 
     searchInput.addEventListener("input", filterTable);
     roleFilter.addEventListener("change", filterTable);

@@ -11,11 +11,15 @@ from accounts import bp as accounts_bp
 from accounts import get_all_users
 from werkzeug.utils import secure_filename
 from functools import wraps
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 app = Flask(__name__)
+csrf = CSRFProtect()
+csrf.init_app(app)
 
 # SECRET_KEY (for flash messages & sessions)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
+csrf = CSRFProtect(app)
 
 # Secure session configuration
 app.config.update(
@@ -37,6 +41,10 @@ print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWO
 app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(accounts_bp)
+
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf())
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
@@ -81,15 +89,10 @@ def get_user_reports(user_id):
         
         # First, let's try a simple query without joining the statuses table
         cursor.execute('''
-            SELECT r.*, 
-                   CASE 
-                       WHEN r.status_id = 1 THEN 'Pending'
-                       WHEN r.status_id = 2 THEN 'In Progress' 
-                       WHEN r.status_id = 3 THEN 'Resolved'
-                       ELSE 'Unknown'
-                   END as status_name
-            FROM reports r 
-            WHERE r.user_id = %s 
+            SELECT r.*, s.name AS status_name
+            FROM reports r
+            JOIN status s ON r.status_id = s.status_id
+            WHERE r.user_id = %s
             ORDER BY r.created_at DESC
         ''', (user_id,))
         
