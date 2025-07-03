@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+</head>
+
+<body>
+    <div class="main">
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            {% include 'common/topbar.html' %}
+
+            <div class="settings-section">
+                <div class="settings-section-header">
+                    <h1>User Settings</h1>
+                </div>
+
+                <!-- Notification Preferences Section (Collapsible) -->
+                <div class="section">
+                    <h2 onclick="toggleSection('notificationPreferences')">Notification Preferences</h2>
+                    <div id="notificationPreferences" class="section-content">
+                        <div class="checkbox-container">
+                            <label for="fireHazard">Fire Hazards</label>
+                            <input type="checkbox" id="fireHazard">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <label for="faultyEquipment">Faulty Facilities/Equipments</label>
+                            <input type="checkbox" id="faultyEquipment">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <label for="vandalism">Vandalism</label>
+                            <input type="checkbox" id="vandalism">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <label for="suspiciousActivity">Suspicious Activities</label>
+                            <input type="checkbox" id="suspiciousActivity">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <label for="otherIncident">Other Incidents</label>
+                            <input type="checkbox" id="otherIncident">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy & Permissions Section (Collapsible) -->
+                <div class="section">
+                    <h2 onclick="toggleSection('privacyPermissions')">Privacy & Permissions</h2>
+                    <div id="privacyPermissions" class="section-content">
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="locationAccess">Enable Location Access:</label>
+                            </div>
+                            <input type="checkbox" id="locationAccess">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="cameraAccess">Enable Camera/Microphone Access:</label>
+                                <small>*required in order to submit photos/videos</small>
+                            </div>
+                            <input type="checkbox" id="cameraAccess">
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="dataSharing">Allow sharing of data:</label>
+                            </div>
+                            <input type="checkbox" id="dataSharing">
+                        </div>
+                    </div>
+                </div>
+
+                <button>Logout</button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(id) {
+            const section = document.getElementById(id);
+            section.classList.toggle('active');
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+
+</html>
