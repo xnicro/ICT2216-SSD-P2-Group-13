@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template, redirect, url_for, send_from_directory
+from flask import Flask, abort, render_template, redirect, url_for, send_from_directory, session, flash, request, jsonify
 from datetime import datetime
 import mysql.connector
 import os
@@ -9,14 +9,9 @@ from admin_dashboard import bp as admin_bp
 from accounts import bp as accounts_bp
 from accounts import get_all_users
 from werkzeug.utils import secure_filename
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-
+from functools import wraps
 
 app = Flask(__name__)
-
-# Added CSRF 
-csrf = CSRFProtect()
-csrf.init_app(app)
 
 # SECRET_KEY (for flash messages & sessions)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
@@ -34,10 +29,6 @@ app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(accounts_bp)
 
-@app.context_processor
-def inject_csrf_token():
-    return dict(csrf_token=generate_csrf())
-
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 def get_db_connection():
@@ -48,6 +39,60 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
     return conn
+
+# Login required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('catch_all', filename='1_login.html'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Helper function to get user by ID
+def get_user_by_id(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return user
+    except Exception as e:
+        print(f"Error getting user: {e}")
+        return None
+
+# Helper function to get user reports
+def get_user_reports(user_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # First, let's try a simple query without joining the statuses table
+        cursor.execute('''
+            SELECT r.*, 
+                   CASE 
+                       WHEN r.status_id = 1 THEN 'Pending'
+                       WHEN r.status_id = 2 THEN 'In Progress' 
+                       WHEN r.status_id = 3 THEN 'Resolved'
+                       ELSE 'Unknown'
+                   END as status_name
+            FROM reports r 
+            WHERE r.user_id = %s 
+            ORDER BY r.created_at DESC
+        ''', (user_id,))
+        
+        reports = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        print(f"Found {len(reports)} reports for user_id {user_id}")  # Debug line
+        return reports
+    except Exception as e:
+        print(f"Error getting user reports: {e}")
+        return []
 
 # App routes ============================================================
 @app.route('/')
@@ -63,38 +108,166 @@ def view_report(report_id):
     return render_template('0_report_detail.html', report=report)
 
 @app.route('/admin')
-# Add session check here when done 
 def admin():
     statuses = get_statuses()
     reports = get_all_reports()
     return render_template('7_admin_dashboard.html', statuses=statuses, reports=reports)
 
 @app.route('/profile')
-# @login_required
+@login_required
 def profile():
-    """User profile page with reports"""
-    # Create dummy user data matching your DB schema
-    dummy_user = {
-        'user_id': 1,
-        'username': 'johndoe',  # Added to match your accounts.py
-        'email': 'john.doe@example.com',
-        'role': 'user',
-        'created_at': datetime.now()
-    }
+    """User profile page with real user data and reports"""
+    user_id = session.get('user_id')
     
-    # Create dummy reports data
-    dummy_reports = [
-        {
-            'title': 'Broken Elevator',
-            'created_at': datetime(2023, 5, 15),
-            'status': 'Pending',
-            'category': 'Facilities'
-        }
-    ]
+    # Get current user data
+    current_user = get_user_by_id(user_id)
+    if not current_user:
+        flash('User not found', 'error')
+        return redirect(url_for('catch_all', filename='1_login.html'))
+    
+    # Get user's reports
+    user_reports = get_user_reports(user_id)
     
     return render_template('5_profile.html', 
-                         current_user=dummy_user,
-                         user_reports=dummy_reports)
+                         current_user=current_user,
+                         user_reports=user_reports)
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    """Update user profile information"""
+    user_id = session.get('user_id')
+    
+    try:
+        # Get form data
+        username = request.form.get('username')
+        email = request.form.get('email')
+        
+        # Update user in database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE users 
+            SET username = %s, email = %s 
+            WHERE user_id = %s
+        ''', (username, email, user_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Update session data
+        session['username'] = username
+        session['email'] = email
+        
+        flash('Profile updated successfully!', 'success')
+        
+    except Exception as e:
+        flash(f'Error updating profile: {str(e)}', 'error')
+    
+    return redirect(url_for('profile'))
+
+@app.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    """Change user password"""
+    user_id = session.get('user_id')
+    
+    try:
+        # Get form data
+        current_password = request.form.get('currentPassword')
+        new_password = request.form.get('newPassword')
+        confirm_password = request.form.get('confirmPassword')
+        
+        # Validation
+        if not current_password or not new_password or not confirm_password:
+            flash('All password fields are required', 'error')
+            return redirect(url_for('profile'))
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match', 'error')
+            return redirect(url_for('profile'))
+        
+        # Get current user data
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            flash('User not found', 'error')
+            return redirect(url_for('profile'))
+        
+        # Import password hasher
+        from accounts import ph
+        from argon2.exceptions import VerifyMismatchError
+        
+        # Verify current password
+        try:
+            ph.verify(user['pwd'], current_password)
+        except VerifyMismatchError:
+            flash('Current password is incorrect', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('profile'))
+        
+        # Hash new password and update
+        new_hashed_password = ph.hash(new_password)
+        cursor.execute('''
+            UPDATE users 
+            SET pwd = %s 
+            WHERE user_id = %s
+        ''', (new_hashed_password, user_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        flash('Password changed successfully!', 'success')
+        
+    except Exception as e:
+        flash(f'Error changing password: {str(e)}', 'error')
+    
+    return redirect(url_for('profile'))
+
+@app.route('/api/report/<int:report_id>')
+@login_required
+def get_report_details(report_id):
+    """Get report details for the modal"""
+    user_id = session.get('user_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get report details - ensure user owns this report
+        cursor.execute('''
+            SELECT r.*, 
+                   CASE 
+                       WHEN r.status_id = 1 THEN 'Pending'
+                       WHEN r.status_id = 2 THEN 'In Progress' 
+                       WHEN r.status_id = 3 THEN 'Resolved'
+                       ELSE 'Unknown'
+                   END as status_name
+            FROM reports r 
+            WHERE r.report_id = %s AND r.user_id = %s
+        ''', (report_id, user_id))
+        
+        report = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not report:
+            return jsonify({'error': 'Report not found'}), 404
+            
+        # Convert datetime objects to strings for JSON serialization
+        if report.get('created_at'):
+            report['created_at'] = report['created_at'].strftime('%B %d, %Y at %I:%M %p')
+        if report.get('updated_at'):
+            report['updated_at'] = report['updated_at'].strftime('%B %d, %Y at %I:%M %p')
+            
+        return jsonify(report)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/role')
 def role():
@@ -171,4 +344,3 @@ def catch_all(filename):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-
