@@ -8,6 +8,7 @@
     <title>SITSecure | Role Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/roles.css') }}" />
     <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
 </head>
 
@@ -24,6 +25,17 @@
 
                 <!-- Table Content -->
                 <div class="reports-table-container">
+                    <br>
+                    <div class="filter-bar">
+                        <input type="text" id="searchInput" placeholder="Search by username or email" class="search-input" />
+                        
+                        <select id="roleFilter" class="role-dropdown">
+                            <option value="">All Roles</option>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <hr class="hr-role-management">
                     <table id="reportTable">
                         <thead>
                             <tr>
@@ -78,7 +90,6 @@
                     <div class="pagination" id="role-pagination"></div>
                 </div>
             </div>
-
             <script src="{{ url_for('static', filename='js/role_management.js') }}"></script>
 </body>
 

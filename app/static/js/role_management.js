@@ -162,3 +162,34 @@ function renderPaginationButtons(currentPage) {
 }
 
 showPage(1);
+
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("searchInput");
+    const roleFilter = document.getElementById("roleFilter");
+    const tableRows = document.querySelectorAll("#rolesTableBody tr");
+
+    function filterTable() {
+        let val = searchInput.value
+            .slice(0, 100)
+            .replace(/[^\w\s\-]/g, '')
+            .trim();
+        searchInput.value = val;
+
+        const searchText = val.toLowerCase();
+        const selectedRole = roleFilter.value.toLowerCase();
+
+        tableRows.forEach(row => {
+            const username = row.children[1].textContent.toLowerCase();
+            const email = row.children[2].textContent.toLowerCase();
+            const role = row.children[3].textContent.toLowerCase();
+
+            const matchesSearch = username.includes(searchText) || email.includes(searchText);
+            const matchesRole = selectedRole === "" || role === selectedRole;
+
+            row.style.display = (matchesSearch && matchesRole) ? "" : "none";
+        });
+    }
+
+    searchInput.addEventListener("input", filterTable);
+    roleFilter.addEventListener("change", filterTable);
+});
