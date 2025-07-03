@@ -3,6 +3,10 @@ import os
 from flask import Flask, Blueprint, current_app, jsonify, request, session, redirect, url_for, flash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
+from flask_wtf.csrf import validate_csrf
+from wtforms.validators import ValidationError
+from extensions import limiter
+from flask_limiter.errors import RateLimitExceeded
 
 bp = Blueprint('accounts', __name__)
 
@@ -49,7 +53,16 @@ def get_all_users():
 
 # POST routes =============================================    
 @bp.route("/register", methods=["POST"])
+@limiter.limit("5 per 2 minutes")
 def register_user():
+    # Check if CSRF token matches
+    csrf_token = request.form.get("csrf_token")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        flash("Invalid or missing CSRF token", "error")
+        return redirect(url_for('catch_all', filename='1_register.html'))
+    
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
@@ -103,7 +116,16 @@ def register_user():
         
         
 @bp.route("/login", methods=["POST"])
+@limiter.limit("5 per 2 minutes")
 def login_user():
+    # Check if CSRF token matches
+    csrf_token = request.form.get("csrf_token")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        flash("Invalid or missing CSRF token", "error")
+        return redirect(url_for('catch_all', filename='1_login.html'))
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -143,8 +165,14 @@ def login_user():
                 session['role'] = verify_user['role']
                 session['verified'] = verify_user.get('verified', 0)  # Default to 0 if column doesn't exist
                 
-                flash("Login successful!", "success")
-                return redirect(url_for('profile'))  # Redirect to profile page
+                role = verify_user['role']
+                if role == 'admin':
+                    return redirect(url_for('admin'))  
+                elif role == 'superadmin':
+                    return redirect(url_for('role'))
+                else:
+                    return redirect(url_for('profile'))  # Regular user
+
             
             except VerifyMismatchError:
                 flash("Invalid username or password", "error")
@@ -163,6 +191,16 @@ def logout():
 
 @bp.route("/update_role", methods=["POST"])
 def update_role():
+    if session.get("role") != "superadmin":
+        return jsonify(success=False, error="Unauthorized"), 403
+
+    # Check if CSRF Matches
+    csrf_token = request.headers.get("X-CSRFToken")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        return jsonify(success=False, error="Invalid or missing CSRF token"), 400
+    
     data = request.get_json()
 
     user_id = is_valid_integer(data.get("user_id"))
@@ -189,7 +227,12 @@ def update_role():
     finally:
         cursor.close()
         conn.close()
-        
+
+@bp.errorhandler(RateLimitExceeded)
+def ratelimit_handler(e):
+    flash("Too many login attempts. Please try again in a minute.", "error")
+    return redirect(url_for('catch_all', filename='1_login.html')), 429
+
 # Success routes ====================================================
 @bp.route('/register_success')
 def register_success():

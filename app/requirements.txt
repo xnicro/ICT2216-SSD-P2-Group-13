@@ -3,3 +3,4 @@ gunicorn
 mysql-connector-python
 flask-wtf
 argon2-cffi
+flask-limiter

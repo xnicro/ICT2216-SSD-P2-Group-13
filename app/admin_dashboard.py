@@ -1,10 +1,11 @@
-# I MUST ADD ACCESS CONTROL SUCH AS SESSION.GET(ADMIN) OR SMT FOR ALL FUNCTIONS IN FUTURE
 import mysql.connector
 import os
 from flask import (
     Blueprint, current_app, request, session, jsonify
 )
 import datetime
+from flask_wtf.csrf import validate_csrf
+from wtforms.validators import ValidationError
 
 bp = Blueprint('admin_dashboard', __name__)
 
@@ -76,8 +77,16 @@ def get_report_attachments(report_id):
 
 @bp.route("/update_status", methods=["POST"])
 def update_status():
-    data = request.get_json()
+    if session.get("role") != "admin":
+        return jsonify(success=False, error="Unauthorized"), 403
 
+    csrf_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        return jsonify(success=False, error="Invalid or missing CSRF token"), 400
+    
+    data = request.get_json()
     # Check if valid integer first
     report_id = is_valid_integer(data.get("report_id"))
     status_id = is_valid_integer(data.get("status_id"))
@@ -113,8 +122,15 @@ def fetch_report_attachments(report_id):
 
 @bp.route("/admin/delete_report/<int:report_id>", methods=["DELETE"])
 def delete_report(report_id):
-    # Add session check here in future
+    if session.get("role") != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
 
+    csrf_token = request.headers.get("X-CSRFToken")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        return jsonify({"error": "Invalid or missing CSRF token"}), 400
+    
     report_id = is_valid_integer(report_id)
     if not report_id:
         return jsonify({"error": "Invalid report ID"}), 400
