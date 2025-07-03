@@ -1,0 +1,234 @@
+
+/* ====================== */
+/* Settings Page Styles */
+/* ====================== */
+
+.settings-section {
+    padding: 22px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.settings-section-header {
+    margin-bottom: 32px;
+}
+
+.settings-section-header h1 {
+    color: var(--dark-blue);
+    font-weight: 700;
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+/* Section styling */
+.section {
+    background-color: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section h2 {
+    background-color: var(--light-blue);
+    color: var(--dark-blue);
+    padding: 16px 20px;
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.section h2:hover {
+    background-color: #e0e4eb;
+}
+
+.section h2::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.section.active h2::after {
+    transform: rotate(180deg);
+}
+
+.section-content {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.section.active .section-content {
+    padding: 20px;
+    max-height: 1000px;
+}
+
+/* Form elements styling */
+.section-content label {
+    display: block;
+    margin-bottom: 16px;
+    color: var(--gray);
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.section-content input[type="email"],
+.section-content input[type="password"],
+.section-content input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    margin-top: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section-content input[type="email"]:focus,
+.section-content input[type="password"]:focus,
+.section-content input[type="text"]:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(70, 123, 101, 0.2);
+    outline: none;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 8px 0;
+}
+
+.checkbox-container label {
+    margin: 0 0 0 12px;
+    cursor: pointer;
+    flex-grow: 1;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+/* Label group styling */
+.label-group {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 12px;
+}
+
+.label-group label {
+    margin-bottom: 4px !important;
+    margin-left: 0 !important;
+}
+
+.label-group small {
+    margin-top: 0;
+    margin-bottom: 0;
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Adjust checkbox container for label group */
+.checkbox-container:has(.label-group) {
+    align-items: flex-start;
+}
+
+.checkbox-container:has(.label-group) input[type="checkbox"] {
+    margin-top: 4px;
+}
+
+/* Custom toggle switch */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    background-color: #e0e0e0;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--green);
+}
+
+input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+/* Logout button */
+.settings-section button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    margin-top: 16px;
+}
+
+.settings-section button:hover {
+    background-color: #c0392b;
+}
+
+/* Helper text */
+.section-content small {
+    display: block;
+    margin-top: 4px;
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .settings-section {
+        padding: 16px;
+    }
+    
+    .section h2 {
+        padding: 14px 16px;
+    }
+    
+    .section-content {
+        padding: 0 16px;
+    }
+    
+    .section.active .section-content {
+        padding: 16px;
+    }
+}
