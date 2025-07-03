@@ -69,7 +69,7 @@
                 <!-- Edit Mode -->
                 <div id="editMode" class="edit-mode">
                     <form action="{{ url_for('update_profile') }}" method="POST" id="profileForm">
-                        
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <div class="form-group">
                             <label for="username">Username *</label>
                             <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
@@ -88,7 +88,7 @@
                 <!-- Password Change Mode -->
                 <div id="passwordMode" class="edit-mode">
                     <form action="{{ url_for('change_password') }}" method="POST" id="passwordForm">
-                        
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <div class="form-group">
                             <label for="currentPassword">Current Password *</label>
                             <input type="password" id="currentPassword" name="currentPassword" required>
@@ -152,19 +152,22 @@
                             <label for="statusFilter">Filter by Status</label>
                             <select id="statusFilter" onchange="filterReports()">
                                 <option value="">All Statuses</option>
+                                <option value="unresolved">Unresolved</option>
                                 <option value="pending">Pending</option>
-                                <option value="in-progress">In Progress</option>
+                                <option value="reviewing">Reviewing</option>
+                                <option value="emergency">Emergency</option>
                                 <option value="resolved">Resolved</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="categoryFilter">Filter by Category</label>
                             <select id="categoryFilter" onchange="filterReports()">
-                                <option value="">All Categories</option>
-                                <option value="facilities">Facilities</option>
-                                <option value="electrical">Electrical</option>
-                                <option value="plumbing">Plumbing</option>
-                                <option value="security">Security</option>
+                                <option value="all">All Categories</option>
+                                <option value="fires">Fires</option>
+                                <option value="faulty_facilities">Faulty Facilities/Equipments</option>
+                                <option value="vandalism">Vandalism</option>
+                                <option value="suspicious_activity">Suspicious Activity</option>
+                                <option value="other">Others</option>
                             </select>
                         </div>
                         <div class="form-group">
