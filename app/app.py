@@ -97,6 +97,10 @@ def role():
 def report():
     return redirect(url_for('reports.submit_report'))
 
+@app.route('/settings')
+def settings():
+    return render_template('5_settings.html')
+
 @app.route('/health')
 def health():
     """Health check endpoint for monitoring"""
