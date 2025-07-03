@@ -133,6 +133,8 @@ def login_user():
             try: # Verify password
                 ph.verify(verify_user['pwd'], password)
                 
+                session.permanent = True
+                
                 # Password is correct, set up session
                 session['user_id'] = verify_user['user_id']
                 session['username'] = verify_user['username']
