@@ -3,6 +3,7 @@ from datetime import datetime
 import mysql.connector
 import os
 from report_submission import bp as reports_bp
+from home_dashboard import get_report_by_id
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
 from accounts import bp as accounts_bp
@@ -53,6 +54,13 @@ def get_db_connection():
 def index():
     reports = get_all_reports()
     return render_template('0_index.html', reports=reports)
+
+@app.route('/report/<int:report_id>')
+def view_report(report_id):
+    report = get_report_by_id(report_id)
+    if not report:
+        return "Report not found", 404
+    return render_template('0_report_detail.html', report=report)
 
 @app.route('/admin')
 # Add session check here when done 

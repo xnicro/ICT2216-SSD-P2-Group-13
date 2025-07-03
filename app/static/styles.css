@@ -781,11 +781,44 @@ table#reportTable tbody tr:hover {
   color: var(--border);
 }
 
+.category-fires {
+  color: #AA3052;
+}
+
+.category-faulty {
+  color: gray;
+}
+
+.category-vandalism {
+  color: #8B81CD;
+}
+
+.category-suspicious {
+  color: #E0AC63;
+}
+
+.category-others {
+  color: #7088F0;
+}
+
+.category-default {
+  color: black;
+}
+
+/* Report Detail section for users (homepage) */
+div.report-detail-section {
+  padding: 22px;
+}
+
+div.report-detail-section h1 {
+  text-transform: capitalize;
+}
+
 /* Submit Report Section */
 a.back {
   display: inline-block;
   font-weight: 500;
-  margin-bottom: 24px;;
+  margin-bottom: 32px;;
   font-size: 12px;
 }
 
