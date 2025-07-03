@@ -14,7 +14,9 @@
         <a href="/settings"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
         <a href="/admin"><i class="fa-solid fa-user-tie"></i><span>Admin</span></a>
         <a href="/role"><i class="fa-solid fa-screwdriver-wrench"></i><span>Manage Roles</span></a>
-        <a href="1_login.html"><i class="fa-solid fa-gear"></i><span>Login</span></a>
-        <a href="1_register.html"><i class="fa-solid fa-gear"></i><span>Register</span></a>
+        {% if not session.username %}
+            <a href="1_login.html"><i class="fa-solid fa-gear"></i><span>Login</span></a>
+            <a href="1_register.html"><i class="fa-solid fa-gear"></i><span>Register</span></a>
+        {% endif %}
     </nav>
 </div>
