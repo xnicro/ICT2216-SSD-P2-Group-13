@@ -706,6 +706,7 @@ body div.main {
   padding-bottom: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
+  max-width: 100vw;
 }
 
 div.filters {
@@ -728,6 +729,7 @@ table#reportTable {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 table#reportTable th,
@@ -743,6 +745,11 @@ table#reportTable thead th {
 
 table#reportTable tbody td {
   padding: 12px;
+}
+
+table#reportTable tbody tr:hover {
+  background-color: var(--hover);
+  cursor: pointer;
 }
 
 .pagination {
@@ -1090,4 +1097,8 @@ p.already {
 p.already a {
   text-decoration: underline;
   cursor: pointer; /* optional if it's clickable */
+}
+
+p.already a:hover {
+  color: #A8A8A8;
 }

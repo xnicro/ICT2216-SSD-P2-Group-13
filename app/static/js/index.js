@@ -46,8 +46,26 @@ function renderTable(page) {
     const titleCell = document.createElement("td");
     titleCell.textContent = row.title;
 
+    const rawDate = new Date(row.created_at);
+
+    // Format date: "July 1, 2025"
+    const dateOptions = { year: "numeric", month: "long", day: "numeric" };
+    const formattedDate = rawDate.toLocaleDateString("en-US", dateOptions);
+
+    // Format time: "12.10pm"
+    let hours = rawDate.getHours();
+    const minutes = rawDate.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+    // Create date <td>
     const dateCell = document.createElement("td");
-    dateCell.textContent = row.created_at;
+    dateCell.textContent = formattedDate;
+
+    // Create time <td>
+    const timeCell = document.createElement("td");
+    timeCell.textContent = formattedTime;
 
     const categoryCell = document.createElement("td");
     categoryCell.textContent = row.category_name;
@@ -66,6 +84,7 @@ function renderTable(page) {
     // Append cells to the row
     tr.appendChild(titleCell);
     tr.appendChild(dateCell);
+    tr.appendChild(timeCell);
     tr.appendChild(categoryCell);
     tr.appendChild(statusCell);
     tr.appendChild(ownerCell);
