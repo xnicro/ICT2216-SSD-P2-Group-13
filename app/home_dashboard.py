@@ -46,6 +46,23 @@ def get_report_by_id(report_id):
         cursor.close()
         conn.close()
 
+def get_report_attachments(report_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = """
+        SELECT file_name
+        FROM report_attachments
+        WHERE report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        results = cursor.fetchall()
+        
+        return results
+    finally:
+        cursor.close()
+        conn.close()
+
 # Validation and Security Functions
 def is_valid_integer(val):
     try:
