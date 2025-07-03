@@ -2,13 +2,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --accent-color: #e74c3c;
-    --light-color: #ecf0f1;
-    --dark-color: #2c3e50;
-    --success-color: #27ae60;
-    --warning-color: #f39c12;
+    --primary-color: #1A1B29; /* dark-blue */
+    --secondary-color: #467B65; /* green */
+    --accent-color: #AA3052; /* category-fires for danger */
+    --light-color: #ECEFF8; /* light-blue */
+    --dark-color: #343a40; /* black */
+    --success-color: #32813D; /* status-resolved */
+    --warning-color: #D78D30; /* status-pending */
+    --border-color: #e3e4e8; /* border */
+    --hover-color: #ECEFF8; /* hover */
+    --gray-color: #364153; /* gray */
 }
 
 .main {
@@ -27,6 +30,7 @@
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    border: 1px solid var(--border-color);
 }
 
 .profile-header {
@@ -34,14 +38,14 @@
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .profile-pic {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -57,7 +61,7 @@
 
 .profile-info p {
     margin: 5px 0 0;
-    color: #7f8c8d;
+    color: var(--gray-color);
 }
 
 /* Profile Edit Form Styles */
@@ -67,6 +71,7 @@
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    border: 1px solid var(--border-color);
 }
 
 .profile-edit-section h3 {
@@ -90,7 +95,7 @@
 .form-group input {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--border-color);
     border-radius: 5px;
     font-size: 14px;
     transition: border-color 0.3s ease;
@@ -125,16 +130,16 @@
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    background-color: var(--hover-green);
 }
 
 .btn-secondary {
-    background-color: #95a5a6;
+    background-color: var(--gray-color);
     color: white;
 }
 
 .btn-secondary:hover {
-    background-color: #7f8c8d;
+    background-color: var(--dark-color);
 }
 
 .btn-danger {
@@ -143,7 +148,7 @@
 }
 
 .btn-danger:hover {
-    background-color: #c0392b;
+    background-color: #8E433E; /* status-emergency */
 }
 
 /* Alert Messages */
@@ -155,14 +160,14 @@
 }
 
 .alert-success {
-    background-color: #d4edda;
-    border-color: #27ae60;
+    background-color: #EBF5ED; /* status-resolved bg */
+    border-color: var(--success-color);
     color: #155724;
 }
 
 .alert-error {
-    background-color: #f8d7da;
-    border-color: #e74c3c;
+    background-color: #F3E6E5; /* status-emergency bg */
+    border-color: var(--accent-color);
     color: #721c24;
 }
 
@@ -173,11 +178,12 @@
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 20px;
+    border: 1px solid var(--border-color);
 }
 
 .reports-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
@@ -190,7 +196,7 @@
 }
 
 .stat-card {
-    background: linear-gradient(135deg, var(--secondary-color), #3498db);
+    background: #1A1B29;
     color: white;
     padding: 15px;
     border-radius: 8px;
@@ -210,7 +216,7 @@
 
 /* Filter Controls */
 .filter-section {
-    background: #f8f9fa;
+    background: var(--light-color);
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 20px;
@@ -233,22 +239,22 @@ table {
 th, td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
 }
 
 th {
-    background-color: #f8f9fa;
+    background-color: var(--light-color);
     font-weight: 600;
     color: var(--primary-color);
 }
 
 tbody tr:hover {
-    background-color: #f8f9fa;
+    background-color: var(--hover-color);
 }
 
 .status-pending {
-    background-color: #fff3cd;
-    color: #856404;
+    background-color: #F8E8D9;
+    color: var(--warning-color);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 12px;
@@ -256,8 +262,8 @@ tbody tr:hover {
 }
 
 .status-in-progress {
-    background-color: #cce5ff;
-    color: #0056b3;
+    background-color: #E5F4F8;
+    color: #2B8AF0;
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 12px;
@@ -265,8 +271,8 @@ tbody tr:hover {
 }
 
 .status-resolved {
-    background-color: #d4edda;
-    color: #155724;
+    background-color: #EBF5ED;
+    color: var(--success-color);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 12px;
@@ -300,7 +306,7 @@ tbody tr:hover {
 }
 
 .danger-zone p {
-    color: #666;
+    color: var(--gray-color);
     margin-bottom: 15px;
 }
 
@@ -342,6 +348,7 @@ tbody tr:hover {
     max-width: 600px;
     max-height: 80vh;
     overflow-y: auto;
+    border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -350,18 +357,22 @@ tbody tr:hover {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
 }
 
 .close {
-    color: #aaa;
+    color: white;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
 }
 
 .close:hover {
-    color: #000;
+    color: var(--light-color);
 }
 
 .status-timeline {
@@ -373,7 +384,7 @@ tbody tr:hover {
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
-    background: #f8f9fa;
+    background: var(--light-color);
     border-radius: 5px;
 }
 
@@ -390,7 +401,7 @@ tbody tr:hover {
 }
 
 .timeline-icon.submitted {
-    background-color: var(--secondary-color);
+    background-color: var(--primary-color);
 }
 
 .timeline-icon.in-progress {
