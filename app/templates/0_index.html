@@ -69,11 +69,6 @@
     </div>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-    </script>
-    <script>
         const home_reports = {{ reports | tojson }};
     </script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>

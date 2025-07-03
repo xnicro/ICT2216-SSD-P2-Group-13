@@ -16,24 +16,23 @@
         <div class="main-content">
             {% include 'common/topbar.html' %}
             <div class="report-detail-section">
-                <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") }}</p>
-                <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") }}</p>
-                <p class="report-detail-category">
-                    <i class="{{ report.category_icon }}"></i>
-                    {{ report.category_name | e }}
-                </p>
-                <h1>{{ report.title | e}}</h1>
-                <p>{{ report.description | e}}</p>
+                <div class="report-detail-card">
+                    <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
+                    <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") }}</p>
+                    <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") }}</p>
+                    <p class="report-detail-category">
+                        <i class="{{ report.category_icon }}"></i>
+                        {{ report.category_name | e }}
+                    </p>
+                    <h1>{{ report.title | e}}</h1>
+                    <p>{{ report.description | e}}</p>
+                </div>
+
             </div>
 
         </div>
     </div>
 
-    <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-    </script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 
