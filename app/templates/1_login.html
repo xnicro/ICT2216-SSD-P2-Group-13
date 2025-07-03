@@ -74,6 +74,7 @@
                 
                 <!-- Login Form - NO CSRF TOKEN -->
                 <form action="{{ url_for('accounts.login_user') }}" method="post" class="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <div>
                         <label for="username">Username:</label>
                         <input type="text" id="username" name="username" required>
