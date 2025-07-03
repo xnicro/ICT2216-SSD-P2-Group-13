@@ -3,7 +3,7 @@ from datetime import datetime
 import mysql.connector
 import os
 from report_submission import bp as reports_bp
-from home_dashboard import get_report_by_id
+from home_dashboard import get_report_by_id, get_report_attachments
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
 from accounts import bp as accounts_bp
