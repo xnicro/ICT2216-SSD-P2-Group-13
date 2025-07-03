@@ -3,40 +3,6 @@
   color: var(--dark-blue);
 }
 
-/* Status Design*/
-.status-badge {
-  font-weight: 600;
-  padding: 0.5em 1em;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  user-select: none;
-  text-transform: capitalize;
-}
-
-.status-pending {
-  background-color: #F8E8D9;
-  color: #D78D30;
-}
-
-.status-resolved {
-  background-color: #EBF5ED;
-  color: #32813D;
-}
-
-.status-emergency {
-  background-color: #F3E6E5;
-  color: #8E433E;
-}
-
-.status-unresolved {
-  background-color: #F3F7F9;
-  color: #636B71;
-}
-
-.status-reviewing {
-  background-color: #E5F4F8;
-  color: #2B8AF0;
-}
 
 /* Controls container */
 .controls-admin {
