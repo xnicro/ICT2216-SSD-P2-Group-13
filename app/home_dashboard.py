@@ -1,4 +1,3 @@
-# I MUST ADD ACCESS CONTROL SUCH AS SESSION.GET(ADMIN) OR SMT FOR ALL FUNCTIONS IN FUTURE
 import mysql.connector
 import os
 from flask import (

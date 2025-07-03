@@ -5,6 +5,10 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 import mysql.connector
+from flask_wtf.csrf import validate_csrf
+from wtforms.validators import ValidationError
+from extensions import limiter
+from flask_limiter.errors import RateLimitExceeded
 
 bp = Blueprint('reports', __name__, template_folder='templates')
 
@@ -37,10 +41,19 @@ def get_db_connection():
     )
 
 @bp.route('/report', methods=['GET', 'POST'])
+@limiter.limit("5 per 2 minutes")
 def submit_report():
     if request.method == 'GET':
         return render_template('4_report_submission.html')
-
+    
+    # POST: validate CSRF token
+    csrf_token = request.form.get("csrf_token")
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        flash("Invalid or missing CSRF token", "error")
+        return redirect(url_for('reports.submit_report'))
+    
     # ——— POST ———
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
