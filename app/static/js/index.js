@@ -1,11 +1,10 @@
-// Mapping of category values to display labels
-// const CATEGORY_LABELS = {
-//   fires: 'Fires',
-//   faulty_facilities: 'Faulty Facilities/Equipment',
-//   vandalism: 'Vandalism',
-//   suspicious_activity: 'Suspicious Activity',
-//   other: 'Others'
-// };
+const CATEGORY_STYLES = {
+  "Fires": { icon: "fa-solid fa-fire", colorClass: "category-fires" },
+  "Faulty Facilities/Equipment": { icon: "fa-solid fa-screwdriver-wrench", colorClass: "category-faulty" },
+  "Vandalism": { icon: "fa-solid fa-spray-can", colorClass: "category-vandalism" },
+  "Suspicious Activity": { icon: "fa-solid fa-user-secret", colorClass: "category-suspicious" },
+  "Others": { icon: "fa-solid fa-question-circle", colorClass: "category-others" }
+};
 
 const rowsPerPage = 7;
 let currentPage = 1;
@@ -68,7 +67,21 @@ function renderTable(page) {
     timeCell.textContent = formattedTime;
 
     const categoryCell = document.createElement("td");
-    categoryCell.textContent = row.category_name;
+
+    const styleInfo = CATEGORY_STYLES[row.category_name] || {
+      icon: "fa-solid fa-tag",
+      colorClass: "category-default"
+    };
+
+    const icon = document.createElement("i");
+    icon.className = styleInfo.icon + " " + styleInfo.colorClass;
+    icon.style.marginRight = "8px";
+
+    const categoryText = document.createElement("span");
+    categoryText.textContent = row.category_name;
+
+    categoryCell.appendChild(icon);
+    categoryCell.appendChild(categoryText);
 
     const statusCell = document.createElement("td");
     const statusSpan = document.createElement("span");
@@ -88,6 +101,11 @@ function renderTable(page) {
     tr.appendChild(categoryCell);
     tr.appendChild(statusCell);
     tr.appendChild(ownerCell);
+
+    // Make row clickable
+    tr.addEventListener("click", () => {
+      window.location.href = `/report/${row.report_id}`;
+    });
 
     tableBody.appendChild(tr);
   });

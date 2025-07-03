@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SITSecure | Report Detail</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <div class="main">
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            {% include 'common/topbar.html' %}
+            <div class="report-detail-section">
+                <h1>{{ report.title | e}}</h1>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+
+</html>
