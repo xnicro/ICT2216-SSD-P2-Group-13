@@ -563,7 +563,7 @@ body div.main {
   background-color: var(--dark-blue);
   color: var(--light);
   width: 300px;
-  height: 100vh;
+  min-height: 100vh;
   padding: 12px;
   transition: width 0.3s ease;
   overflow: hidden;
