@@ -1,5 +1,6 @@
 from flask import Flask, abort, render_template, redirect, url_for, send_from_directory, session, flash, request, jsonify
 from datetime import datetime
+from datetime import timedelta
 import mysql.connector
 import os
 from report_submission import bp as reports_bp
@@ -15,6 +16,14 @@ app = Flask(__name__)
 
 # SECRET_KEY (for flash messages & sessions)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev_secret_key')
+
+# Secure session configuration
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,             # Prevent JS access to session cookie
+    SESSION_COOKIE_SECURE=not app.debug,      # Only allow over HTTPS in production
+    SESSION_COOKIE_SAMESITE='Lax',            # Helps mitigate CSRF (can use 'Strict' if no third-party use)
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)  # Session timeout duration
+)
 
 # Initial Configs =================================================
 # MySQL configurations
