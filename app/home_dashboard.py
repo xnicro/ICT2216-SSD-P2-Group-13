@@ -6,6 +6,13 @@ from flask import (
 )
 import datetime
 
+CATEGORY_ICONS = {
+    "Fires": "fa-solid fa-fire category-fires",
+    "Faulty Facilities/Equipment": "fa-solid fa-screwdriver-wrench category-faulty",
+    "Vandalism": "fa-solid fa-spray-can category-vandalism",
+    "Suspicious Activity": "fa-solid fa-user-secret category-suspicious",
+    "Others": "fa-solid fa-question-circle category-others"
+}
 
 def get_db_connection():
     cfg = current_app.config
@@ -28,6 +35,12 @@ def get_report_by_id(report_id):
         """
         cursor.execute(query, (report_id,))
         report = cursor.fetchone()
+        # Convert string to datetime object
+        if report and isinstance(report['created_at'], str):
+            report['created_at'] = datetime.strptime(report['created_at'], "%Y-%m-%d %H:%M:%S")
+        
+        report['category_icon'] = CATEGORY_ICONS.get(report['category_name'], "fa-solid fa-tag")
+        
         return report
     finally:
         cursor.close()

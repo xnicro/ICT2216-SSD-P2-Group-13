@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SITSecure | Report Detail</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 
 <body>
@@ -16,7 +16,14 @@
         <div class="main-content">
             {% include 'common/topbar.html' %}
             <div class="report-detail-section">
+                <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") }}</p>
+                <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") }}</p>
+                <p class="report-detail-category">
+                    <i class="{{ report.category_icon }}"></i>
+                    {{ report.category_name | e }}
+                </p>
                 <h1>{{ report.title | e}}</h1>
+                <p>{{ report.description | e}}</p>
             </div>
 
         </div>

@@ -565,9 +565,7 @@ body div.main {
   width: 300px;
   min-height: 100vh;
   padding: 12px;
-  transition: width 0.3s ease;
   overflow: hidden;
-  position: relative;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
@@ -588,11 +586,13 @@ body div.main {
 .sidebar div.company-logo div {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .sidebar div.company-logo p {
   font-weight: 700;
   font-size: 24px;
+  margin: 0;
 }
 
 .sidebar i {
@@ -729,7 +729,6 @@ table#reportTable {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 }
 
 table#reportTable th,
@@ -810,19 +809,36 @@ div.report-detail-section {
   padding: 22px;
 }
 
+div.report-detail-section p.report-detail-date {
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+div.report-detail-section p.report-detail-category {
+  font-weight: 600;
+  font-size: 24px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+
+}
+
 div.report-detail-section h1 {
   text-transform: capitalize;
+  font-size: 32px;
+  margin-bottom: 16px;
 }
 
 /* Submit Report Section */
 a.back {
   display: inline-block;
   font-weight: 500;
-  margin-bottom: 32px;;
+  margin-bottom: 32px;
+  ;
   font-size: 12px;
 }
 
-a.back:hover{
+a.back:hover {
   text-decoration: underline;
 }
 
@@ -1129,7 +1145,8 @@ p.already {
 
 p.already a {
   text-decoration: underline;
-  cursor: pointer; /* optional if it's clickable */
+  cursor: pointer;
+  /* optional if it's clickable */
 }
 
 p.already a:hover {
