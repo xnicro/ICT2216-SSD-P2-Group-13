@@ -136,6 +136,7 @@ def login_user():
                 session.permanent = True
                 
                 # Password is correct, set up session
+                session.clear()
                 session['user_id'] = verify_user['user_id']
                 session['username'] = verify_user['username']
                 session['email'] = verify_user['email']
