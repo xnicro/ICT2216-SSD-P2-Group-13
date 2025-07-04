@@ -53,7 +53,6 @@ def get_db_connection():
     )
 
 @bp.route('/report', methods=['GET', 'POST'])
-@limiter.limit("5 per 2 minutes")
 def submit_report():
     if request.method == 'GET':
         return render_template('4_report_submission.html')
