@@ -1,6 +1,6 @@
 import os
 from flask import (
-    Blueprint, current_app, flash,
+    Blueprint, abort, current_app, flash, jsonify,
     redirect, render_template, request, session, url_for
 )
 from werkzeug.utils import secure_filename
@@ -45,6 +45,9 @@ def get_db_connection():
 
 @bp.route('/report', methods=['GET', 'POST'])
 def submit_report():
+    if session.get("role") != "user":
+        abort(403)
+    
     if request.method == 'GET':
         return render_template('4_report_submission.html')
     

@@ -1,7 +1,7 @@
 import mysql.connector
 import os
 from flask import (
-    Blueprint, current_app, request, session, jsonify
+    Blueprint, abort, current_app, request, session, jsonify
 )
 import datetime
 from flask_wtf.csrf import validate_csrf
@@ -78,7 +78,7 @@ def get_report_attachments(report_id):
 @bp.route("/update_status", methods=["POST"])
 def update_status():
     if session.get("role") != "admin":
-        return jsonify(success=False, error="Unauthorized"), 403
+        abort(403)
 
     csrf_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
     try:
@@ -123,7 +123,7 @@ def fetch_report_attachments(report_id):
 @bp.route("/admin/delete_report/<int:report_id>", methods=["DELETE"])
 def delete_report(report_id):
     if session.get("role") != "admin":
-        return jsonify({"error": "Unauthorized"}), 403
+        abort(403)
 
     csrf_token = request.headers.get("X-CSRFToken")
     try:
