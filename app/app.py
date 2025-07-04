@@ -83,7 +83,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('Please log in to access this page.', 'error')
-            return redirect(url_for('catch_all', filename='1_login.html'))
+            return render_template('1_login.html')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -94,7 +94,7 @@ def role_required(*allowed_roles):
         def decorated_function(*args, **kwargs):
             if 'role' not in session:
                 flash('Unauthorized access.', 'error')
-                return redirect(url_for('catch_all', filename='1_login.html'))
+                return render_template('1_login.html')
             
             if session['role'] not in allowed_roles:
                 abort(403)
@@ -202,7 +202,7 @@ def profile():
     current_user = get_user_by_id(user_id)
     if not current_user:
         flash('User not found', 'error')
-        return redirect(url_for('catch_all', filename='1_login.html'))
+        return render_template('1_login.html')
     
     # Get user's reports
     user_reports = get_user_reports(user_id)
@@ -361,8 +361,8 @@ def role():
     return render_template('1_role_management.html', users=users, roles=["user","admin"])
 
 @app.route('/report')
-# @login_required
-# @role_required('user')
+@login_required
+@role_required('user')
 def report():
     return redirect(url_for('reports.submit_report'))
 

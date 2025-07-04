@@ -71,23 +71,24 @@
                         {% endif %}
                     {% endwith %}
                 </div>
-                
-                <!-- Login Form - NO CSRF TOKEN -->
-                <form action="{{ url_for('accounts.login_user') }}" method="post" class="login-form">
+          
+                <!-- Login Form -->
+                <form action="{{ url_for('accounts.login_user') }}" method="post" class="login-form" id="login-form"
+                    {% if rate_limited %}onsubmit="return false;"{% endif %}>
+
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <div>
                         <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" required>
+                        <input type="text" id="username" name="username" required {% if rate_limited %}disabled{% endif %}>
                     </div>
-
                     <div>
                         <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" name="password" required {% if rate_limited %}disabled{% endif %}>
                     </div>
 
-                    <button type="submit">Sign In</button>
+                    <button type="submit" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>Sign In</button>
 
-                    <p class="already">Don't have an account? <a href="1_register.html">Sign up</a></p>
+                    <p class="already">Don't have an account? <a href="/register">Sign up</a></p>
                 </form>
             </div>
             <div class="campus-container">
@@ -112,6 +113,19 @@
                 }, 5000);
             });
         });
+        // Rate limit logic 
+        const retryAfter = parseInt("{{ retry_after }}", 10);
+        if (!isNaN(retryAfter) && retryAfter > 0) {
+            setTimeout(() => {
+                document.getElementById("username").disabled = false;
+                document.getElementById("password").disabled = false;
+
+                const btn = document.querySelector("button[type='submit']");
+                btn.disabled = false;
+                btn.style.backgroundColor = ""; 
+                document.querySelector("form#login-form").onsubmit = null;
+            }, retryAfter * 1000);
+        }
     </script>
 
 </body>

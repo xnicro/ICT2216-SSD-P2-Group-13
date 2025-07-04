@@ -1,6 +1,6 @@
 import mysql.connector
 import os
-from flask import Flask, Blueprint, current_app, jsonify, request, session, redirect, url_for, flash
+from flask import Flask, Blueprint, abort, current_app, jsonify, render_template, request, session, redirect, url_for, flash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from flask_wtf.csrf import validate_csrf
@@ -116,7 +116,7 @@ def register_user():
         
         
 @bp.route("/login", methods=["POST"])
-@limiter.limit("5 per 2 minutes")
+@limiter.limit("5 per minute")
 def login_user():
     # Check if CSRF token matches
     csrf_token = request.form.get("csrf_token")
@@ -192,7 +192,7 @@ def logout():
 @bp.route("/update_role", methods=["POST"])
 def update_role():
     if session.get("role") != "superadmin":
-        return jsonify(success=False, error="Unauthorized"), 403
+        abort(403)
 
     # Check if CSRF Matches
     csrf_token = request.headers.get("X-CSRFToken")
@@ -230,8 +230,10 @@ def update_role():
 
 @bp.errorhandler(RateLimitExceeded)
 def ratelimit_handler(e):
-    flash("Too many login attempts. Please try again in a minute.", "error")
-    return redirect(url_for('login')), 429
+    retry_after = int(e.description.split(" ")[-1]) if "second" in str(e.description) else 60 
+    flash("Too many login attempts. Please try again in a few minutes.", "error")
+    return render_template('1_login.html', rate_limited=True, retry_after=retry_after), 429
+
 
 # Success routes ====================================================
 @bp.route('/register_success')
