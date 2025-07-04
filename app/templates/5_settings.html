@@ -21,34 +21,56 @@
             <div class="settings-section">
                 <div class="settings-section-header">
                     <h1>User Settings</h1>
+                    <p>Customize your notification preferences and privacy settings</p>
                 </div>
 
                 <!-- Notification Preferences Section (Collapsible) -->
                 <div class="section">
-                    <h2 onclick="toggleSection('notificationPreferences')">Notification Preferences</h2>
+                    <h2 onclick="toggleSection('notificationPreferences')">
+                        <i class="fas fa-bell"></i> Notification Preferences
+                    </h2>
                     <div id="notificationPreferences" class="section-content">
+                        <p class="section-description">
+                            Choose which types of reports you want to be notified about. You'll receive notifications when new reports are submitted in these categories.
+                        </p>
+                        
                         <div class="checkbox-container">
-                            <label for="fireHazard">Fire Hazards</label>
+                            <div class="label-group">
+                                <label for="fireHazard">Fire Hazards</label>
+                                <small>Get notified about fire safety incidents and hazards</small>
+                            </div>
                             <input type="checkbox" id="fireHazard">
                         </div>
 
                         <div class="checkbox-container">
-                            <label for="faultyEquipment">Faulty Facilities/Equipments</label>
+                            <div class="label-group">
+                                <label for="faultyEquipment">Faulty Facilities/Equipment</label>
+                                <small>Get notified about equipment malfunctions and facility issues</small>
+                            </div>
                             <input type="checkbox" id="faultyEquipment">
                         </div>
 
                         <div class="checkbox-container">
-                            <label for="vandalism">Vandalism</label>
+                            <div class="label-group">
+                                <label for="vandalism">Vandalism</label>
+                                <small>Get notified about property damage and vandalism incidents</small>
+                            </div>
                             <input type="checkbox" id="vandalism">
                         </div>
 
                         <div class="checkbox-container">
-                            <label for="suspiciousActivity">Suspicious Activities</label>
+                            <div class="label-group">
+                                <label for="suspiciousActivity">Suspicious Activities</label>
+                                <small>Get notified about suspicious behavior and security concerns</small>
+                            </div>
                             <input type="checkbox" id="suspiciousActivity">
                         </div>
 
                         <div class="checkbox-container">
-                            <label for="otherIncident">Other Incidents</label>
+                            <div class="label-group">
+                                <label for="otherIncident">Other Incidents</label>
+                                <small>Get notified about miscellaneous incidents and reports</small>
+                            </div>
                             <input type="checkbox" id="otherIncident">
                         </div>
                     </div>
@@ -56,44 +78,145 @@
 
                 <!-- Privacy & Permissions Section (Collapsible) -->
                 <div class="section">
-                    <h2 onclick="toggleSection('privacyPermissions')">Privacy & Permissions</h2>
+                    <h2 onclick="toggleSection('privacyPermissions')">
+                        <i class="fas fa-shield-alt"></i> Privacy & Permissions
+                    </h2>
                     <div id="privacyPermissions" class="section-content">
+                        <p class="section-description">
+                            Manage your privacy settings and app permissions.
+                        </p>
+                        
                         <div class="checkbox-container">
                             <div class="label-group">
-                                <label for="locationAccess">Enable Location Access:</label>
+                                <label for="locationAccess">Enable Location Access</label>
+                                <small>Allow the app to access your location for report submissions</small>
                             </div>
                             <input type="checkbox" id="locationAccess">
                         </div>
 
                         <div class="checkbox-container">
                             <div class="label-group">
-                                <label for="cameraAccess">Enable Camera/Microphone Access:</label>
-                                <small>*required in order to submit photos/videos</small>
+                                <label for="cameraAccess">Enable Camera Access</label>
+                                <small>*Required to submit photos with your reports</small>
                             </div>
                             <input type="checkbox" id="cameraAccess">
                         </div>
 
                         <div class="checkbox-container">
                             <div class="label-group">
-                                <label for="dataSharing">Allow sharing of data:</label>
+                                <label for="dataSharing">Allow Data Sharing</label>
+                                <small>Share anonymized data to improve app performance</small>
                             </div>
                             <input type="checkbox" id="dataSharing">
                         </div>
                     </div>
                 </div>
 
-                <button>Logout</button>
+                <!-- Notification Delivery Section -->
+                <div class="section">
+                    <h2 onclick="toggleSection('notificationDelivery')">
+                        <i class="fas fa-envelope"></i> Notification Delivery
+                    </h2>
+                    <div id="notificationDelivery" class="section-content">
+                        <p class="section-description">
+                            Choose how you want to receive notifications.
+                        </p>
+                        
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="emailNotifications">Email Notifications</label>
+                                <small>Receive notifications via email to {{ user.email if user else 'your email' }}</small>
+                            </div>
+                            <input type="checkbox" id="emailNotifications" checked>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="smsNotifications">SMS Notifications</label>
+                                <small>Receive notifications via SMS to {{ user.contact if user else 'your contact' }}</small>
+                            </div>
+                            <input type="checkbox" id="browserNotifications">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="save-button" onclick="saveUserPreferences()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button type="button" class="logout-button" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
 
             </div>
 
         </div>
     </div>
 
+    <!-- Include Socket.IO for real-time notifications (optional) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
     <script>
         function toggleSection(id) {
             const section = document.getElementById(id);
             section.classList.toggle('active');
         }
+
+        // Initialize Socket.IO for real-time notifications (optional)
+        const socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected to notification server');
+        });
+
+        socket.on('new_notification', function(data) {
+            showNotification(`New notification: ${data.message}`, 'info');
+            // Update notification badge if you have one
+            updateNotificationBadge();
+        });
+
+        // Request browser notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        document.getElementById('browserNotifications').checked = true;
+                    }
+                });
+            }
+        }
+
+        // Show browser notification
+        function showBrowserNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: "{{ url_for('static', filename='assets/logo.svg') }}"
+                });
+            }
+        }
+
+        // Enhanced notification handling
+        socket.on('new_notification', function(data) {
+            showNotification(`New notification: ${data.message}`, 'info');
+            
+            if (document.getElementById('browserNotifications').checked) {
+                showBrowserNotification('New Report Alert', data.message);
+            }
+        });
+
+        // Add event listener for browser notifications checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const browserNotificationsCheckbox = document.getElementById('browserNotifications');
+            if (browserNotificationsCheckbox) {
+                browserNotificationsCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        requestNotificationPermission();
+                    }
+                });
+            }
+        });
     </script>
 
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
