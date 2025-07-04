@@ -1,98 +1,26 @@
-from flask_sqlalchemy import SQLAlchemy
+from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for, flash, current_app
+import mysql.connector
 from datetime import datetime
-from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from threading import Thread
 
-db = SQLAlchemy()
-
-# ===== DATABASE MODELS =====
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20), nullable=True)  # For SMS notifications
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    preferences = db.relationship('UserPreference', backref='user', uselist=False, cascade='all, delete-orphan')
-    notifications = db.relationship('Notification', backref='user', lazy=True, cascade='all, delete-orphan')
-
-class UserPreference(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
-    # Notification preferences for different report types
-    fire_hazard = db.Column(db.Boolean, default=False)
-    faulty_equipment = db.Column(db.Boolean, default=False)
-    vandalism = db.Column(db.Boolean, default=False)
-    suspicious_activity = db.Column(db.Boolean, default=False)
-    other_incident = db.Column(db.Boolean, default=False)
-    
-    # Privacy preferences
-    location_access = db.Column(db.Boolean, default=False)
-    camera_access = db.Column(db.Boolean, default=False)
-    data_sharing = db.Column(db.Boolean, default=False)
-    
-    # Delivery preferences
-    email_notifications = db.Column(db.Boolean, default=True)
-    sms_notifications = db.Column(db.Boolean, default=False)
-    browser_notifications = db.Column(db.Boolean, default=False)
-    
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-class Report(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(50), nullable=False)  # 'fire_hazard', 'faulty_equipment', etc.
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
-    # Add relationship to user
-    author = db.relationship('User', backref='reports')
-
-class Notification(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    report_id = db.Column(db.Integer, db.ForeignKey('report.id'), nullable=False)
-    message = db.Column(db.String(500), nullable=False)
-    is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    report = db.relationship('Report', backref='notifications')
-
-# ===== FLASK BLUEPRINT =====
-
 settings_bp = Blueprint('settings', __name__)
 
-# ===== EMAIL CONFIGURATION =====
+# ===== DATABASE HELPER FUNCTIONS =====
 
-class EmailConfig:
-    # Configure these in your environment variables or config file
-    SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-    SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
-    SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'your-app@example.com')
-    SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'your-app-password')
-    APP_NAME = os.getenv('APP_NAME', 'Your App Name')
+def get_db_connection():
+    """Get MySQL database connection using app config"""
+    return mysql.connector.connect(
+        host=current_app.config['MYSQL_HOST'],
+        user=current_app.config['MYSQL_USER'],
+        password=current_app.config['MYSQL_PASSWORD'],
+        database=current_app.config['MYSQL_DB']
+    )
 
 # ===== ROUTES =====
-
-@settings_bp.route('/settings')
-def settings_page():
-    """Render the settings page"""
-    if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
-    
-    user = User.query.get(session['user_id'])
-    if not user:
-        return redirect(url_for('auth.login'))
-    
-    return render_template('5_settings.html', user=user)
 
 @settings_bp.route('/api/settings', methods=['GET'])
 def get_settings():
@@ -101,37 +29,53 @@ def get_settings():
         return jsonify({'error': 'Not authenticated'}), 401
     
     user_id = session['user_id']
-    preferences = UserPreference.query.filter_by(user_id=user_id).first()
     
-    if not preferences:
-        # Return default preferences
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get user preferences
+        cursor.execute('''
+            SELECT * FROM user_preferences WHERE user_id = %s
+        ''', (user_id,))
+        
+        preferences = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not preferences:
+            # Return default preferences
+            return jsonify({
+                'fireHazard': False,
+                'faultyEquipment': False,
+                'vandalism': False,
+                'suspiciousActivity': False,
+                'otherIncident': False,
+                'locationAccess': False,
+                'cameraAccess': False,
+                'dataSharing': False,
+                'emailNotifications': True,
+                'smsNotifications': False,
+                'browserNotifications': False
+            })
+        
         return jsonify({
-            'fireHazard': False,
-            'faultyEquipment': False,
-            'vandalism': False,
-            'suspiciousActivity': False,
-            'otherIncident': False,
-            'locationAccess': False,
-            'cameraAccess': False,
-            'dataSharing': False,
-            'emailNotifications': True,
-            'smsNotifications': False,
-            'browserNotifications': False
+            'fireHazard': bool(preferences['fire_hazard']),
+            'faultyEquipment': bool(preferences['faulty_equipment']),
+            'vandalism': bool(preferences['vandalism']),
+            'suspiciousActivity': bool(preferences['suspicious_activity']),
+            'otherIncident': bool(preferences['other_incident']),
+            'locationAccess': bool(preferences['location_access']),
+            'cameraAccess': bool(preferences['camera_access']),
+            'dataSharing': bool(preferences['data_sharing']),
+            'emailNotifications': bool(preferences['email_notifications']),
+            'smsNotifications': bool(preferences['sms_notifications']),
+            'browserNotifications': bool(preferences['browser_notifications'])
         })
-    
-    return jsonify({
-        'fireHazard': preferences.fire_hazard,
-        'faultyEquipment': preferences.faulty_equipment,
-        'vandalism': preferences.vandalism,
-        'suspiciousActivity': preferences.suspicious_activity,
-        'otherIncident': preferences.other_incident,
-        'locationAccess': preferences.location_access,
-        'cameraAccess': preferences.camera_access,
-        'dataSharing': preferences.data_sharing,
-        'emailNotifications': preferences.email_notifications,
-        'smsNotifications': preferences.sms_notifications,
-        'browserNotifications': preferences.browser_notifications
-    })
+        
+    except Exception as e:
+        print(f"Error getting settings: {str(e)}", flush=True)
+        return jsonify({'error': 'Failed to get settings'}), 500
 
 @settings_bp.route('/api/settings', methods=['POST'])
 def update_settings():
@@ -142,40 +86,82 @@ def update_settings():
     user_id = session['user_id']
     data = request.get_json()
     
-    # Get or create user preferences
-    preferences = UserPreference.query.filter_by(user_id=user_id).first()
-    if not preferences:
-        preferences = UserPreference(user_id=user_id)
-        db.session.add(preferences)
-    
-    # Update notification preferences
-    preferences.fire_hazard = data.get('fireHazard', False)
-    preferences.faulty_equipment = data.get('faultyEquipment', False)
-    preferences.vandalism = data.get('vandalism', False)
-    preferences.suspicious_activity = data.get('suspiciousActivity', False)
-    preferences.other_incident = data.get('otherIncident', False)
-    
-    # Update privacy preferences
-    preferences.location_access = data.get('locationAccess', False)
-    preferences.camera_access = data.get('cameraAccess', False)
-    preferences.data_sharing = data.get('dataSharing', False)
-    
-    # Update delivery preferences
-    preferences.email_notifications = data.get('emailNotifications', True)
-    preferences.sms_notifications = data.get('smsNotifications', False)
-    preferences.browser_notifications = data.get('browserNotifications', False)
-    
     try:
-        db.session.commit()
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Check if preferences exist
+        cursor.execute('SELECT id FROM user_preferences WHERE user_id = %s', (user_id,))
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing preferences
+            cursor.execute('''
+                UPDATE user_preferences SET
+                    fire_hazard = %s,
+                    faulty_equipment = %s,
+                    vandalism = %s,
+                    suspicious_activity = %s,
+                    other_incident = %s,
+                    location_access = %s,
+                    camera_access = %s,
+                    data_sharing = %s,
+                    email_notifications = %s,
+                    sms_notifications = %s,
+                    browser_notifications = %s,
+                    updated_at = NOW()
+                WHERE user_id = %s
+            ''', (
+                data.get('fireHazard', False),
+                data.get('faultyEquipment', False),
+                data.get('vandalism', False),
+                data.get('suspiciousActivity', False),
+                data.get('otherIncident', False),
+                data.get('locationAccess', False),
+                data.get('cameraAccess', False),
+                data.get('dataSharing', False),
+                data.get('emailNotifications', True),
+                data.get('smsNotifications', False),
+                data.get('browserNotifications', False),
+                user_id
+            ))
+        else:
+            # Insert new preferences
+            cursor.execute('''
+                INSERT INTO user_preferences (
+                    user_id, fire_hazard, faulty_equipment, vandalism,
+                    suspicious_activity, other_incident, location_access,
+                    camera_access, data_sharing, email_notifications,
+                    sms_notifications, browser_notifications, created_at, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+            ''', (
+                user_id,
+                data.get('fireHazard', False),
+                data.get('faultyEquipment', False),
+                data.get('vandalism', False),
+                data.get('suspiciousActivity', False),
+                data.get('otherIncident', False),
+                data.get('locationAccess', False),
+                data.get('cameraAccess', False),
+                data.get('dataSharing', False),
+                data.get('emailNotifications', True),
+                data.get('smsNotifications', False),
+                data.get('browserNotifications', False)
+            ))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
         return jsonify({'message': 'Settings updated successfully'}), 200
+        
     except Exception as e:
-        db.session.rollback()
-        print(f"Error updating settings: {str(e)}")
+        print(f"Error updating settings: {str(e)}", flush=True)
         return jsonify({'error': 'Failed to update settings'}), 500
 
 # ===== NOTIFICATION SYSTEM =====
 
-def send_notifications_for_new_report(report):
+def send_notifications_for_new_report(report_id, report_title, report_description, report_category, report_user_id):
     """Send notifications to users who have enabled notifications for this report category"""
     
     # Map report categories to preference fields
@@ -187,63 +173,82 @@ def send_notifications_for_new_report(report):
         'other_incident': 'other_incident'
     }
     
-    preference_field = category_mapping.get(report.category)
+    preference_field = category_mapping.get(report_category)
     if not preference_field:
-        print(f"Unknown report category: {report.category}")
+        print(f"Unknown report category: {report_category}")
         return
     
-    # Get users who want notifications for this category
-    users_to_notify = db.session.query(User).join(UserPreference).filter(
-        getattr(UserPreference, preference_field) == True,
-        User.id != report.user_id  # Don't notify the report creator
-    ).all()
-    
-    print(f"Found {len(users_to_notify)} users to notify for {report.category} report")
-    
-    for user in users_to_notify:
-        # Create in-app notification
-        notification = Notification(
-            user_id=user.id,
-            report_id=report.id,
-            message=f"New {report.category.replace('_', ' ').title()} report: {report.title}"
-        )
-        db.session.add(notification)
-        
-        # Get user's delivery preferences
-        preferences = user.preferences
-        if preferences:
-            # Send email notification if enabled
-            if preferences.email_notifications:
-                send_email_notification_async(user, report)
-            
-            # Send SMS notification if enabled (you'll need to implement this)
-            if preferences.sms_notifications:
-                send_sms_notification_async(user, report)
-        
-        print(f"Notification queued for user {user.username}")
-    
     try:
-        db.session.commit()
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get users who want notifications for this category
+        query = f'''
+            SELECT u.user_id, u.username, u.email, up.*
+            FROM users u
+            JOIN user_preferences up ON u.user_id = up.user_id
+            WHERE up.{preference_field} = 1 
+            AND u.user_id != %s
+        '''
+        
+        cursor.execute(query, (report_user_id,))
+        users_to_notify = cursor.fetchall()
+        
+        print(f"Found {len(users_to_notify)} users to notify for {report_category} report")
+        
+        for user in users_to_notify:
+            # Create in-app notification
+            cursor.execute('''
+                INSERT INTO notification (user_id, report_id, message, is_read, created_at)
+                VALUES (%s, %s, %s, 0, NOW())
+            ''', (
+                user['user_id'],
+                report_id,
+                f"New {report_category.replace('_', ' ').title()} report: {report_title}"
+            ))
+            
+            # Send email notification if enabled
+            if user['email_notifications']:
+                send_email_notification_async(
+                    user['email'], 
+                    user['username'],
+                    report_id,
+                    report_title,
+                    report_description,
+                    report_category
+                )
+            
+            print(f"Notification queued for user {user['username']}")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
         print("All notifications saved successfully")
+        
     except Exception as e:
-        db.session.rollback()
-        print(f"Error saving notifications: {str(e)}")
+        print(f"Error sending notifications: {str(e)}")
 
-def send_email_notification_async(user, report):
+def send_email_notification_async(email, username, report_id, report_title, report_description, report_category):
     """Send email notification in a background thread"""
-    thread = Thread(target=send_email_notification, args=(user, report))
+    thread = Thread(target=send_email_notification, args=(email, username, report_id, report_title, report_description, report_category))
     thread.daemon = True
     thread.start()
 
-def send_email_notification(user, report):
+def send_email_notification(email, username, report_id, report_title, report_description, report_category):
     """Send email notification to user"""
     try:
-        config = EmailConfig()
+        # Email configuration
+        SMTP_SERVER = current_app.config.get('SMTP_SERVER', 'smtp.gmail.com')
+        SMTP_PORT = current_app.config.get('SMTP_PORT', 587)
+        SENDER_EMAIL = current_app.config.get('SENDER_EMAIL', 'your-app@example.com')
+        SENDER_PASSWORD = current_app.config.get('SENDER_PASSWORD', 'your-app-password')
+        APP_NAME = current_app.config.get('APP_NAME', 'Your App Name')
         
         msg = MIMEMultipart()
-        msg['From'] = config.SENDER_EMAIL
-        msg['To'] = user.email
-        msg['Subject'] = f"🔔 New {report.category.replace('_', ' ').title()} Report Alert"
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = email
+        msg['Subject'] = f"🔔 New {report_category.replace('_', ' ').title()} Report Alert"
         
         # Create HTML email body
         html_body = f"""
@@ -252,20 +257,20 @@ def send_email_notification(user, report):
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h2 style="color: #e74c3c;">📢 New Report Alert</h2>
                 
-                <p>Hello <strong>{user.username}</strong>,</p>
+                <p>Hello <strong>{username}</strong>,</p>
                 
                 <p>A new report has been submitted in a category you're subscribed to:</p>
                 
                 <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #467b65;">
                     <h3 style="margin-top: 0; color: #467b65;">📋 Report Details</h3>
-                    <p><strong>Category:</strong> {report.category.replace('_', ' ').title()}</p>
-                    <p><strong>Title:</strong> {report.title}</p>
-                    <p><strong>Description:</strong> {report.description[:200]}{'...' if len(report.description) > 200 else ''}</p>
-                    <p><strong>Submitted:</strong> {report.created_at.strftime('%B %d, %Y at %I:%M %p')}</p>
+                    <p><strong>Category:</strong> {report_category.replace('_', ' ').title()}</p>
+                    <p><strong>Title:</strong> {report_title}</p>
+                    <p><strong>Description:</strong> {report_description[:200]}{'...' if len(report_description) > 200 else ''}</p>
+                    <p><strong>Submitted:</strong> {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
                 </div>
                 
                 <p style="margin-top: 30px;">
-                    <a href="http://your-domain.com/reports/{report.id}" 
+                    <a href="http://localhost:5000/report/{report_id}" 
                        style="background-color: #467b65; color: white; padding: 12px 24px; 
                               text-decoration: none; border-radius: 6px; display: inline-block;">
                         View Full Report
@@ -275,14 +280,14 @@ def send_email_notification(user, report):
                 <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
                 
                 <p style="font-size: 14px; color: #6c757d;">
-                    You're receiving this because you've enabled notifications for {report.category.replace('_', ' ').title()} reports. 
+                    You're receiving this because you've enabled notifications for {report_category.replace('_', ' ').title()} reports. 
                     You can change your notification preferences in your 
-                    <a href="http://your-domain.com/settings" style="color: #467b65;">account settings</a>.
+                    <a href="http://localhost:5000/settings" style="color: #467b65;">account settings</a>.
                 </p>
                 
                 <p style="font-size: 12px; color: #999;">
                     Best regards,<br>
-                    The {config.APP_NAME} Team
+                    The {APP_NAME} Team
                 </p>
             </div>
         </body>
@@ -291,76 +296,17 @@ def send_email_notification(user, report):
         
         msg.attach(MIMEText(html_body, 'html'))
         
-        server = smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT)
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
         server.starttls()
-        server.login(config.SENDER_EMAIL, config.SENDER_PASSWORD)
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
         text = msg.as_string()
-        server.sendmail(config.SENDER_EMAIL, user.email, text)
+        server.sendmail(SENDER_EMAIL, email, text)
         server.quit()
         
-        print(f"Email notification sent successfully to {user.email}")
+        print(f"Email notification sent successfully to {email}")
         
     except Exception as e:
-        print(f"Failed to send email to {user.email}: {str(e)}")
-
-def send_sms_notification_async(user, report):
-    """Send SMS notification in a background thread"""
-    thread = Thread(target=send_sms_notification, args=(user, report))
-    thread.daemon = True
-    thread.start()
-
-def send_sms_notification(user, report):
-    """Send SMS notification to user (implement with Twilio or similar service)"""
-    try:
-        # This is a placeholder - implement with your SMS service
-        # Example with Twilio:
-        # from twilio.rest import Client
-        # client = Client(account_sid, auth_token)
-        # message = client.messages.create(
-        #     body=f"New {report.category.replace('_', ' ').title()} report: {report.title}",
-        #     from_='+1234567890',
-        #     to=user.phone
-        # )
-        print(f"SMS notification would be sent to {user.phone} about {report.title}")
-        
-    except Exception as e:
-        print(f"Failed to send SMS to {user.phone}: {str(e)}")
-
-# ===== INTEGRATION WITH EXISTING REPORT SYSTEM =====
-
-# Add this to your existing report submission route
-def integrate_with_report_submission():
-    """
-    Example of how to integrate with your existing report submission system.
-    Add this call to your existing report creation route.
-    """
-    
-    # In your existing report route (e.g., in report_submission.py), add:
-    """
-    @report_bp.route('/api/reports', methods=['POST'])
-    def create_report():
-        if 'user_id' not in session:
-            return jsonify({'error': 'Not authenticated'}), 401
-        
-        data = request.get_json()
-        
-        # Your existing report creation logic
-        report = Report(
-            title=data['title'],
-            description=data['description'],
-            category=data['category'],  # Make sure this matches our category mapping
-            user_id=session['user_id']
-        )
-        
-        db.session.add(report)
-        db.session.commit()
-        
-        # NEW: Add notification system call
-        from user_settings import send_notifications_for_new_report
-        send_notifications_for_new_report(report)
-        
-        return jsonify({'message': 'Report created successfully', 'report_id': report.id}), 201
-    """
+        print(f"Failed to send email to {email}: {str(e)}")
 
 # ===== ADDITIONAL API ENDPOINTS =====
 
@@ -371,21 +317,38 @@ def get_unread_notifications():
         return jsonify({'error': 'Not authenticated'}), 401
     
     user_id = session['user_id']
-    notifications = Notification.query.filter_by(
-        user_id=user_id, 
-        is_read=False
-    ).order_by(Notification.created_at.desc()).limit(50).all()
     
-    notification_list = []
-    for notification in notifications:
-        notification_list.append({
-            'id': notification.id,
-            'message': notification.message,
-            'created_at': notification.created_at.isoformat(),
-            'report_id': notification.report_id
-        })
-    
-    return jsonify(notification_list)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('''
+            SELECT n.*, r.title as report_title
+            FROM notification n
+            LEFT JOIN reports r ON n.report_id = r.report_id
+            WHERE n.user_id = %s AND n.is_read = 0
+            ORDER BY n.created_at DESC
+            LIMIT 50
+        ''', (user_id,))
+        
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        notification_list = []
+        for notification in notifications:
+            notification_list.append({
+                'id': notification['id'],
+                'message': notification['message'],
+                'created_at': notification['created_at'].isoformat() if notification['created_at'] else None,
+                'report_id': notification['report_id']
+            })
+        
+        return jsonify(notification_list)
+        
+    except Exception as e:
+        print(f"Error getting notifications: {str(e)}")
+        return jsonify({'error': 'Failed to get notifications'}), 500
 
 @settings_bp.route('/api/notifications/<int:notification_id>/mark-read', methods=['POST'])
 def mark_notification_read(notification_id):
@@ -394,76 +357,66 @@ def mark_notification_read(notification_id):
         return jsonify({'error': 'Not authenticated'}), 401
     
     user_id = session['user_id']
-    notification = Notification.query.filter_by(
-        id=notification_id, 
-        user_id=user_id
-    ).first()
     
-    if not notification:
-        return jsonify({'error': 'Notification not found'}), 404
-    
-    notification.is_read = True
-    db.session.commit()
-    
-    return jsonify({'message': 'Notification marked as read'}), 200
-
-# ===== UTILITY FUNCTIONS =====
-
-def create_default_preferences(user_id):
-    """Create default preferences for a new user"""
-    preferences = UserPreference(
-        user_id=user_id,
-        email_notifications=True,  # Default to email notifications enabled
-        sms_notifications=False,
-        browser_notifications=False
-    )
-    db.session.add(preferences)
-    db.session.commit()
-    return preferences
-
-def get_notification_summary(user_id):
-    """Get a summary of user's notification preferences"""
-    preferences = UserPreference.query.filter_by(user_id=user_id).first()
-    if not preferences:
-        return "No preferences set"
-    
-    enabled_categories = []
-    if preferences.fire_hazard:
-        enabled_categories.append("Fire Hazards")
-    if preferences.faulty_equipment:
-        enabled_categories.append("Faulty Equipment")
-    if preferences.vandalism:
-        enabled_categories.append("Vandalism")
-    if preferences.suspicious_activity:
-        enabled_categories.append("Suspicious Activities")
-    if preferences.other_incident:
-        enabled_categories.append("Other Incidents")
-    
-    if not enabled_categories:
-        return "No notification categories enabled"
-    
-    return f"Notifications enabled for: {', '.join(enabled_categories)}"
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE notification 
+            SET is_read = 1 
+            WHERE id = %s AND user_id = %s
+        ''', (notification_id, user_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({'message': 'Notification marked as read'}), 200
+        
+    except Exception as e:
+        print(f"Error marking notification as read: {str(e)}")
+        return jsonify({'error': 'Failed to mark notification as read'}), 500
 
 # ===== TESTING FUNCTION =====
 
 @settings_bp.route('/api/test-notification', methods=['POST'])
 def test_notification():
-    """Test notification system (remove in production)"""
+    """Test notification system"""
     if 'user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
-    # Create a test report
-    test_report = Report(
-        title="Test Fire Hazard Report",
-        description="This is a test notification to verify the system is working.",
-        category="fire_hazard",
-        user_id=session['user_id']
-    )
-    
-    db.session.add(test_report)
-    db.session.commit()
-    
-    # Send test notifications
-    send_notifications_for_new_report(test_report)
-    
-    return jsonify({'message': 'Test notification sent'}), 200
+    try:
+        # Create a test report
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO reports (title, description, category, user_id, status_id, created_at)
+            VALUES (%s, %s, %s, %s, 1, NOW())
+        ''', (
+            "Test Fire Hazard Report",
+            "This is a test notification to verify the system is working.",
+            "fire_hazard",
+            session['user_id']
+        ))
+        
+        report_id = cursor.lastrowid
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Send test notifications
+        send_notifications_for_new_report(
+            report_id,
+            "Test Fire Hazard Report",
+            "This is a test notification to verify the system is working.",
+            "fire_hazard",
+            session['user_id']
+        )
+        
+        return jsonify({'message': 'Test notification sent'}), 200
+        
+    except Exception as e:
+        print(f"Error sending test notification: {str(e)}")
+        return jsonify({'error': 'Failed to send test notification'}), 500

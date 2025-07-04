@@ -9,13 +9,25 @@ from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
 from extensions import limiter
 from flask_limiter.errors import RateLimitExceeded
+# Import the notification function
+from user_settings import send_notifications_for_new_report
 
 bp = Blueprint('reports', __name__, template_folder='templates')
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
-# Mapping of form values to their display names
+
+# Updated mapping to match notification system categories
 CATEGORY_MAPPING = {
+    'fires': 'fire_hazard',
+    'faulty_facilities': 'faulty_equipment',
+    'vandalism': 'vandalism',
+    'suspicious_activity': 'suspicious_activity',
+    'other': 'other_incident'
+}
+
+# Display names for UI
+CATEGORY_DISPLAY_NAMES = {
     'fires': 'Fires',
     'faulty_facilities': 'Faulty Facilities/Equipment',
     'vandalism': 'Vandalism',
@@ -59,17 +71,20 @@ def submit_report():
     description = request.form.get('description', '').strip()
     # raw category value from the select
     category_value = request.form.get('category', '')
-    # lookup human-readable label
-    category_name = CATEGORY_MAPPING.get(category_value, category_value)
+    # Get the system category name for notifications
+    category_system_name = CATEGORY_MAPPING.get(category_value, 'other_incident')
+    # Get display name for UI
+    category_display_name = CATEGORY_DISPLAY_NAMES.get(category_value, category_value)
+    
     is_anon = bool(request.form.get('anonymous'))
-    # Only pull category_description if “other” is selected
+    # Only pull category_description if "other" is selected
     category_description = (
         request.form.get('category_description', '').strip()
         if category_value == 'other'
         else None
     )
 
-    # Server-side validation: require a description for “other”
+    # Server-side validation: require a description for "other"
     if category_value == 'other' and not category_description:
         flash('Please provide a short description when you select "Others".', 'danger')
         return render_template('4_report_submission.html',
@@ -82,23 +97,29 @@ def submit_report():
     cursor = conn.cursor(buffered=True, dictionary=True)
     try:
         user_id = None if is_anon else session.get('user_id')
-        # insert using the human-readable category_name
+        
+        # Insert report with both category (for notifications) and category_name (for display)
         cursor.execute("""
             INSERT INTO reports
               (user_id,
+               category,
                category_name,
                category_description,
                is_anonymous,
                title,
-               description)
-            VALUES (%s, %s, %s, %s, %s, %s)
+               description,
+               status_id,
+               created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
         """, (
             user_id,
-            category_name,
+            category_system_name,  # For notification system
+            category_display_name,  # For display
             category_description,
             int(is_anon),
             title,
-            description
+            description,
+            1  # Default status_id (Pending)
         ))
         report_id = cursor.lastrowid
 
@@ -119,15 +140,34 @@ def submit_report():
                 VALUES (%s, %s, %s, %s)
             """, attachments)
 
-        # ——— Commit & finish ———
+        # ——— Commit first to ensure report is saved ———
         conn.commit()
+        
+        # ——— Send notifications (only for non-anonymous reports) ———
+        if not is_anon and user_id:
+            try:
+                send_notifications_for_new_report(
+                    report_id,
+                    title,
+                    description,
+                    category_system_name,
+                    user_id
+                )
+                current_app.logger.info(f"Notifications sent for report {report_id}")
+            except Exception as e:
+                # Log error but don't fail the report submission
+                current_app.logger.error(f"Error sending notifications: {e}")
+                # Optionally, you can flash a warning
+                flash('Report submitted successfully! (Note: Notifications may not have been sent)', 'warning')
+        
         flash('Report submitted successfully!', 'success')
         return redirect(url_for('index'))
 
     except Exception as e:
         conn.rollback()
         current_app.logger.error("Error submitting report: %s", e)
-        raise
+        flash('An error occurred while submitting your report. Please try again.', 'error')
+        return redirect(url_for('reports.submit_report'))
 
     finally:
         cursor.close()
