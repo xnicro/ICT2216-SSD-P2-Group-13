@@ -27,8 +27,8 @@
 
         {# If user is not logged in, show login/register #}
         {% if not session.username %}
-            <a href="1_login.html"><i class="fa-solid fa-right-to-bracket"></i><span>Login</span></a>
-            <a href="1_register.html"><i class="fa-solid fa-user-plus"></i><span>Register</span></a>
+            <a href="/login"><i class="fa-solid fa-right-to-bracket"></i><span>Login</span></a>
+            <a href="/register"><i class="fa-solid fa-user-plus"></i><span>Register</span></a>
         {% endif %}
     </nav>
 </div>

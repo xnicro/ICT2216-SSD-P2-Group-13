@@ -128,7 +128,7 @@ def admin():
 @app.route('/profile')
 @login_required
 def profile():
-    """User profile page with real user data and reports"""
+    # User profile page with real user data and reports
     user_id = session.get('user_id')
     
     # Get current user data
@@ -147,7 +147,7 @@ def profile():
 @app.route('/update_profile', methods=['POST'])
 @login_required
 def update_profile():
-    """Update user profile information"""
+    # Update user profile information
     user_id = session.get('user_id')
     
     try:
@@ -181,7 +181,7 @@ def update_profile():
 @app.route('/change_password', methods=['POST'])
 @login_required
 def change_password():
-    """Change user password"""
+    # Change user password
     user_id = session.get('user_id')
     
     try:
@@ -243,7 +243,7 @@ def change_password():
 @app.route('/api/report/<int:report_id>')
 @login_required
 def get_report_details(report_id):
-    """Get report details for the modal"""
+    # Get report details for the modal
     user_id = session.get('user_id')
     
     try:
@@ -296,7 +296,7 @@ def settings():
 
 @app.route('/health')
 def health():
-    """Health check endpoint for monitoring"""
+    # Health check endpoint for monitoring
     try:
         # Test database connection
         conn = get_db_connection()
@@ -331,7 +331,7 @@ def uploaded_file(filename):
     safe_path = os.path.join(app.root_path, 'uploads')
     return send_from_directory(safe_path, safe_filename)
 
-# custom route to test conn to db
+# custom route to test conn to db, delete after if not needed
 @app.route('/test_db.html')
 def test_db():
     data = []
@@ -346,6 +346,15 @@ def test_db():
     except Exception as e:
         db_status = f'MySQL connection error: {str(e)}'
     return render_template('test_db.html', db_status=db_status, data=data)
+
+# To hide filename/path
+@app.route('/login')
+def login():
+    return render_template('1_login.html')
+
+@app.route('/register')
+def register():
+    return render_template('1_register.html')
 
 # This route is the catch-all so u guys don't have to make a specific route for each page everytime, IT HAS TO BE THE LAST ROUTE
 # Not secure, if u want a specific page to be secure OR with custom logic, make a new route above

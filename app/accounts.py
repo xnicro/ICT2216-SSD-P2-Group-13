@@ -61,7 +61,7 @@ def register_user():
         validate_csrf(csrf_token)
     except ValidationError:
         flash("Invalid or missing CSRF token", "error")
-        return redirect(url_for('catch_all', filename='1_register.html'))
+        return redirect(url_for('register'))
     
     if request.method == 'POST':
         username = request.form['username']
@@ -72,22 +72,22 @@ def register_user():
         # Basic validation
         if len(username) < 3:
             flash("Username must be at least 3 characters", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         if not username.isalnum():  # Only allow letters and numbers
             flash("Username can only contain letters and numbers", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         if not email:
             flash("Email cannot be empty", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         if not password:
             flash("Password cannot be empty", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         if not confirm_password:
             flash("Confirm Password cannot be empty", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         if password != confirm_password:
             flash("Passwords don't match", "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         
         try:
             conn = get_db_connection()
@@ -98,7 +98,7 @@ def register_user():
             cursor.execute(check_query, (username, email))
             if cursor.fetchone():
                 flash("Username or email already exists", "error")
-                return redirect(url_for('catch_all', filename='1_register.html'))
+                return redirect(url_for('register'))
             else:
                 # Insert new user with prepared statement
                 insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
@@ -109,10 +109,10 @@ def register_user():
             cursor.close()
             conn.close()
             flash("Registration successful! Please login.", "success")
-            return redirect(url_for('catch_all', filename='1_login.html'))
+            return redirect(url_for('login'))
         except Exception as e:
             flash(f'Registration error: {str(e)}', "error")
-            return redirect(url_for('catch_all', filename='1_register.html'))
+            return redirect(url_for('register'))
         
         
 @bp.route("/login", methods=["POST"])
@@ -124,7 +124,7 @@ def login_user():
         validate_csrf(csrf_token)
     except ValidationError:
         flash("Invalid or missing CSRF token", "error")
-        return redirect(url_for('catch_all', filename='1_login.html'))
+        return redirect(url_for('login'))
     
     if request.method == 'POST':
         username = request.form['username']
@@ -133,10 +133,10 @@ def login_user():
          # Basic validation
         if not username:
             flash("Username cannot be empty", "error")
-            return redirect(url_for('catch_all', filename='1_login.html'))
+            return redirect(url_for('login'))
         if not password:
             flash("Password cannot be empty", "error")
-            return redirect(url_for('catch_all', filename='1_login.html'))
+            return redirect(url_for('login'))
         
         try:
             conn = get_db_connection()
@@ -150,7 +150,7 @@ def login_user():
 
             if not verify_user: #if no such user
                 flash("Invalid username or password", "error")
-                return redirect(url_for('catch_all', filename='1_login.html'))
+                return redirect(url_for('login'))
             
             try: # Verify password
                 ph.verify(verify_user['pwd'], password)
@@ -176,18 +176,18 @@ def login_user():
             
             except VerifyMismatchError:
                 flash("Invalid username or password", "error")
-                return redirect(url_for('catch_all', filename='1_login.html'))
+                return redirect(url_for('login'))
             
         except Exception as e:
             flash(f'Login error: {str(e)}', "error")
-            return redirect(url_for('catch_all', filename='1_login.html'))
+            return redirect(url_for('login'))
 
 @bp.route("/logout")
 def logout():
     # Logout user and clear session
     session.clear()
     flash("You have been logged out successfully", "info")
-    return redirect(url_for('catch_all', filename='1_login.html'))
+    return redirect(url_for('login'))
 
 @bp.route("/update_role", methods=["POST"])
 def update_role():
@@ -231,7 +231,7 @@ def update_role():
 @bp.errorhandler(RateLimitExceeded)
 def ratelimit_handler(e):
     flash("Too many login attempts. Please try again in a minute.", "error")
-    return redirect(url_for('catch_all', filename='1_login.html')), 429
+    return redirect(url_for('login')), 429
 
 # Success routes ====================================================
 @bp.route('/register_success')
