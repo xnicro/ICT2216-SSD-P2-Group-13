@@ -117,6 +117,7 @@ button {
   background-color: #E5F4F8;
   color: #2B8AF0;
 }
+
 /* Side Bar */
 body div.main {
   display: flex;
@@ -762,4 +763,34 @@ p.already a {
 
 p.already a:hover {
   color: #A8A8A8;
+}
+
+/* Add some basic styling for flash messages */
+.flash-messages {
+  margin-bottom: 20px;
+}
+
+.alert {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-info {
+  background-color: #cce7ff;
+  color: #004085;
+  border: 1px solid #b8daff;
 }
