@@ -12,8 +12,12 @@ from accounts import get_all_users
 from werkzeug.utils import secure_filename
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
+from extensions import limiter
 
 app = Flask(__name__)
+
+limiter.init_app(app) 
+
 csrf = CSRFProtect()
 csrf.init_app(app)
 
@@ -83,6 +87,22 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Role Decorator
+def role_required(*allowed_roles):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'role' not in session:
+                flash('Unauthorized access.', 'error')
+                return redirect(url_for('catch_all', filename='1_login.html'))
+            
+            if session['role'] not in allowed_roles:
+                abort(403)
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 # Helper function to get user by ID
 def get_user_by_id(user_id):
     try:
@@ -148,11 +168,15 @@ def inject_notification_count():
 
 # App routes ============================================================
 @app.route('/')
+@login_required
+@role_required('user')
 def index():
     reports = get_all_reports()
     return render_template('0_index.html', reports=reports)
 
 @app.route('/report/<int:report_id>')
+@login_required
+@role_required('user')
 def view_report(report_id):
     report = get_report_by_id(report_id)
     if not report:
@@ -160,6 +184,8 @@ def view_report(report_id):
     return render_template('0_report_detail.html', report=report)
 
 @app.route('/admin')
+@login_required
+@role_required('admin')
 def admin():
     statuses = get_statuses()
     reports = get_all_reports()
@@ -167,8 +193,9 @@ def admin():
 
 @app.route('/profile')
 @login_required
+@role_required('user')
 def profile():
-    # User profile page with real user data and reports
+    """User profile page with real user data and reports"""
     user_id = session.get('user_id')
     
     # Get current user data
@@ -186,8 +213,9 @@ def profile():
 
 @app.route('/update_profile', methods=['POST'])
 @login_required
+@role_required('user')
 def update_profile():
-    # Update user profile information
+    """Update user profile information"""
     user_id = session.get('user_id')
     
     try:
@@ -220,8 +248,9 @@ def update_profile():
 
 @app.route('/change_password', methods=['POST'])
 @login_required
+@role_required('user')
 def change_password():
-    # Change user password
+    """Change user password"""
     user_id = session.get('user_id')
     
     try:
@@ -280,10 +309,12 @@ def change_password():
     
     return redirect(url_for('profile'))
 
+
 @app.route('/api/report/<int:report_id>')
 @login_required
+@role_required('user')
 def get_report_details(report_id):
-    # Get report details for the modal
+    """Get report details for the modal"""
     user_id = session.get('user_id')
     
     try:
@@ -321,12 +352,17 @@ def get_report_details(report_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/role')
+@login_required
+@role_required('superadmin')
 def role():
     users = get_all_users()
     return render_template('1_role_management.html', users=users, roles=["user","admin"])
 
 @app.route('/report')
+# @login_required
+# @role_required('user')
 def report():
     return redirect(url_for('reports.submit_report'))
 
