@@ -372,7 +372,12 @@ def settings():
     # Get current user for template
     user_id = session.get('user_id')
     current_user = get_user_by_id(user_id)
-    return render_template('5_settings.html', user=current_user)
+    
+    # Check user role and render appropriate template
+    if current_user and current_user.get('role') == 'admin':
+        return render_template('5_admin_settings.html', user=current_user)
+    else:
+        return render_template('5_user_settings.html', user=current_user)
 
 @app.route('/health')
 def health():
