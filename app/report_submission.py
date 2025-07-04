@@ -17,15 +17,6 @@ bp = Blueprint('reports', __name__, template_folder='templates')
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
-# Updated mapping to match notification system categories
-CATEGORY_MAPPING = {
-    'fires': 'fire_hazard',
-    'faulty_facilities': 'faulty_equipment',
-    'vandalism': 'vandalism',
-    'suspicious_activity': 'suspicious_activity',
-    'other': 'other_incident'
-}
-
 # Display names for UI
 CATEGORY_DISPLAY_NAMES = {
     'fires': 'Fires',
@@ -70,8 +61,6 @@ def submit_report():
     description = request.form.get('description', '').strip()
     # raw category value from the select
     category_value = request.form.get('category', '')
-    # Get the system category name for notifications
-    category_system_name = CATEGORY_MAPPING.get(category_value, 'other_incident')
     # Get display name for UI
     category_display_name = CATEGORY_DISPLAY_NAMES.get(category_value, category_value)
     
@@ -97,11 +86,10 @@ def submit_report():
     try:
         user_id = None if is_anon else session.get('user_id')
         
-        # Insert report with both category (for notifications) and category_name (for display)
+        # Insert report with only category_name (remove category field)
         cursor.execute("""
             INSERT INTO reports
               (user_id,
-               category,
                category_name,
                category_description,
                is_anonymous,
@@ -109,11 +97,10 @@ def submit_report():
                description,
                status_id,
                created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())
         """, (
             user_id,
-            category_system_name,  # For notification system
-            category_display_name,  # For display
+            category_display_name,  # Only use display name
             category_description,
             int(is_anon),
             title,
@@ -149,15 +136,13 @@ def submit_report():
                     report_id,
                     title,
                     description,
-                    category_system_name,
+                    category_display_name,
                     user_id
                 )
                 current_app.logger.info(f"Notifications sent for report {report_id}")
             except Exception as e:
                 # Log error but don't fail the report submission
                 current_app.logger.error(f"Error sending notifications: {e}")
-                # Optionally, you can flash a warning
-                flash('Report submitted successfully! (Note: Notifications may not have been sent)', 'warning')
         
         flash('Report submitted successfully!', 'success')
         return redirect(url_for('index'))

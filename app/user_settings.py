@@ -86,6 +86,9 @@ def update_settings():
     user_id = session['user_id']
     data = request.get_json()
     
+    print(f"Updating settings for user_id: {user_id}", flush=True)
+    print(f"Received data: {data}", flush=True)
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -161,21 +164,22 @@ def update_settings():
 
 # ===== NOTIFICATION SYSTEM =====
 
-def send_notifications_for_new_report(report_id, report_title, report_description, report_category, report_user_id):
+# Modified send_notifications_for_new_report function
+def send_notifications_for_new_report(report_id, report_title, report_description, report_category_name, report_user_id):
     """Send notifications to users who have enabled notifications for this report category"""
     
-    # Map report categories to preference fields
+    # Map display names to preference field names
     category_mapping = {
-        'fire_hazard': 'fire_hazard',
-        'faulty_equipment': 'faulty_equipment',
-        'vandalism': 'vandalism',
-        'suspicious_activity': 'suspicious_activity',
-        'other_incident': 'other_incident'
+        'Fires': 'fire_hazard',
+        'Faulty Facilities/Equipment': 'faulty_equipment',
+        'Vandalism': 'vandalism',
+        'Suspicious Activity': 'suspicious_activity',
+        'Others': 'other_incident'
     }
     
-    preference_field = category_mapping.get(report_category)
+    preference_field = category_mapping.get(report_category_name)
     if not preference_field:
-        print(f"Unknown report category: {report_category}")
+        print(f"Unknown report category: {report_category_name}")
         return
     
     try:
@@ -194,7 +198,7 @@ def send_notifications_for_new_report(report_id, report_title, report_descriptio
         cursor.execute(query, (report_user_id,))
         users_to_notify = cursor.fetchall()
         
-        print(f"Found {len(users_to_notify)} users to notify for {report_category} report")
+        print(f"Found {len(users_to_notify)} users to notify for {report_category_name} report")
         
         for user in users_to_notify:
             # Create in-app notification
@@ -204,7 +208,7 @@ def send_notifications_for_new_report(report_id, report_title, report_descriptio
             ''', (
                 user['user_id'],
                 report_id,
-                f"New {report_category.replace('_', ' ').title()} report: {report_title}"
+                f"New {report_category_name} report: {report_title}"
             ))
             
             # Send email notification if enabled
@@ -215,7 +219,7 @@ def send_notifications_for_new_report(report_id, report_title, report_descriptio
                     report_id,
                     report_title,
                     report_description,
-                    report_category
+                    report_category_name  # Pass display name directly
                 )
             
             print(f"Notification queued for user {user['username']}")

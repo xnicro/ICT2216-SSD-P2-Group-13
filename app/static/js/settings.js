@@ -4,6 +4,28 @@ function toggleSection(sectionId) {
   section.classList.toggle('active');
 }
 
+// Function to get CSRF token
+function getCSRFToken() {
+  // Try multiple methods to get CSRF token
+  // Method 1: From meta tag
+  const metaTag = document.querySelector('meta[name="csrf-token"]');
+  if (metaTag) return metaTag.content;
+  
+  // Method 2: From cookie
+  const match = document.cookie.match(/csrf_token=([^;]+)/);
+  if (match) return match[1];
+  
+  // Method 3: From window object (if injected by template)
+  if (window.csrf_token) return window.csrf_token;
+  
+  // Method 4: From a hidden input field
+  const csrfInput = document.querySelector('input[name="csrf_token"]');
+  if (csrfInput) return csrfInput.value;
+  
+  console.error('CSRF token not found');
+  return null;
+}
+
 // Initialize all sections as collapsed and load user preferences
 document.addEventListener("DOMContentLoaded", () => {
   const sections = document.querySelectorAll('.section');
@@ -43,7 +65,9 @@ async function loadUserPreferences() {
       document.getElementById('browserNotifications').checked = preferences.browserNotifications || false;
       
     } else {
-      console.error('Failed to load user preferences');
+      console.error('Failed to load user preferences:', response.status, response.statusText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error details:', errorData);
     }
   } catch (error) {
     console.error('Error loading preferences:', error);
@@ -55,7 +79,10 @@ function setupCheckboxListeners() {
   const checkboxes = document.querySelectorAll('input[type="checkbox"]');
   
   checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', debounce(saveUserPreferences, 500));
+    // Remove debounce for now to make debugging easier
+    checkbox.addEventListener('change', () => {
+      console.log(`Checkbox ${checkbox.id} changed to ${checkbox.checked}`);
+    });
   });
 }
 
@@ -88,14 +115,31 @@ async function saveUserPreferences() {
     browserNotifications: document.getElementById('browserNotifications').checked
   };
   
+  console.log('Saving preferences:', preferences);
+  
   try {
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+      throw new Error('CSRF token not found');
+    }
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken
+    };
+    
+    console.log('Request headers:', headers);
+    
     const response = await fetch('/api/settings', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: headers,
       body: JSON.stringify(preferences)
     });
+    
+    console.log('Response status:', response.status);
+    
+    const responseData = await response.json().catch(() => null);
+    console.log('Response data:', responseData);
     
     if (response.ok) {
       showNotification('Settings saved successfully!', 'success');
@@ -104,7 +148,9 @@ async function saveUserPreferences() {
         setTimeout(() => saveButton.classList.remove('success'), 2000);
       }
     } else {
-      showNotification('Failed to save settings. Please try again.', 'error');
+      const errorMessage = responseData?.error || 'Failed to save settings. Please try again.';
+      console.error('Save failed:', errorMessage);
+      showNotification(errorMessage, 'error');
       if (saveButton) {
         saveButton.classList.add('error');
         setTimeout(() => saveButton.classList.remove('error'), 2000);
@@ -112,7 +158,7 @@ async function saveUserPreferences() {
     }
   } catch (error) {
     console.error('Error saving preferences:', error);
-    showNotification('An error occurred while saving settings.', 'error');
+    showNotification('An error occurred while saving settings: ' + error.message, 'error');
     if (saveButton) {
       saveButton.classList.add('error');
       setTimeout(() => saveButton.classList.remove('error'), 2000);
@@ -141,6 +187,8 @@ function debounce(func, wait) {
 
 // Show notification to user
 function showNotification(message, type = 'info') {
+  console.log(`Notification [${type}]: ${message}`);
+  
   // Remove existing notifications
   const existingNotifications = document.querySelectorAll('.notification');
   existingNotifications.forEach(notification => {
