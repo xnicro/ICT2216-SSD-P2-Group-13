@@ -64,6 +64,38 @@ async function loadUserPreferences() {
       document.getElementById('smsNotifications').checked = preferences.smsNotifications || false;
       document.getElementById('browserNotifications').checked = preferences.browserNotifications || false;
       
+      // Special handling for browser notifications
+      const browserNotifCheckbox = document.getElementById('browserNotifications');
+      if (browserNotifCheckbox) {
+        // Check if browser supports notifications
+        if ('Notification' in window) {
+          // If permission is denied, always show as unchecked
+          if (Notification.permission === 'denied') {
+            browserNotifCheckbox.checked = false;
+            browserNotifCheckbox.disabled = true;
+            
+            // Add a visual indicator
+            const labelGroup = browserNotifCheckbox.closest('.checkbox-container').querySelector('.label-group');
+            if (labelGroup) {
+              const existingWarning = labelGroup.querySelector('.permission-warning');
+              if (!existingWarning) {
+                const warning = document.createElement('small');
+                warning.className = 'permission-warning';
+                warning.style.color = '#dc3545';
+                warning.textContent = 'Blocked by browser - check browser settings';
+                labelGroup.appendChild(warning);
+              }
+            }
+          } else {
+            browserNotifCheckbox.checked = preferences.browserNotifications || false;
+            browserNotifCheckbox.disabled = false;
+          }
+        } else {
+          // Browser doesn't support notifications
+          browserNotifCheckbox.checked = false;
+          browserNotifCheckbox.disabled = true;
+        }
+      }
     } else {
       console.error('Failed to load user preferences:', response.status, response.statusText);
       const errorData = await response.json().catch(() => ({}));
