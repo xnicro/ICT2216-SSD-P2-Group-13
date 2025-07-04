@@ -38,9 +38,25 @@ app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'flask_db')
 print("aaa", flush=True)
 print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWORD'],app.config['MYSQL_DB'], flush=True)
 
+# Email configuration for notifications
+app.config['SMTP_SERVER'] = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+app.config['SMTP_PORT'] = int(os.getenv('SMTP_PORT', 587))
+app.config['SENDER_EMAIL'] = os.getenv('SENDER_EMAIL', 'your-app@example.com')
+app.config['SENDER_PASSWORD'] = os.getenv('SENDER_PASSWORD', 'your-app-password')
+app.config['APP_NAME'] = os.getenv('APP_NAME', 'Your App Name')
+
+# Register blueprints
 app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(accounts_bp)
+
+# Import and register notification system blueprint
+try:
+    from user_settings import settings_bp
+    app.register_blueprint(settings_bp)
+    print("Settings blueprint registered successfully", flush=True)
+except ImportError as e:
+    print(f"Warning: Could not import settings blueprint: {e}", flush=True)
 
 @app.context_processor
 def inject_csrf_token():
@@ -105,6 +121,30 @@ def get_user_reports(user_id):
     except Exception as e:
         print(f"Error getting user reports: {e}")
         return []
+    
+# Helper function to get user notification count
+def get_unread_notification_count(user_id):
+    """Get count of unread notifications for a user"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM notification WHERE user_id = %s AND is_read = FALSE', (user_id,))
+        count = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+        return count
+    except Exception as e:
+        print(f"Error getting notification count: {e}")
+        return 0
+
+# Context processor to inject notification count
+@app.context_processor
+def inject_notification_count():
+    """Inject unread notification count into all templates"""
+    if 'user_id' in session:
+        notification_count = get_unread_notification_count(session['user_id'])
+        return dict(notification_count=notification_count)
+    return dict(notification_count=0)
 
 # App routes ============================================================
 @app.route('/')
@@ -291,8 +331,12 @@ def report():
     return redirect(url_for('reports.submit_report'))
 
 @app.route('/settings')
+@login_required
 def settings():
-    return render_template('5_settings.html')
+    # Get current user for template
+    user_id = session.get('user_id')
+    current_user = get_user_by_id(user_id)
+    return render_template('5_settings.html', user=current_user)
 
 @app.route('/health')
 def health():
