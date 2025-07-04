@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Admin Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
+</head>
+
+<body>
+    <div class="main">
+        {% include 'common/sidebar.html' %}
+
+        <div class="main-content">
+            {% include 'common/topbar.html' %}
+
+            <div class="settings-section">
+                <div class="settings-section-header">
+                    <h1>Admin Settings</h1>
+                    <p>Manage your account, notifications, and security preferences</p>
+                </div>
+
+                <!-- Account Settings Section -->
+                <div class="section">
+                    <h2 onclick="toggleSection('accountSettings')">
+                        <div class="header-content">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Account Settings</span>
+                        </div>
+                    </h2>
+                    <div id="accountSettings" class="section-content">
+                        <p class="section-description">
+                            Manage your account information and preferences.
+                        </p>
+                        
+                        <div class="form-group">
+                            <label for="adminName">Admin Name</label>
+                            <input type="text" id="adminName" value="{{ user.username if user else '' }}" placeholder="Your name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="adminEmail">Email Address</label>
+                            <input type="email" id="adminEmail" value="{{ user.email if user else '' }}" placeholder="Your email">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings Section -->
+                <div class="section">
+                    <h2 onclick="toggleSection('notificationSettings')">
+                        <div class="header-content">
+                            <i class="fas fa-bell"></i>
+                            <span>Notification Settings</span>
+                        </div>
+                    </h2>
+                    <div id="notificationSettings" class="section-content">
+                        <p class="section-description">
+                            Configure how you receive notifications and alerts.
+                        </p>
+                        
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="emailNotifications">Email Notifications</label>
+                                <small>Receive important alerts via email</small>
+                            </div>
+                            <input type="checkbox" id="emailNotifications" checked>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="criticalAlerts">Critical Alerts</label>
+                                <small>Receive immediate notifications for urgent issues</small>
+                            </div>
+                            <input type="checkbox" id="criticalAlerts" checked>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="browserNotifications">Browser Notifications</label>
+                                <small>Show notifications in your browser</small>
+                            </div>
+                            <input type="checkbox" id="browserNotifications">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings Section -->
+                <div class="section">
+                    <h2 onclick="toggleSection('securitySettings')">
+                        <div class="header-content">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Security Settings</span>
+                        </div>
+                    </h2>
+                    <div id="securitySettings" class="section-content">
+                        <p class="section-description">
+                            Manage your account security and authentication.
+                        </p>
+                        
+                        <div class="form-group">
+                            <label>Two-Factor Authentication</label>
+                            <div class="button-group">
+                                <button type="button" class="btn-secondary" onclick="enable2FA()">
+                                    <i class="fas fa-mobile-alt"></i> Enable 2FA
+                                </button>
+                                <small>Add an extra layer of security to your account</small>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="loginAlerts">Login Alerts</label>
+                                <small>Get notified about new logins to your account</small>
+                            </div>
+                            <input type="checkbox" id="loginAlerts" checked>
+                        </div>
+
+                        <div class="checkbox-container">
+                            <div class="label-group">
+                                <label for="sessionTimeout">Auto-Logout After 30 Minutes</label>
+                                <small>Automatically log out after period of inactivity</small>
+                            </div>
+                            <input type="checkbox" id="sessionTimeout" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Settings Button -->
+                <div class="button-group">
+                    <button type="button" class="save-button" onclick="saveAdminSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(id) {
+            const section = document.getElementById(id).parentElement;
+            section.classList.toggle('active');
+        }
+
+        // Request browser notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        document.getElementById('browserNotifications').checked = true;
+                        showNotification('Browser notifications enabled!', 'success');
+                    }
+                });
+            }
+        }
+
+        // Add event listener for browser notifications checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const browserNotificationsCheckbox = document.getElementById('browserNotifications');
+            if (browserNotificationsCheckbox) {
+                browserNotificationsCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        requestNotificationPermission();
+                    }
+                    else {
+                        // User unchecked the box
+                        console.log('Browser notifications disabled by user');
+                        
+                        // Note: You cannot programmatically revoke notification permission
+                        // The user must do this through browser settings
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            if (confirm('To fully disable browser notifications, you need to:\n\n' +
+                                      '1. Click the lock/info icon in your address bar\n' +
+                                      '2. Find "Notifications" in the permissions\n' +
+                                      '3. Change it to "Block"\n\n' +
+                                      'Would you like to keep notifications enabled for now?')) {
+                                this.checked = true;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        function enable2FA() {
+            // Implement 2FA enable logic here
+            showNotification('Two-factor authentication setup initiated', 'info');
+        }
+
+        function saveAdminSettings() {
+            // Implement save logic here
+            showNotification('Admin settings saved successfully!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            console.log(`Notification [${type}]: ${message}`);
+            // Implement your notification UI here
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+
+</html>

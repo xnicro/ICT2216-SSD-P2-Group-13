@@ -7,18 +7,14 @@ function toggleSection(sectionId) {
 // Function to get CSRF token
 function getCSRFToken() {
   // Try multiple methods to get CSRF token
-  // Method 1: From meta tag
   const metaTag = document.querySelector('meta[name="csrf-token"]');
   if (metaTag) return metaTag.content;
   
-  // Method 2: From cookie
   const match = document.cookie.match(/csrf_token=([^;]+)/);
   if (match) return match[1];
   
-  // Method 3: From window object (if injected by template)
   if (window.csrf_token) return window.csrf_token;
   
-  // Method 4: From a hidden input field
   const csrfInput = document.querySelector('input[name="csrf_token"]');
   if (csrfInput) return csrfInput.value;
   
@@ -26,19 +22,44 @@ function getCSRFToken() {
   return null;
 }
 
-// Initialize all sections as collapsed and load user preferences
+// Check if current page is admin settings
+function isAdminSettingsPage() {
+  return document.querySelector('h1')?.textContent === 'Admin Settings';
+}
+
+// Initialize all sections as collapsed and load appropriate preferences
 document.addEventListener("DOMContentLoaded", () => {
   const sections = document.querySelectorAll('.section');
   sections.forEach(section => {
     section.classList.remove('active');
   });
   
-  // Load user preferences from backend
-  loadUserPreferences();
+  // Load appropriate preferences based on page
+  if (isAdminSettingsPage()) {
+    loadAdminPreferences();
+    setupAdminCheckboxListeners();
+  } else {
+    loadUserPreferences();
+    setupCheckboxListeners();
+  }
   
-  // Add event listeners for checkbox changes
-  setupCheckboxListeners();
+  // Setup browser notifications checkbox
+  setupBrowserNotificationsCheckbox();
+  
+  // Setup save button event listener
+  const saveButton = document.querySelector('.save-button');
+  if (saveButton) {
+    saveButton.addEventListener('click', () => {
+      if (isAdminSettingsPage()) {
+        saveAdminSettings();
+      } else {
+        saveUserPreferences();
+      }
+    });
+  }
 });
+
+// ===== USER SETTINGS FUNCTIONS =====
 
 // Load user preferences from backend
 async function loadUserPreferences() {
@@ -60,60 +81,32 @@ async function loadUserPreferences() {
       document.getElementById('dataSharing').checked = preferences.dataSharing || false;
       
       // Update delivery preference checkboxes
-      document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false; // Default true
+      document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false;
       document.getElementById('smsNotifications').checked = preferences.smsNotifications || false;
-      document.getElementById('browserNotifications').checked = preferences.browserNotifications || false;
-      
-      // Special handling for browser notifications
-      const browserNotifCheckbox = document.getElementById('browserNotifications');
-      if (browserNotifCheckbox) {
-        // Check if browser supports notifications
-        if ('Notification' in window) {
-          // If permission is denied, always show as unchecked
-          if (Notification.permission === 'denied') {
-            browserNotifCheckbox.checked = false;
-            browserNotifCheckbox.disabled = true;
-            
-            // Add a visual indicator
-            const labelGroup = browserNotifCheckbox.closest('.checkbox-container').querySelector('.label-group');
-            if (labelGroup) {
-              const existingWarning = labelGroup.querySelector('.permission-warning');
-              if (!existingWarning) {
-                const warning = document.createElement('small');
-                warning.className = 'permission-warning';
-                warning.style.color = '#dc3545';
-                warning.textContent = 'Blocked by browser - check browser settings';
-                labelGroup.appendChild(warning);
-              }
-            }
-          } else {
-            browserNotifCheckbox.checked = preferences.browserNotifications || false;
-            browserNotifCheckbox.disabled = false;
-          }
-        } else {
-          // Browser doesn't support notifications
-          browserNotifCheckbox.checked = false;
-          browserNotifCheckbox.disabled = true;
-        }
-      }
+      updateBrowserNotificationsCheckbox(preferences.browserNotifications || false);
     } else {
       console.error('Failed to load user preferences:', response.status, response.statusText);
       const errorData = await response.json().catch(() => ({}));
       console.error('Error details:', errorData);
+      showNotification('Failed to load settings. Please refresh the page.', 'error');
     }
   } catch (error) {
     console.error('Error loading preferences:', error);
+    showNotification('Error loading settings. Please try again.', 'error');
   }
 }
 
-// Set up event listeners for checkbox changes
+// Set up event listeners for checkbox changes (user settings)
 function setupCheckboxListeners() {
-  const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+  const checkboxes = document.querySelectorAll('#notificationPreferences input[type="checkbox"], #privacyPermissions input[type="checkbox"], #notificationDelivery input[type="checkbox"]');
   
   checkboxes.forEach(checkbox => {
-    // Remove debounce for now to make debugging easier
     checkbox.addEventListener('change', () => {
       console.log(`Checkbox ${checkbox.id} changed to ${checkbox.checked}`);
+      // Special handling for browser notifications
+      if (checkbox.id === 'browserNotifications' && checkbox.checked) {
+        requestNotificationPermission();
+      }
     });
   });
 }
@@ -129,25 +122,135 @@ async function saveUserPreferences() {
   }
   
   const preferences = {
-    // Notification preferences
     fireHazard: document.getElementById('fireHazard').checked,
     faultyEquipment: document.getElementById('faultyEquipment').checked,
     vandalism: document.getElementById('vandalism').checked,
     suspiciousActivity: document.getElementById('suspiciousActivity').checked,
     otherIncident: document.getElementById('otherIncident').checked,
-    
-    // Privacy preferences
     locationAccess: document.getElementById('locationAccess').checked,
     cameraAccess: document.getElementById('cameraAccess').checked,
     dataSharing: document.getElementById('dataSharing').checked,
-    
-    // Delivery preferences
     emailNotifications: document.getElementById('emailNotifications').checked,
     smsNotifications: document.getElementById('smsNotifications').checked,
     browserNotifications: document.getElementById('browserNotifications').checked
   };
   
-  console.log('Saving preferences:', preferences);
+  try {
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+      throw new Error('CSRF token not found');
+    }
+    
+    const response = await fetch('/api/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify(preferences)
+    });
+    
+    if (response.ok) {
+      showNotification('Settings saved successfully!', 'success');
+      if (saveButton) {
+        saveButton.classList.add('success');
+        setTimeout(() => saveButton.classList.remove('success'), 2000);
+      }
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error || 'Failed to save settings');
+    }
+  } catch (error) {
+    console.error('Error saving preferences:', error);
+    showNotification(error.message, 'error');
+    if (saveButton) {
+      saveButton.classList.add('error');
+      setTimeout(() => saveButton.classList.remove('error'), 2000);
+    }
+  } finally {
+    if (saveButton) {
+      saveButton.classList.remove('loading');
+      saveButton.disabled = false;
+    }
+  }
+}
+
+// ===== ADMIN SETTINGS FUNCTIONS =====
+
+// Load admin preferences from backend
+async function loadAdminPreferences() {
+  try {
+    const response = await fetch('/api/admin/settings');
+    if (response.ok) {
+      const preferences = await response.json();
+      
+      // Update notification checkboxes
+      document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false;
+      document.getElementById('criticalAlerts').checked = preferences.criticalAlerts !== false;
+      document.getElementById('loginAlerts').checked = preferences.loginAlerts !== false;
+      document.getElementById('sessionTimeout').checked = preferences.sessionTimeout !== false;
+      
+      // Update browser notifications
+      updateBrowserNotificationsCheckbox(preferences.browserNotifications || false);
+      
+      // Load profile data if fields exist
+      if (document.getElementById('adminName')) {
+        document.getElementById('adminName').value = document.getElementById('adminName').dataset.value || '';
+      }
+      if (document.getElementById('adminEmail')) {
+        document.getElementById('adminEmail').value = document.getElementById('adminEmail').dataset.value || '';
+      }
+    } else {
+      console.error('Failed to load admin preferences:', response.status, response.statusText);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error details:', errorData);
+      showNotification('Failed to load admin settings. Please refresh the page.', 'error');
+    }
+  } catch (error) {
+    console.error('Error loading admin preferences:', error);
+    showNotification('Error loading admin settings. Please try again.', 'error');
+  }
+}
+
+// Set up event listeners for checkbox changes (admin settings)
+function setupAdminCheckboxListeners() {
+  const checkboxes = document.querySelectorAll('#notificationSettings input[type="checkbox"], #securitySettings input[type="checkbox"]');
+  
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      console.log(`Admin checkbox ${checkbox.id} changed to ${checkbox.checked}`);
+      // Special handling for browser notifications
+      if (checkbox.id === 'browserNotifications' && checkbox.checked) {
+        requestNotificationPermission();
+      }
+    });
+  });
+}
+
+// Save admin settings to backend
+async function saveAdminSettings() {
+  const saveButton = document.querySelector('.save-button');
+  
+  // Show loading state
+  if (saveButton) {
+    saveButton.classList.add('loading');
+    saveButton.disabled = true;
+  }
+  
+  // Get profile data
+  const profileData = {
+    username: document.getElementById('adminName').value,
+    email: document.getElementById('adminEmail').value
+  };
+  
+  // Get preferences
+  const preferences = {
+    emailNotifications: document.getElementById('emailNotifications').checked,
+    criticalAlerts: document.getElementById('criticalAlerts').checked,
+    browserNotifications: document.getElementById('browserNotifications').checked,
+    loginAlerts: document.getElementById('loginAlerts').checked,
+    sessionTimeout: document.getElementById('sessionTimeout').checked
+  };
   
   try {
     const csrfToken = getCSRFToken();
@@ -160,43 +263,43 @@ async function saveUserPreferences() {
       'X-CSRFToken': csrfToken
     };
     
-    console.log('Request headers:', headers);
+    // First update profile
+    const profileResponse = await fetch('/api/admin/update-profile', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(profileData)
+    });
     
-    const response = await fetch('/api/settings', {
+    if (!profileResponse.ok) {
+      const errorData = await profileResponse.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to update profile');
+    }
+    
+    // Then update preferences
+    const prefsResponse = await fetch('/api/admin/settings', {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(preferences)
     });
     
-    console.log('Response status:', response.status);
+    if (!prefsResponse.ok) {
+      const errorData = await prefsResponse.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to update preferences');
+    }
     
-    const responseData = await response.json().catch(() => null);
-    console.log('Response data:', responseData);
-    
-    if (response.ok) {
-      showNotification('Settings saved successfully!', 'success');
-      if (saveButton) {
-        saveButton.classList.add('success');
-        setTimeout(() => saveButton.classList.remove('success'), 2000);
-      }
-    } else {
-      const errorMessage = responseData?.error || 'Failed to save settings. Please try again.';
-      console.error('Save failed:', errorMessage);
-      showNotification(errorMessage, 'error');
-      if (saveButton) {
-        saveButton.classList.add('error');
-        setTimeout(() => saveButton.classList.remove('error'), 2000);
-      }
+    showNotification('Admin settings saved successfully!', 'success');
+    if (saveButton) {
+      saveButton.classList.add('success');
+      setTimeout(() => saveButton.classList.remove('success'), 2000);
     }
   } catch (error) {
-    console.error('Error saving preferences:', error);
-    showNotification('An error occurred while saving settings: ' + error.message, 'error');
+    console.error('Error saving admin settings:', error);
+    showNotification(error.message, 'error');
     if (saveButton) {
       saveButton.classList.add('error');
       setTimeout(() => saveButton.classList.remove('error'), 2000);
     }
   } finally {
-    // Remove loading state
     if (saveButton) {
       saveButton.classList.remove('loading');
       saveButton.disabled = false;
@@ -204,17 +307,96 @@ async function saveUserPreferences() {
   }
 }
 
-// Debounce function to limit API calls
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+// ===== COMMON FUNCTIONS =====
+
+// Setup browser notifications checkbox with proper state
+function setupBrowserNotificationsCheckbox() {
+  const browserNotifCheckbox = document.getElementById('browserNotifications');
+  if (!browserNotifCheckbox) return;
+
+  if (!('Notification' in window)) {
+    browserNotifCheckbox.checked = false;
+    browserNotifCheckbox.disabled = true;
+    addPermissionWarning(browserNotifCheckbox, 'Browser notifications not supported');
+    return;
+  }
+
+  if (Notification.permission === 'denied') {
+    browserNotifCheckbox.checked = false;
+    browserNotifCheckbox.disabled = true;
+    addPermissionWarning(browserNotifCheckbox, 'Blocked by browser - check browser settings');
+  }
+}
+
+// Update browser notifications checkbox state
+function updateBrowserNotificationsCheckbox(shouldBeChecked) {
+  const browserNotifCheckbox = document.getElementById('browserNotifications');
+  if (!browserNotifCheckbox) return;
+
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      browserNotifCheckbox.checked = shouldBeChecked;
+      browserNotifCheckbox.disabled = false;
+    } else if (Notification.permission === 'denied') {
+      browserNotifCheckbox.checked = false;
+      browserNotifCheckbox.disabled = true;
+      addPermissionWarning(browserNotifCheckbox, 'Blocked by browser - check browser settings');
+    } else {
+      browserNotifCheckbox.checked = false;
+    }
+  } else {
+    browserNotifCheckbox.checked = false;
+    browserNotifCheckbox.disabled = true;
+    addPermissionWarning(browserNotifCheckbox, 'Browser notifications not supported');
+  }
+}
+
+// Add permission warning message
+function addPermissionWarning(checkbox, message) {
+  const labelGroup = checkbox.closest('.checkbox-container')?.querySelector('.label-group');
+  if (!labelGroup) return;
+
+  const existingWarning = labelGroup.querySelector('.permission-warning');
+  if (existingWarning) return;
+
+  const warning = document.createElement('small');
+  warning.className = 'permission-warning';
+  warning.style.color = '#dc3545';
+  warning.textContent = message;
+  labelGroup.appendChild(warning);
+}
+
+// Request browser notification permission
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      const browserNotifCheckbox = document.getElementById('browserNotifications');
+      if (!browserNotifCheckbox) return;
+
+      if (permission === 'granted') {
+        browserNotifCheckbox.checked = true;
+        showNotification('Browser notifications enabled!', 'success');
+      } else {
+        browserNotifCheckbox.checked = false;
+        if (permission === 'denied') {
+          browserNotifCheckbox.disabled = true;
+          addPermissionWarning(browserNotifCheckbox, 'Blocked by browser - check browser settings');
+        }
+      }
+    });
+  }
+}
+
+// Enable 2FA (admin only)
+function enable2FA() {
+  showNotification('Two-factor authentication setup initiated', 'info');
+  // Actual 2FA implementation would go here
+}
+
+// Change password (admin only)
+function changePassword() {
+  showNotification('Password change requested', 'info');
+  // Actual password change implementation would go here
 }
 
 // Show notification to user
@@ -232,7 +414,7 @@ function showNotification(message, type = 'info') {
   notification.className = `notification ${type}`;
   notification.textContent = message;
   
-  // Add styles (these will be overridden by CSS classes)
+  // Add styles
   notification.style.cssText = `
     position: fixed;
     top: 20px;
@@ -252,6 +434,15 @@ function showNotification(message, type = 'info') {
     gap: 12px;
   `;
   
+  // Add icon based on type
+  const icon = document.createElement('i');
+  icon.className = `fas ${
+    type === 'success' ? 'fa-check-circle' : 
+    type === 'error' ? 'fa-exclamation-circle' : 
+    'fa-info-circle'
+  }`;
+  notification.prepend(icon);
+  
   // Add animation keyframes if not already added
   if (!document.querySelector('#notification-styles')) {
     const style = document.createElement('style');
@@ -264,6 +455,9 @@ function showNotification(message, type = 'info') {
       @keyframes slideOut {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
+      }
+      .notification {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       }
     `;
     document.head.appendChild(style);
@@ -282,15 +476,28 @@ function showNotification(message, type = 'info') {
   }, 4000);
 }
 
-// Function to check for new notifications (optional - for real-time updates)
+// Debounce function to limit API calls
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Check for new notifications (optional - for real-time updates)
 async function checkForNewNotifications() {
   try {
-    const response = await fetch('/api/notifications/unread');
+    const endpoint = isAdminSettingsPage() ? '/api/admin/notifications/unread' : '/api/notifications/unread';
+    const response = await fetch(endpoint);
     if (response.ok) {
       const notifications = await response.json();
       
       if (notifications.length > 0) {
-        // Update notification badge or show alerts
         updateNotificationBadge(notifications.length);
       }
     }
