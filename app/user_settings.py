@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from threading import Thread
+from access_control import permission_required
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -72,6 +73,7 @@ def get_settings():
         return jsonify({'error': 'Failed to get settings'}), 500
 
 @settings_bp.route('/api/settings', methods=['POST'])
+@permission_required('update_user_settings')
 def update_settings():
     """Update user settings"""
     if 'user_id' not in session:

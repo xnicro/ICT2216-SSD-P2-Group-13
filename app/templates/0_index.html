@@ -70,7 +70,7 @@
     </div>
 
     <script>
-        const home_reports = {{ reports | tojson }};
+        const home_reports = JSON.parse('{{ reports | tojson | safe }}');
     </script>
     <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>

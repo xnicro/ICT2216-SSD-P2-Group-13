@@ -7,6 +7,7 @@ from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
 from extensions import limiter
 from flask_limiter.errors import RateLimitExceeded
+from access_control import login_required, permission_required
 
 bp = Blueprint('accounts', __name__)
 
@@ -190,10 +191,9 @@ def logout():
     return redirect(url_for('login'))
 
 @bp.route("/update_role", methods=["POST"])
+@login_required
+@permission_required("manage_roles")
 def update_role():
-    if session.get("role") != "superadmin":
-        abort(403)
-
     # Check if CSRF Matches
     csrf_token = request.headers.get("X-CSRFToken")
     try:
@@ -233,42 +233,4 @@ def ratelimit_handler(e):
     retry_after = int(e.description.split(" ")[-1]) if "second" in str(e.description) else 60 
     flash("Too many login attempts. Please try again in a few minutes.", "error")
     return render_template('1_login.html', rate_limited=True, retry_after=retry_after), 429
-
-
-# Success routes ====================================================
-@bp.route('/register_success')
-def register_success():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Registration Successful</title>
-        <h1>Registration Successful</h1>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                text-align: center;
-                padding: 50px;
-            }
-            .back-button {
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 16px;
-                text-decoration: none;
-                display: inline-block;
-            }
-            .back-button:hover {
-                background-color: #45a049;
-            }
-        </style>
-    </head>
-    <body>
-        <a href="/" class="back-button">Go Back to Home</a>
-    </body>
-    </html>
-    """
 

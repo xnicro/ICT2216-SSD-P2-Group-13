@@ -6,6 +6,7 @@ from flask import (
 import datetime
 from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
+from access_control import login_required, permission_required
 
 bp = Blueprint('admin_dashboard', __name__)
 
@@ -76,10 +77,9 @@ def get_report_attachments(report_id):
 
 
 @bp.route("/update_status", methods=["POST"])
+@login_required
+@permission_required("manage_reports")
 def update_status():
-    if session.get("role") != "admin":
-        abort(403)
-
     csrf_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
     try:
         validate_csrf(csrf_token)
@@ -114,17 +114,17 @@ def update_status():
         conn.close()
 
 @bp.route("/admin/report_attachments/<int:report_id>", methods=["GET"])
+@login_required
+@permission_required("view_report_attachments")
 def fetch_report_attachments(report_id):
     attachments = get_report_attachments(report_id)
     return jsonify(attachments)
 
 # Delete Functions
-
 @bp.route("/admin/delete_report/<int:report_id>", methods=["DELETE"])
+@login_required
+@permission_required("manage_reports")
 def delete_report(report_id):
-    if session.get("role") != "admin":
-        abort(403)
-
     csrf_token = request.headers.get("X-CSRFToken")
     try:
         validate_csrf(csrf_token)

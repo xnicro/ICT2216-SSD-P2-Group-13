@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, session, current_app
 import mysql.connector
 from datetime import datetime
 from functools import wraps
+from access_control import permission_required
 
 admin_settings_bp = Blueprint('admin_settings', __name__, url_prefix='/api/admin')
 
@@ -66,6 +67,7 @@ def get_admin_settings():
 
 @admin_settings_bp.route('/settings', methods=['POST'])
 @admin_required
+@permission_required('update_admin_settings')
 def update_admin_settings():
     """Update admin settings"""
     user_id = session['user_id']
