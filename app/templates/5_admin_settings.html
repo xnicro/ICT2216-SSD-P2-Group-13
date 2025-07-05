@@ -87,13 +87,6 @@
                             <input type="checkbox" id="loginAlerts" checked>
                         </div>
 
-                        <div class="checkbox-container">
-                            <div class="label-group">
-                                <label for="sessionTimeout">Auto-Logout After 30 Minutes</label>
-                                <small>Automatically log out after period of inactivity</small>
-                            </div>
-                            <input type="checkbox" id="sessionTimeout" checked>
-                        </div>
                     </div>
                 </div>
 
@@ -158,14 +151,6 @@
             showNotification('Two-factor authentication setup initiated', 'info');
         }
 
-        function saveAdminSettings() {
-            // This function is now implemented in settings.js
-        }
-
-        // Simple notification function for inline script
-        function showNotification(message, type) {
-            console.log(`${type}: ${message}`);
-        }
     </script>
 
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
