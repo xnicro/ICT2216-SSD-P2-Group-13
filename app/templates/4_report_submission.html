@@ -35,21 +35,22 @@
                     {% endwith %}
                 </div>
 
-                <form method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data">
+                <form id="report-form" method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data"
+                    {% if rate_limited %}onsubmit="return false;"{% endif %}>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <div>
                         <label for="title">Title</label>
-                        <input type="text" id="title" name="title" value="{{ title | e }}">
+                        <input type="text" id="title" name="title" value="{{ title | e }}" {% if rate_limited %}disabled{% endif %}>
                     </div>
 
                     <div>
                         <label for="description">Description</label>
-                        <textarea id="description" name="description">{{ description | e }}</textarea>
+                        <textarea id="description" name="description" {% if rate_limited %}disabled{% endif %}>{{ description | e }}</textarea>
                     </div>
 
                     <div>
                         <label for="category">Category</label>
-                        <select id="category" name="category">
+                        <select id="category" name="category" {% if rate_limited %}disabled{% endif %}>
                             <option value="" disabled {% if not selected_category %}selected{% endif %}>Select a category</option>
                             <option value="fires" {% if selected_category == 'fires' %}selected{% endif %}>Fires</option>
                             <option value="faulty_facilities" {% if selected_category == 'faulty_facilities' %}selected{% endif %}>Faulty Facilities/Equipment</option>
@@ -62,11 +63,11 @@
                     <div id="other-desc-container" {% if selected_category != 'other' %}style="display: none;"{% endif %}>
                         <label for="category_description">Please specify</label>
                         <input type="text" id="category_description" name="category_description"
-                            placeholder="Short description of category" value="{{ category_description | e }}">
+                            placeholder="Short description of category" value="{{ category_description | e }}" {% if rate_limited %}disabled{% endif %}>
                     </div>
 
                     <div class="check-container">
-                        <input class="check" type="checkbox" name="anonymous" value="1" {% if is_anonymous %}checked{% endif %}>
+                        <input class="check" type="checkbox" name="anonymous" value="1" {% if is_anonymous %}checked{% endif %} {% if rate_limited %}disabled{% endif %}>
                         <label>
                             Submit anonymously
                         </label>
@@ -75,8 +76,8 @@
                     {# --- START: ATTACHMENT SECTION MODIFICATION --- #}
                     <div class="attachment-upload-section">
                         <label for="file-upload-input">Attachments</label>
-                        <input type="file" id="file-upload-input" name="attachments[]" multiple style="display: none;">
-                        <button type="button" id="custom-file-upload-button" class="custom-file-upload-button">
+                        <input type="file" id="file-upload-input" name="attachments[]" multiple style="display: none;" {% if rate_limited %}disabled{% endif %}>
+                        <button type="button" id="custom-file-upload-button" class="custom-file-upload-button" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>
                             <i class="fa-solid fa-upload"></i> Choose Files
                         </button>
                         <div id="file-preview-container" class="file-preview-container">
@@ -85,7 +86,7 @@
                     {# --- END: ATTACHMENT SECTION MODIFICATION --- #}
 
                     <div>
-                        <button type="submit" class="upload-btn"><i
+                        <button type="submit" class="upload-btn" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}><i
                                 class="fa-sharp fa-solid fa-arrow-up-from-bracket"></i>Submit</button>
                     </div>
                 </form>

@@ -67,94 +67,104 @@
     background-color: #0056b3; /* Darker blue on hover */
 }
 
+/* ... (previous CSS unchanged until .file-preview-container) ... */
+
 /* Container for all file preview items */
 .file-preview-container {
     display: flex;
     flex-wrap: wrap; /* Allows attachment items to wrap to the next row */
     gap: 15px; /* Spacing between individual attachment items */
     margin-top: 10px; /* Space from the "Choose Files" button */
-    /* Ensure this container has enough width from its parent to allow wrapping */
+    /* No need for explicit width here, flex items will distribute */
+    justify-content: flex-start; /* Align items to the start of the line */
+    align-items: flex-start; /* Align items to the top of the line */
 }
 
 /* Styling for each individual file attachment item */
 .file-attachment-item {
-    display: flex; /* Makes immediate children (icon, file-text-content) flex items in a row */
-    align-items: center; /* THIS IS KEY: Vertically centers items like icon and text content */
-    justify-content: flex-start; /* Ensure content starts from the left within the item */
+    display: flex;
+    align-items: center; /* Vertically centers icon and file-text-content */
+    /* Changed to 'flex-start' for alignment within the item */
+    justify-content: flex-start; 
     
     padding: 10px;
-    padding-right: 10px; /* Add extra padding on the right for the absolute delete button */
+    /* Adjusted padding-right to ensure enough space for the delete button */ 
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background-color: #fcfcfc;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     position: relative; /* Crucial for absolute positioning of the delete button */
-    box-sizing: border-box;
+    box-sizing: border-box; /* Include padding and border in the element's total width/height */
 
-    /* REMOVE or adjust 'flex' and 'max-width' if you want a true fit-content behavior.
-       If you want them shorter, but still with a wrapping grid, keep these and adjust.
-       For a true "fit-content" for each item, without a strict grid:
-    */
-    /* Option A: Flexible grid (like before, but potentially shorter based on content) */
-    flex: 0 0 calc(33.33% - 32.312px); /* Adjust this percentage to make them shorter or narrower */
-    max-width: calc(33.33% - 32.312px); /* e.g., 25% for 4 per row, or 200px for fixed width */
-    min-width: 140px; /* Ensures a minimum width, prevents collapse */
+    /* NEW FLEX CALCULATION FOR 3-4 ITEMS PER ROW */
+    /* For 3 items: (100% - (2 * gap)) / 3 */
+    /* For 4 items: (100% - (3 * gap)) / 4 */
+    /* Let's target 3-4 on desktop by default, making them flexible */
+
+    /* This will make them grow and shrink flexibly while trying to fit */
+    flex-grow: 1; 
+    flex-shrink: 1;
+    /* Adjusted flex-basis to target about 3 items per row on larger screens */
+    flex-basis: calc(33.33% - 15px); /* Start with a third of the width minus one gap */
+    max-width: calc(33.33% - 15px); /* Prevent them from growing beyond 3 per row */
+    min-width: 180px; /* Increased min-width to ensure content fits better before wrapping */
+    
+    /* Ensure consistent height and hide overflow, as discussed previously for ellipsis */
+    min-height: 60px; /* Fixed height for consistency */
+    overflow: hidden; /* Hide any content that goes beyond the fixed height */
 }
 
-/* Adjust for 4 items per row if desired */
-/* Uncomment this and comment the 3-item rule above if you prefer 4 per row */
-/*
-.file-attachment-item {
-    flex: 0 0 calc(25% - 11.25px); // (100%/4) - (15px * 3 / 4) = 25% - 11.25px
-    max-width: calc(25% - 11.25px);
+/* Optional: Override for 4 items per row on very wide screens if desired */
+@media (min-width: 1200px) { /* Example breakpoint for very wide screens */
+    .file-attachment-item {
+        flex-basis: calc(25% - 11.25px); /* (100% - (3 * 15px)) / 4 = 25% - 11.25px */
+        max-width: calc(25% - 11.25px);
+    }
 }
-*/
 
 .file-attachment-item:hover {
-    border-color: #007bff; /* Highlight border on hover */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Slightly more prominent shadow on hover */
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 /* Icon styling */
 .file-attachment-icon {
     font-size: 2.2rem;
     color: #6c757d;
-    flex-shrink: 0; /* Prevent icon from shrinking */
-    /* Ensure no extra padding/margin here pushing it off-center */
+    flex-shrink: 0; /* Prevent icon from shrinking, it has a fixed size */
 }
 
 /* Container for file name and size */
 .file-text-content {
-    display: flex;       /* Make this a flex container */
-    flex-grow: 1;        /* Allows text content to take up available space */
-    min-width: 0;        /* IMPORTANT: Allows content to shrink below its intrinsic size */
-    
-    flex-direction: row; /* Align children (name, size) horizontally */
-    align-items: baseline; /* Align them on their text baseline for better vertical alignment */
-    flex-wrap: nowrap;   /* Prevent wrapping within this container initially */
-    justify-content: space-between; /* Distributes space between name and size */
-    
-    /* Consider adding a tiny bit of vertical padding if the text feels too close to the top/bottom */
-    /* padding: 2px 0; */
+    display: flex;
+  flex-direction: column;    /* stack name over size */
+  justify-content: center;   /* vertical centering */
+  align-items: center;       /* horizontal centering */
+  text-align: center;        /* makes the ellipsis center nicely */
+  flex-grow: 1;
+  min-width: 0;              /* needed for ellipsis */
+  width: 100%;               /* <-- make this whole area the boundary */
 }
 
 /* File name styling */
 .file-attachment-name {
-    font-weight: 600;
-    color: #333;
-    word-break: break-word; /* Allows long words to break and wrap */
-    flex-grow: 1; /* Allow it to grow to take up space */
-    flex-shrink: 1; /* Allow it to shrink */
-    min-width: 0; /* Crucial for text wrapping within flex item */
+     display: block;            /* ensure it's a block-level box */
+    width: 100%;               /* <-- now it will overflow against its parent */
+    white-space: nowrap;       /* single line */
+    overflow: hidden;          
+    text-overflow: ellipsis;   
+    flex-shrink: 1;
+    min-width: 0;              /* redundant but safe */
 }
 
 /* File size styling */
 .file-attachment-size {
     font-size: 0.8rem;
     color: #888;
-    word-break: break-word; /* Allow size text to break if it somehow gets too long */
-    flex-shrink: 0;     /* Prevent it from shrinking more than its content */
-    white-space: nowrap; /* Keep size on one line unless forced to wrap by word-break */
+    white-space: nowrap; /* Keep size on one line */
+    overflow: hidden;    /* Hide if it somehow overflows */
+    text-overflow: ellipsis; /* Ellipsis for size if it overflows (unlikely but safe) */
+    flex-shrink: 0; /* Prevent it from shrinking more than its content */
 }
 
 /* Delete button styling (the 'x' button) */
@@ -189,29 +199,29 @@
 }
 
 /* Specific icon styles based on file extension/type (using Font Awesome classes) */
-/* These classes are applied by JavaScript and display the correct icon */
-/* Font Awesome 6.x is required */
-.fa-file-image::before { content: "\f1c5"; } /* For image files */
-.fa-file-pdf::before { content: "\f1c1"; } /* For PDF files */
-.fa-file-word::before { content: "\f1c6"; } /* For Word documents */
-.fa-file-excel::before { content: "\f1c3"; } /* For Excel spreadsheets */
-.fa-file-powerpoint::before { content: "\f1c4"; } /* For PowerPoint presentations */
-.fa-file-archive::before { content: "\f1c6"; } /* For archive files (zip, rar) */
-.fa-file-alt::before { content: "\f15c"; } /* For generic text documents (formerly fa-file-alt, now fa-file-lines) */
-.fa-file::before { content: "\f15b"; } /* General fallback file icon */
+.fa-file-image::before { content: "\f1c5"; }
+.fa-file-pdf::before { content: "\f1c1"; }
+.fa-file-word::before { content: "\f1c6"; }
+.fa-file-excel::before { content: "\f1c3"; }
+.fa-file-powerpoint::before { content: "\f1c4"; }
+.fa-file-archive::before { content: "\f1c6"; }
+.fa-file-alt::before { content: "\f15c"; }
+.fa-file::before { content: "\f15b"; }
 
 
 /* Media queries for responsiveness (optional but recommended) */
 @media (max-width: 992px) {
     .file-attachment-item {
-        flex: 0 0 calc(50% - 7.5px); /* 2 items per row on medium screens */
+        flex-basis: calc(50% - 7.5px); /* 2 items per row on medium screens */
         max-width: calc(50% - 7.5px);
+        height: 60px; /* Maintain consistent height */
     }
 }
 
 @media (max-width: 768px) {
     .file-attachment-item {
-        flex: 0 0 calc(100% - 0px); /* 1 item per row on small screens */
+        flex-basis: calc(100% - 0px); /* 1 item per row on small screens */
         max-width: calc(100% - 0px);
+        height: 60px; /* Maintain consistent height */
     }
 }

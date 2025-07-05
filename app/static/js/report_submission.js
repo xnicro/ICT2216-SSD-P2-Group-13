@@ -4,20 +4,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('category');
     const otherContainer = document.getElementById('other-desc-container');
     const otherInput = document.getElementById('category_description');
-    const alertContainer = document.getElementById('alertContainer'); // Get the alert container
+    const alertContainer = document.getElementById('alertContainer');
 
-    // New attachment related elements
     const fileUploadInput = document.getElementById('file-upload-input');
     const customFileUploadButton = document.getElementById('custom-file-upload-button');
     const filePreviewContainer = document.getElementById('file-preview-container');
 
-    // Store files globally, this will be the source of truth for files to be submitted
-    let selectedFiles = [];
+    const reportForm = document.getElementById('report-form');
+    // NEW: Get the submit button element
+    const submitButton = reportForm.querySelector('button[type="submit"]');
 
-    // Constants for file limits (should match Flask MAX_ATTACHMENTS_PER_REPORT, etc.)
-    const MAX_ATTACHMENTS_PER_REPORT = 5;
-    const MAX_SINGLE_FILE_SIZE_MB = 2; // MB
-    const MAX_TOTAL_UPLOAD_SIZE_MB = 10; // MB
+    let selectedFiles = [];
+    let rateLimitTimer = null; // NEW: To store the countdown timer
+    const MAX_TOTAL_UPLOAD_SIZE_MB = 5;
 
     // Helper to format file size
     function formatBytes(bytes, decimals = 2) {
@@ -32,27 +31,25 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to get file icon class based on type/extension
     function getFileIconClass(filename, mimetype) {
         const ext = filename.split('.').pop().toLowerCase();
-        // Prioritize specific MIME types or common extensions
         if (mimetype === 'application/pdf' || ext === 'pdf') {
-            return 'fa-file-pdf'; // PDF icon
+            return 'fa-file-pdf';
         } else if (mimetype.startsWith('image/')) {
-            return 'fa-file-image'; // Image icon
+            return 'fa-file-image';
         } else if (['doc', 'docx'].includes(ext) || mimetype === 'application/msword' || mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-            return 'fa-file-word'; // Word Document icon
+            return 'fa-file-word';
         } else if (['xls', 'xlsx'].includes(ext) || mimetype === 'application/vnd.ms-excel' || mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-            return 'fa-file-excel'; // Excel icon
+            return 'fa-file-excel';
         } else if (['ppt', 'pptx'].includes(ext) || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-            return 'fa-file-powerpoint'; // PowerPoint icon
+            return 'fa-file-powerpoint';
         } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimetype === 'application/zip' || mimetype === 'application/x-rar-compressed') {
-            return 'fa-file-archive'; // Archive icon
-        } else if (['txt', 'log', 'csv'].includes(ext)) { // Generic text files
-            return 'fa-file-alt'; // Or 'fa-file-lines' for text
+            return 'fa-file-archive';
+        } else if (['txt', 'log', 'csv'].includes(ext)) {
+            return 'fa-file-alt';
         }
-        return 'fa-file'; // Generic file icon for anything else
+        return 'fa-file';
     }
 
-
-    // Function to clear alert messages
+    // Function to clear ALL alert messages from the container
     function clearAlerts() {
         if (alertContainer) {
             const alerts = alertContainer.querySelectorAll('.alert');
@@ -68,21 +65,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to show a custom client-side flash message
     function showClientFlash(message, category = 'error') {
-        clearAlerts(); // Clear existing alerts before showing new one
         if (alertContainer) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${category}`;
             alertDiv.textContent = message;
             alertContainer.appendChild(alertDiv);
 
-            // Auto-hide the newly created alert
+            // Auto-hide this specific alert after 5 seconds
             setTimeout(() => {
                 alertDiv.style.opacity = '0';
                 alertDiv.style.transition = 'opacity 0.5s ease-out';
                 setTimeout(() => {
                     alertDiv.remove();
                 }, 500);
-            }, 5000); // Hide after 5 seconds
+            }, 5000);
         }
     }
 
@@ -92,19 +88,21 @@ document.addEventListener('DOMContentLoaded', function () {
             otherContainer.style.display = 'block';
         } else {
             otherContainer.style.display = 'none';
-            otherInput.value = ''; // Clear value if category changes from 'other'
+            otherInput.value = '';
         }
     }
 
     // Function to render all selected files in the preview container
     function renderFilePreviews() {
-        filePreviewContainer.innerHTML = ''; // Clear existing previews
+        filePreviewContainer.innerHTML = '';
 
         if (selectedFiles.length === 0) {
             filePreviewContainer.style.display = 'none';
             return;
         } else {
-            filePreviewContainer.style.display = 'flex'; // Ensure container is visible
+            filePreviewContainer.style.display = 'grid';
+            filePreviewContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
+            filePreviewContainer.style.gap = '15px';
         }
 
         selectedFiles.forEach((file, index) => {
@@ -112,11 +110,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const fileTypeClass = file.type.split('/')[0];
             const fileExtensionClass = file.name.split('.').pop().toLowerCase();
             fileItem.className = `file-attachment-item type-${fileTypeClass} ext-${fileExtensionClass}`;
-            fileItem.dataset.index = index; // Store index for easy deletion
+            fileItem.dataset.index = index;
 
             const iconClass = getFileIconClass(file.name, file.type);
 
-            // MODIFIED HTML STRUCTURE HERE
             fileItem.innerHTML = `
                 <i class="fa-solid ${iconClass} file-attachment-icon"></i>
                 <div class="file-text-content">
@@ -130,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
             filePreviewContainer.appendChild(fileItem);
         });
 
-        // Attach event listeners to new delete buttons
         filePreviewContainer.querySelectorAll('.file-attachment-delete').forEach(button => {
             button.addEventListener('click', deleteFile);
         });
@@ -140,32 +136,18 @@ document.addEventListener('DOMContentLoaded', function () {
     function deleteFile(event) {
         const indexToDelete = parseInt(event.currentTarget.dataset.index);
 
-        // Remove file from our JavaScript array
         selectedFiles.splice(indexToDelete, 1);
-
-        // Re-render previews to update indices and display
         renderFilePreviews();
-
-        // Update the hidden file input to reflect the changes
-        updateFileInput();
-
-        clearAlerts(); // Clear alerts after a successful delete action
-    }
-
-    // Function to update the hidden file input's files property
-    // This is crucial for form submission
-    function updateFileInput() {
-        const dataTransfer = new DataTransfer();
-        selectedFiles.forEach(file => {
-            dataTransfer.items.add(file);
-        });
-        fileUploadInput.files = dataTransfer.files;
+        clearAlerts();
     }
 
     // Event listener for the custom file upload button
     if (customFileUploadButton) {
         customFileUploadButton.addEventListener('click', () => {
-            fileUploadInput.click(); // Trigger click on the hidden file input
+            // NEW: Only allow click if not disabled
+            if (!fileUploadInput.disabled) {
+                fileUploadInput.click();
+            }
         });
     }
 
@@ -175,45 +157,254 @@ document.addEventListener('DOMContentLoaded', function () {
             const newFiles = Array.from(event.target.files);
             let currentTotalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
 
-            clearAlerts(); // Clear any existing alerts before processing new files
+            clearAlerts();
 
             for (const newFile of newFiles) {
-                // Check max attachments limit
-                if (selectedFiles.length >= MAX_ATTACHMENTS_PER_REPORT) {
-                    showClientFlash(`You can only upload a maximum of ${MAX_ATTACHMENTS_PER_REPORT} files. Skipping additional files.`, 'error');
-                    break; // Stop adding files if limit reached
-                }
-
-                // Check single file size limit
-                if (newFile.size > MAX_SINGLE_FILE_SIZE_MB * 1024 * 1024) {
-                    showClientFlash(`File '${newFile.name}' exceeds the maximum allowed size of ${MAX_SINGLE_FILE_SIZE_MB}MB. Skipping this file.`, 'error');
-                    continue; // Skip this file, try next
-                }
-
-                // Check total upload size limit
                 if ((currentTotalSize + newFile.size) > MAX_TOTAL_UPLOAD_SIZE_MB * 1024 * 1024) {
-                    showClientFlash(`Total upload size exceeds the maximum allowed of ${MAX_TOTAL_UPLOAD_SIZE_MB}MB. File '${newFile.name}' was not added.`, 'error');
-                    continue; // Skip this file, try next
+                    showClientFlash(`Total upload size exceeds the maximum allowed of ${MAX_TOTAL_UPLOAD_SIZE_MB}MB. Please reduce the number of files and try again.`, 'error');
+                    continue;
                 }
 
-                // Check allowed file types (can be redundant if Flask also checks, but good for UX)
-                const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf']; // Match your Python ALLOWED_EXTENSIONS
+                const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
                 const fileExtension = newFile.name.split('.').pop().toLowerCase();
                 if (!allowedExtensions.includes(fileExtension)) {
                     showClientFlash(`File '${newFile.name}' has an unsupported file type. Allowed types are ${allowedExtensions.join(', ')}.`, 'error');
                     continue;
                 }
+                
+                if (selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size)) {
+                    showClientFlash(`File '${newFile.name}' is already added.`, 'warning');
+                    continue;
+                }
 
-                // If all checks pass, add the file
                 selectedFiles.push(newFile);
-                currentTotalSize += newFile.size; // Update total size
+                currentTotalSize += newFile.size;
             }
 
-            renderFilePreviews(); // Re-render all previews
-            updateFileInput(); // Update the hidden input to reflect new selectedFiles
+            renderFilePreviews();
+            event.target.value = ''; 
+        });
+    }
 
-            // Reset the file input's value to allow selecting the same file again if needed
-            event.target.value = '';
+    // Function for client-side content validation
+    function containsInvalidCharsClient(value) {
+        if (/<script\b[^>]*>.*?<\/script>/i.test(value)) return true;
+        if (/onerror=|onload=|javascript:|data:text\/html/i.test(value)) return true;
+        if (/SELECT\s| FROM\s| INSERT\s| UPDATE\s| DELETE\s| OR\s| AND\s| UNION\s| EXEC\s/i.test(value)) return true;
+        if (/<|>/.test(value)) return true;
+        if (/[\x00-\x1F\x7F]/.test(value)) return true; 
+        
+        return false;
+    }
+
+    // NEW: Function to disable the form elements
+    function disableForm(durationSeconds = 0) {
+        reportForm.querySelectorAll('input, select, textarea, button').forEach(element => {
+            // Keep submit button separate for countdown text handling
+            if (element !== submitButton) {
+                element.disabled = true;
+            }
+            // Add a class for visual feedback (e.g., grey out)
+            element.classList.add('disabled-form-element');
+        });
+        
+        // Disable delete file buttons too
+        filePreviewContainer.querySelectorAll('.file-attachment-delete').forEach(button => {
+            button.disabled = true;
+        });
+
+        submitButton.disabled = true; // Disable submit button
+
+        if (durationSeconds > 0) {
+            let timeLeft = durationSeconds;
+            // Clear any existing timer before setting a new one
+            if (rateLimitTimer) {
+                clearInterval(rateLimitTimer);
+            }
+
+            submitButton.textContent = `Please wait (${timeLeft}s)`;
+            rateLimitTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    submitButton.textContent = `Please wait (${timeLeft}s)`;
+                } else {
+                    clearInterval(rateLimitTimer);
+                    rateLimitTimer = null; // Clear the timer ID
+                    enableForm();
+                    showClientFlash("You can submit reports again now.", 'info');
+                }
+            }, 1000);
+        } else {
+            submitButton.textContent = "Submitting..."; // For general submission state
+        }
+    }
+
+    // NEW: Function to enable the form elements
+    function enableForm() {
+        // Only enable if no active rate limit timer
+        if (rateLimitTimer) return;
+
+        reportForm.querySelectorAll('input, select, textarea, button').forEach(element => {
+            element.disabled = false;
+            element.classList.remove('disabled-form-element');
+        });
+
+        // Enable delete file buttons
+        filePreviewContainer.querySelectorAll('.file-attachment-delete').forEach(button => {
+            button.disabled = false;
+        });
+
+        submitButton.textContent = "Submit Report"; // Reset button text
+    }
+
+    // Handle form submission
+    if (reportForm) {
+        reportForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            // Clear ALL previous alerts at the start of a new submission attempt
+            clearAlerts();
+            // NEW: Disable form immediately on submit to prevent double clicks/submissions
+            disableForm(); 
+
+            // CLIENT-SIDE VALIDATION BEFORE SUBMISSION
+            const title = this.elements.title.value;
+            const trimmedTitle = title.trim();
+            
+            const description = this.elements.description.value;
+            const trimmedDescription = description.trim();
+
+            const categoryValue = this.elements.category.value;
+            
+            const categoryDescription = this.elements.category_description.value;
+            const trimmedCategoryDescription = categoryDescription.trim();
+            
+            const clientValidationErrors = [];
+
+            // Title Validation
+            if (!trimmedTitle) {
+                clientValidationErrors.push("Title cannot be empty.");
+            }
+            if (trimmedTitle.length > 255) {
+                clientValidationErrors.push("Title must be 255 characters or less.");
+            }
+            if (containsInvalidCharsClient(title)) { 
+                clientValidationErrors.push("Title contains invalid characters.");
+            }
+
+            // Description Validation
+            if (!trimmedDescription) {
+                clientValidationErrors.push("Description cannot be empty.");
+            }
+            if (trimmedDescription.length > 1000) {
+                clientValidationErrors.push("Description must be 1000 characters or less.");
+            }
+            if (containsInvalidCharsClient(description)) {
+                clientValidationErrors.push("Description contains invalid characters.");
+            }
+
+            // Category Validation
+            if (categoryValue === 'other') {
+                if (!trimmedCategoryDescription) {
+                    clientValidationErrors.push("Category description cannot be empty.");
+                }
+                if (trimmedCategoryDescription.length > 255) {
+                    clientValidationErrors.push("Category description must be 255 characters or less.");
+                }
+                if (containsInvalidCharsClient(categoryDescription)) {
+                    clientValidationErrors.push("Category description contains invalid characters.");
+                }
+            } else if (!categoryValue) {
+                 clientValidationErrors.push("Please select a category.");
+            }
+
+
+            // If client-side errors, display them and stop the submission
+            if (clientValidationErrors.length > 0) {
+                const uniqueErrors = new Set(clientValidationErrors);
+                uniqueErrors.forEach(msg => showClientFlash(msg, 'error'));
+                // NEW: Re-enable form if client-side validation fails
+                enableForm(); 
+                return; // Stop form submission here
+            }
+            // END CLIENT-SIDE VALIDATION
+
+            const formData = new FormData();
+
+            // Append trimmed values to FormData, as these are what Flask expects for database storage.
+            // Server-side validation will also trim them.
+            formData.append('csrf_token', this.elements.csrf_token.value);
+            formData.append('title', trimmedTitle);
+            formData.append('description', trimmedDescription);
+            formData.append('category', categoryValue);
+
+            if (categoryValue === 'other') {
+                formData.append('category_description', trimmedCategoryDescription);
+            }
+            if (this.elements.anonymous.checked) {
+                formData.append('anonymous', '1');
+            }
+
+            selectedFiles.forEach(file => {
+                formData.append('attachments', file, file.name);
+            });
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    }
+                });
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error("Server responded with non-JSON. Full response:", responseText);
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        // Fallback: if we get non-JSON and not a redirect, assume a server-rendered error page
+                        // and reload to show any flash messages Flask might have rendered.
+                        window.location.reload(); 
+                    }
+                    return;
+                }
+
+                if (response.ok) {
+                    if (result && result.redirect) {
+                        window.location.href = result.redirect;
+                    } else {
+                        window.location.href = '/'; 
+                    }
+                } else {
+                    // This handles server-side validation errors AND rate limits
+                    if (result && result.error_messages) {
+                        const uniqueServerErrors = new Set(result.error_messages);
+                        uniqueServerErrors.forEach(msg => showClientFlash(msg, 'error'));
+
+                        // NEW: Check for rate limit response and duration
+                        if (response.status === 429 && result.retry_after) {
+                            disableForm(result.retry_after); // Disable and set timer
+                        } else {
+                            enableForm(); // For other errors, re-enable immediately
+                        }
+                    } else if (result && result.message) {
+                        showClientFlash(result.message, 'error');
+                        enableForm(); // Re-enable for generic messages
+                    } else {
+                        showClientFlash('An unexpected server error occurred. Please try again.', 'error');
+                        enableForm(); // Re-enable for unknown errors
+                    }
+                }
+            } catch (error) {
+                console.error('Network error during form submission:', error);
+                showClientFlash('Network error or server unreachable. Please try again.', 'error');
+                enableForm(); // Re-enable on network errors
+            }
         });
     }
 
@@ -226,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Auto-hide flash messages (for those initially rendered by Flask)
+    // Auto-hide flash messages (for those initially rendered by Flask on page load)
     const initialAlerts = document.querySelectorAll('#alertContainer .alert');
     initialAlerts.forEach(alert => {
         setTimeout(() => {
@@ -238,7 +429,4 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 500);
         }, 5000);
     });
-
-    // We no longer prevent default submission in JS for empty field checks.
-    // The server-side Python handles all validation and error flashing comprehensively.
 });

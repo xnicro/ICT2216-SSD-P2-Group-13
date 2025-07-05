@@ -29,11 +29,13 @@ MAX_TITLE_LENGTH = 255
 MAX_DESCRIPTION_LENGTH = 1000
 MAX_CATEGORY_DESCRIPTION_LENGTH = 255
 
-MAX_ATTACHMENTS_PER_REPORT = 5
-MAX_SINGLE_FILE_SIZE_MB = 2
-MAX_TOTAL_UPLOAD_SIZE_MB = 10
+MAX_TOTAL_UPLOAD_SIZE_MB = 5
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Helper function to check if the request is an AJAX request
+def is_ajax_request():
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
 def contains_invalid_chars(value):
     if re.search(r'<script\b[^>]*>.*?</script>', value, re.IGNORECASE):
@@ -42,9 +44,9 @@ def contains_invalid_chars(value):
         return True
     if re.search(r'SELECT\s|\sFROM\s|\sINSERT\s|\sUPDATE\s|\sDELETE\s|\sOR\s|\sAND\s|\sUNION\s|\sEXEC\s', value, re.IGNORECASE):
         return True
-    if '<' in value or '>' in value:
+    if '<' in value or '>' in value: # Basic check for unescaped HTML tags
         return True
-    if re.search(r'[\x00-\x1F\x7F-\x9F]', value):
+    if re.search(r'[\x00-\x1F\x7F-\x9F]', value): # Control characters
         return True
     return False
 
@@ -64,12 +66,13 @@ def get_db_connection():
     )
 
 @bp.route('/report', methods=['GET', 'POST'])
-@limiter.limit("5 per 2 minutes")
+@limiter.limit("5 per minute")
 def submit_report():
     if session.get("role") != "user":
+        if is_ajax_request():
+            return jsonify({"message": "Unauthorized access", "error_messages": ["Unauthorized access"]}), 403
         abort(403)
-    
-    # Initialize variables for template rendering
+
     title = ''
     description = ''
     selected_category = ''
@@ -78,19 +81,19 @@ def submit_report():
 
     if request.method == 'GET':
         return render_template('4_report_submission.html',
-                               title=title, # Pass empty values initially
+                               title=title,
                                description=description,
                                selected_category=selected_category,
                                category_description=category_description,
                                is_anonymous=is_anon)
-    
-    # POST: validate CSRF token
+
     csrf_token = request.form.get("csrf_token")
     try:
         validate_csrf(csrf_token)
     except ValidationError:
+        if is_ajax_request():
+            return jsonify({"message": "Invalid or missing CSRF token", "error_messages": ["Invalid or missing CSRF token"]}), 400
         flash("Invalid or missing CSRF token", "error")
-        # Ensure form data persists even on CSRF error
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         selected_category = request.form.get('category', '')
@@ -106,60 +109,59 @@ def submit_report():
                                selected_category=selected_category,
                                category_description=category_description,
                                is_anonymous=is_anon)
-    
-    # --- POST ---
-    title = request.form.get('title', '').strip()
-    description = request.form.get('description', '').strip()
+
+    # Get raw values for contains_invalid_chars check (before stripping)
+    # IMPORTANT: Your current code was directly using stripped values for contains_invalid_chars
+    # which is not ideal. It should use raw values for that check.
+    # Let's align this with the previous suggestion.
+    raw_title = request.form.get('title', '')
+    raw_description = request.form.get('description', '')
+    raw_category_description = request.form.get('category_description', '') if request.form.get('category', '') == 'other' else ''
+
+
+    # Get trimmed values for emptiness and length checks (used for database storage as well)
+    title = raw_title.strip()
+    description = raw_description.strip()
     category_value = request.form.get('category', '')
-    
     is_anon = bool(request.form.get('anonymous'))
-    
-    category_description = ''
-    if category_value == 'other':
-        category_description = request.form.get('category_description', '').strip()
 
-    # --- Server-side Input Validation ---
-    validation_errors = [] # List to collect all validation error messages
+    category_description = raw_category_description.strip() # Trim here for storage/display
 
-    # Check for empty Title and Description
+
+    validation_errors = []
+
     if not title:
         validation_errors.append("Title cannot be empty.")
-    if not description:
-        validation_errors.append("Description cannot be empty.")
-    
-    # 1. Validate Category (Whitelist)
-    if category_value not in CATEGORY_DISPLAY_NAMES:
-        validation_errors.append("Invalid report category selected.")
-    elif not category_value:
-        validation_errors.append("Please select a category.")
-    
-    # Get display name after validation (even if invalid, for consistent passing to template)
-    category_display_name = CATEGORY_DISPLAY_NAMES.get(category_value)
-
-    # 2. Length Validation
-    if title and not (1 <= len(title) <= MAX_TITLE_LENGTH):
+    # No "else" here, so it continues to check length even if empty (but on empty string length is 0, so fine)
+    if title and not (1 <= len(title) <= MAX_TITLE_LENGTH): # Only check length if title is not empty after trimming
         validation_errors.append(f"Title must be between 1 and {MAX_TITLE_LENGTH} characters.")
 
-    if description and not (1 <= len(description) <= MAX_DESCRIPTION_LENGTH):
+    if not description:
+        validation_errors.append("Description cannot be empty.")
+    if description and not (1 <= len(description) <= MAX_DESCRIPTION_LENGTH): # Only check length if description is not empty after trimming
         validation_errors.append(f"Description must be between 1 and {MAX_DESCRIPTION_LENGTH} characters.")
 
-    # Server-side length check for category_description (still needed)
+    if category_value not in CATEGORY_DISPLAY_NAMES:
+        validation_errors.append("Invalid report category selected.")
+    elif not category_value: # This case is probably caught by the first if for invalid category
+        validation_errors.append("Please select a category.")
+
+    category_display_name = CATEGORY_DISPLAY_NAMES.get(category_value)
+
     if category_value == 'other':
-        # This length validation remains as it's a server-side responsibility.
-        # The JS for emptiness is for UX, but server needs to ensure data integrity.
-        if not category_description: # Re-added this check here as the JS will not prevent submission
-             validation_errors.append('Category description cannot be empty.')
+        if not category_description:
+            validation_errors.append('Category description cannot be empty.')
+        # Ensure length check only applies if category_description is not empty
         elif not (1 <= len(category_description) <= MAX_CATEGORY_DESCRIPTION_LENGTH):
             validation_errors.append(f"Category description must be between 1 and {MAX_CATEGORY_DESCRIPTION_LENGTH} characters.")
 
-    # 3. Content Validation (HTML/tag-like characters)
     invalid_char_fields = []
-    if contains_invalid_chars(title):
+    # Use raw_values for contains_invalid_chars check
+    if contains_invalid_chars(raw_title):
         invalid_char_fields.append('Title')
-    if contains_invalid_chars(description):
+    if contains_invalid_chars(raw_description):
         invalid_char_fields.append('Description')
-    # Only check category_description for invalid chars if it's not empty.
-    if category_description and contains_invalid_chars(category_description):
+    if raw_category_description and contains_invalid_chars(raw_category_description): # Only check if raw_category_description was provided
         invalid_char_fields.append('Category description')
 
     if invalid_char_fields:
@@ -167,26 +169,28 @@ def submit_report():
             validation_errors.append(f"{invalid_char_fields[0]} contains invalid characters.")
         elif len(invalid_char_fields) == 2:
             validation_errors.append(f"{invalid_char_fields[0]} and {invalid_char_fields[1]} contain invalid characters.")
-        else: # 3 or more
+        else:
             fields_str = ", ".join(invalid_char_fields[:-1]) + f" and {invalid_char_fields[-1]}"
             validation_errors.append(f"{fields_str} contain invalid characters.")
 
-    # If any validation errors occurred, flash them and re-render the form
     if validation_errors:
+        current_app.logger.debug(f"Validation errors detected (server): {validation_errors}")
+        if is_ajax_request():
+            return jsonify({"message": "Validation failed", "error_messages": validation_errors}), 400
         for error_msg in validation_errors:
-            flash(error_msg, 'error') # Flash each specific error
+            flash(error_msg, 'error')
         return render_template('4_report_submission.html',
                                title=title,
                                description=description,
                                selected_category=category_value,
                                category_description=category_description,
                                is_anonymous=is_anon)
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(buffered=True, dictionary=True)
     try:
         user_id = None if is_anon else session.get('user_id')
-        
+
         cursor.execute("""
             INSERT INTO reports
               (user_id,
@@ -203,50 +207,55 @@ def submit_report():
             category_display_name,
             category_description,
             int(is_anon),
-            title,
-            description,
+            title, # Use trimmed title for database
+            description, # Use trimmed description for database
             1
         ))
         report_id = cursor.lastrowid
 
         attachments = []
-        uploaded_files_count = 0
         total_upload_size = 0
 
         for f in request.files.getlist('attachments'):
-            if f.filename == '':
+            if not f or f.filename == '':
                 continue
-
-            uploaded_files_count += 1
-            if uploaded_files_count > MAX_ATTACHMENTS_PER_REPORT:
-                flash(f"You can only upload a maximum of {MAX_ATTACHMENTS_PER_REPORT} files. Skipping additional files.", 'error')
-                break 
 
             f.seek(0, os.SEEK_END)
             file_size = f.tell()
             f.seek(0)
-            
-            if file_size > MAX_SINGLE_FILE_SIZE_MB * 1024 * 1024:
-                flash(f"File '{f.filename}' exceeds the maximum allowed size of {MAX_SINGLE_FILE_SIZE_MB}MB. Skipping this file.", 'error')
-                continue
 
             total_upload_size += file_size
             if total_upload_size > MAX_TOTAL_UPLOAD_SIZE_MB * 1024 * 1024:
-                flash(f"Total upload size exceeds the maximum allowed of {MAX_TOTAL_UPLOAD_SIZE_MB}MB. File '{f.filename}' was not uploaded.", 'error')
+                if is_ajax_request():
+                    conn.rollback()
+                    return jsonify({
+                        "message": "Upload size limit exceeded",
+                        "error_messages": [f"Total upload size exceeds the maximum allowed of {MAX_TOTAL_UPLOAD_SIZE_MB}MB. Please reduce the number of files and try again."]
+                    }), 400
+                flash(
+                    f"Total upload size exceeds the maximum allowed of {MAX_TOTAL_UPLOAD_SIZE_MB}MB. Please reduce the number of files and try again.",
+                    'error'
+                    )
                 break
 
             if allowed_file(f.filename):
                 fn = secure_filename(f.filename)
                 save_name = f"{report_id}_{fn}"
                 save_path = os.path.join(UPLOAD_FOLDER, save_name)
-                
+
                 try:
                     f.save(save_path)
                     attachments.append((report_id, save_name, save_path, f.mimetype))
                 except Exception as e:
                     current_app.logger.error(f"Error saving file {fn}: {e}")
+                    if is_ajax_request():
+                        conn.rollback()
+                        return jsonify({"message": f"Failed to save file '{fn}'.", "error_messages": [f"Failed to save file '{fn}'. Please try again."]})
                     flash(f"Failed to save file '{fn}'. Please try again.", 'error')
             else:
+                if is_ajax_request():
+                    conn.rollback()
+                    return jsonify({"message": f"Unsupported file type for '{f.filename}'.", "error_messages": [f"File '{f.filename}' has an unsupported file type. Allowed types are {', '.join(ALLOWED_EXTENSIONS)}."]})
                 flash(f"File '{f.filename}' has an unsupported file type. Allowed types are {', '.join(ALLOWED_EXTENSIONS)}.", 'error')
 
         if attachments:
@@ -257,7 +266,7 @@ def submit_report():
             """, attachments)
 
         conn.commit()
-        
+
         if not is_anon and user_id:
             try:
                 send_notifications_for_new_report(
@@ -269,16 +278,19 @@ def submit_report():
                 )
                 current_app.logger.info(f"Notifications sent for report {report_id}")
             except Exception as e:
-                current_app.logger.error(f"Error sending notifications: {e}")
-        
+                current_app.logger.error(f"Error sending notifications for report {report_id}: {e}")
+
+        if is_ajax_request():
+            return jsonify({"message": "Report submitted successfully!", "redirect": url_for('index')}), 200
         flash('Report submitted successfully!', 'success')
         return redirect(url_for('index'))
 
     except Exception as e:
         conn.rollback()
         current_app.logger.error("Error submitting report: %s", e)
+        if is_ajax_request():
+            return jsonify({"message": "An error occurred while submitting your report.", "error_messages": ["An error occurred while submitting your report. Please try again."]}), 500
         flash('An error occurred while submitting your report. Please try again.', 'error')
-        # Preserve form data on error
         return render_template('4_report_submission.html',
                                title=title,
                                description=description,
@@ -287,11 +299,13 @@ def submit_report():
                                is_anonymous=is_anon)
 
     finally:
-        cursor.close()
-        conn.close()
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 @bp.errorhandler(RateLimitExceeded)
 def rate_limit_exceeded(e):
+    retry_after = int(e.description.split(" ")[-1]) if "second" in str(e.description) else 60 
     flash("You are submitting too many reports. Please try again in a few minutes.", "error")
     return render_template('4_report_submission.html',
                            title=request.form.get('title', '').strip(),
@@ -299,4 +313,4 @@ def rate_limit_exceeded(e):
                            selected_category=request.form.get('category', ''),
                            category_description=(request.form.get('category_description', '').strip()
                                                  if request.form.get('category', '') == 'other' else ''),
-                           is_anonymous=bool(request.form.get('anonymous'))), 429
+                           is_anonymous=bool(request.form.get('anonymous')), rate_limited=True, retry_after=retry_after), 429
