@@ -2,3 +2,4 @@
 **/__pycache__/
 **/mysql_data/
 *.env
+**/nginx/cert*
