@@ -3,7 +3,7 @@ import mysql.connector
 from datetime import datetime
 from functools import wraps
 
-admin_settings_bp = Blueprint('admin_settings', __name__)
+admin_settings_bp = Blueprint('admin_settings', __name__, url_prefix='/api/admin')
 
 # ===== HELPER FUNCTIONS =====
 
@@ -11,7 +11,7 @@ def admin_required(f):
     """Decorator to ensure user is an admin"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session or not session.get('is_admin', False):
+        if 'user_id' not in session or session.get('role') != 'admin':
             return jsonify({'error': 'Admin access required'}), 403
         return f(*args, **kwargs)
     return decorated_function
@@ -27,7 +27,7 @@ def get_db_connection():
 
 # ===== ADMIN SETTINGS ROUTES =====
 
-@admin_settings_bp.route('/api/admin/settings', methods=['GET'])
+@admin_settings_bp.route('/settings', methods=['GET'])
 @admin_required
 def get_admin_settings():
     """Get admin-specific settings"""
@@ -50,7 +50,6 @@ def get_admin_settings():
             # Return default preferences
             return jsonify({
                 'emailNotifications': True,
-                'criticalAlerts': True,
                 'browserNotifications': False,
                 'loginAlerts': True,
                 'sessionTimeout': True
@@ -58,7 +57,6 @@ def get_admin_settings():
         
         return jsonify({
             'emailNotifications': bool(preferences['email_notifications']),
-            'criticalAlerts': bool(preferences['critical_alerts']),
             'browserNotifications': bool(preferences['browser_notifications']),
             'loginAlerts': bool(preferences['login_alerts']),
             'sessionTimeout': bool(preferences['session_timeout'])
@@ -68,7 +66,7 @@ def get_admin_settings():
         current_app.logger.error(f"Error getting admin settings: {str(e)}")
         return jsonify({'error': 'Failed to get admin settings'}), 500
 
-@admin_settings_bp.route('/api/admin/settings', methods=['POST'])
+@admin_settings_bp.route('/settings', methods=['POST'])
 @admin_required
 def update_admin_settings():
     """Update admin settings"""
@@ -88,7 +86,6 @@ def update_admin_settings():
             cursor.execute('''
                 UPDATE admin_preferences SET
                     email_notifications = %s,
-                    critical_alerts = %s,
                     browser_notifications = %s,
                     login_alerts = %s,
                     session_timeout = %s,
@@ -96,7 +93,6 @@ def update_admin_settings():
                 WHERE user_id = %s
             ''', (
                 data.get('emailNotifications', True),
-                data.get('criticalAlerts', True),
                 data.get('browserNotifications', False),
                 data.get('loginAlerts', True),
                 data.get('sessionTimeout', True),
@@ -106,14 +102,13 @@ def update_admin_settings():
             # Insert new preferences
             cursor.execute('''
                 INSERT INTO admin_preferences (
-                    user_id, email_notifications, critical_alerts,
+                    user_id, email_notifications,
                     browser_notifications, login_alerts, session_timeout,
                     created_at, updated_at
                 ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
             ''', (
                 user_id,
                 data.get('emailNotifications', True),
-                data.get('criticalAlerts', True),
                 data.get('browserNotifications', False),
                 data.get('loginAlerts', True),
                 data.get('sessionTimeout', True)
@@ -128,55 +123,3 @@ def update_admin_settings():
     except Exception as e:
         current_app.logger.error(f"Error updating admin settings: {str(e)}")
         return jsonify({'error': 'Failed to update admin settings'}), 500
-
-# ===== ADMIN ACCOUNT MANAGEMENT =====
-
-@admin_settings_bp.route('/api/admin/update-profile', methods=['POST'])
-@admin_required
-def update_admin_profile():
-    """Update admin profile information"""
-    user_id = session['user_id']
-    username = request.json.get('username')
-    email = request.json.get('email')
-    
-    if not username or not email:
-        return jsonify({'error': 'Username and email are required'}), 400
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Check if email is already taken by another user
-        cursor.execute('''
-            SELECT user_id FROM users 
-            WHERE email = %s AND user_id != %s
-        ''', (email, user_id))
-        
-        if cursor.fetchone():
-            cursor.close()
-            conn.close()
-            return jsonify({'error': 'Email already in use by another account'}), 400
-        
-        # Update user profile
-        cursor.execute('''
-            UPDATE users SET
-                username = %s,
-                email = %s,
-                updated_at = NOW()
-            WHERE user_id = %s
-        ''', (username, email, user_id))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        # Update session if email was changed
-        if email != session.get('email'):
-            session['email'] = email
-            session['username'] = username
-        
-        return jsonify({'message': 'Profile updated successfully'}), 200
-        
-    except Exception as e:
-        current_app.logger.error(f"Error updating admin profile: {str(e)}")
-        return jsonify({'error': 'Failed to update profile'}), 500

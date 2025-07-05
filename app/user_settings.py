@@ -51,9 +51,6 @@ def get_settings():
                 'vandalism': False,
                 'suspiciousActivity': False,
                 'otherIncident': False,
-                'locationAccess': False,
-                'cameraAccess': False,
-                'dataSharing': False,
                 'emailNotifications': True,
                 'smsNotifications': False,
                 'browserNotifications': False
@@ -65,9 +62,6 @@ def get_settings():
             'vandalism': bool(preferences['vandalism']),
             'suspiciousActivity': bool(preferences['suspicious_activity']),
             'otherIncident': bool(preferences['other_incident']),
-            'locationAccess': bool(preferences['location_access']),
-            'cameraAccess': bool(preferences['camera_access']),
-            'dataSharing': bool(preferences['data_sharing']),
             'emailNotifications': bool(preferences['email_notifications']),
             'smsNotifications': bool(preferences['sms_notifications']),
             'browserNotifications': bool(preferences['browser_notifications'])
@@ -106,9 +100,6 @@ def update_settings():
                     vandalism = %s,
                     suspicious_activity = %s,
                     other_incident = %s,
-                    location_access = %s,
-                    camera_access = %s,
-                    data_sharing = %s,
                     email_notifications = %s,
                     sms_notifications = %s,
                     browser_notifications = %s,
@@ -120,9 +111,6 @@ def update_settings():
                 data.get('vandalism', False),
                 data.get('suspiciousActivity', False),
                 data.get('otherIncident', False),
-                data.get('locationAccess', False),
-                data.get('cameraAccess', False),
-                data.get('dataSharing', False),
                 data.get('emailNotifications', True),
                 data.get('smsNotifications', False),
                 data.get('browserNotifications', False),
@@ -133,10 +121,9 @@ def update_settings():
             cursor.execute('''
                 INSERT INTO user_preferences (
                     user_id, fire_hazard, faulty_equipment, vandalism,
-                    suspicious_activity, other_incident, location_access,
-                    camera_access, data_sharing, email_notifications,
+                    suspicious_activity, other_incident, email_notifications,
                     sms_notifications, browser_notifications, created_at, updated_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             ''', (
                 user_id,
                 data.get('fireHazard', False),
@@ -144,9 +131,6 @@ def update_settings():
                 data.get('vandalism', False),
                 data.get('suspiciousActivity', False),
                 data.get('otherIncident', False),
-                data.get('locationAccess', False),
-                data.get('cameraAccess', False),
-                data.get('dataSharing', False),
                 data.get('emailNotifications', True),
                 data.get('smsNotifications', False),
                 data.get('browserNotifications', False)
