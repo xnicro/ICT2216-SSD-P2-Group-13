@@ -116,16 +116,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const iconClass = getFileIconClass(file.name, file.type);
 
-            fileItem.innerHTML = `
-                <i class="fa-solid ${iconClass} file-attachment-icon"></i>
-                <div class="file-text-content">
-                    <span class="file-attachment-name" title="${file.name}">${file.name}</span>
-                    <span class="file-attachment-size">${formatBytes(file.size)}</span>
-                </div>
-                <button type="button" class="file-attachment-delete" data-index="${index}">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            `;
+            // Create icon element
+            const icon = document.createElement('i');
+            icon.className = `fa-solid ${iconClass} file-attachment-icon`;
+
+            // Create text container
+            const textContainer = document.createElement('div');
+            textContainer.className = 'file-text-content';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'file-attachment-name';
+            nameSpan.title = file.name;
+            nameSpan.textContent = file.name;
+
+            const sizeSpan = document.createElement('span');
+            sizeSpan.className = 'file-attachment-size';
+            sizeSpan.textContent = formatBytes(file.size);
+
+            textContainer.appendChild(nameSpan);
+            textContainer.appendChild(sizeSpan);
+
+            // Create delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.type = 'button';
+            deleteButton.className = 'file-attachment-delete';
+            deleteButton.dataset.index = index;
+
+            const deleteIcon = document.createElement('i');
+            deleteIcon.className = 'fa-solid fa-times';
+
+            deleteButton.appendChild(deleteIcon);
+
+            // Assemble file item
+            fileItem.appendChild(icon);
+            fileItem.appendChild(textContainer);
+            fileItem.appendChild(deleteButton);
+
             filePreviewContainer.appendChild(fileItem);
         });
 

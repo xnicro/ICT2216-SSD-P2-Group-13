@@ -28,7 +28,7 @@
                         {% if messages %}
                             {% for category, message in messages %}
                                 <div class="alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error'}}">
-                                    {{ message }}
+                                    {{ message | e }}
                                 </div>
                             {% endfor %}
                         {% endif %}
@@ -37,7 +37,7 @@
 
                 <form id="report-form" method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data"
                     {% if rate_limited %}onsubmit="return false;"{% endif %}>
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token | e }}">
                     <div>
                         <label for="title">Title</label>
                         <input type="text" id="title" name="title" value="{{ title | e }}" {% if rate_limited %}disabled{% endif %}>

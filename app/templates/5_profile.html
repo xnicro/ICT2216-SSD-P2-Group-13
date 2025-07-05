@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token | e}}">
     <title>My Profile - SITSecure</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
-    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
     <div class="main">
@@ -22,9 +22,9 @@
             <div class="profile-container">
                 <div class="profile-header">
                     <div class="profile-info">
-                        <h2 id="displayFullName">{{ current_user.username }}</h2>
-                        <p id="displayEmail">{{ current_user.email }}</p>
-                        <p>{{ current_user.role|title }}</p>
+                        <h2 id="displayFullName">{{ current_user.username | e }}</h2>
+                        <p id="displayEmail">{{ current_user.email | e }}</p>
+                        <p>{{ current_user.role| title | e }}</p>
                     </div>
                 </div>
             </div>
@@ -40,7 +40,7 @@
                             {% for category, message in messages %}
                                 {% if category != 'password_error' and category != 'password_success' %}
                                     <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
-                                        {{ message }}
+                                        {{ message | e }}
                                     </div>
                                 {% endif %}
                             {% endfor %}
@@ -52,19 +52,19 @@
                 <div id="viewMode" class="view-mode active">
                     <div class="form-group">
                         <label>Username:</label>
-                        <p id="viewUsername">{{ current_user.username }}</p>
+                        <p id="viewUsername">{{ current_user.username | e }}</p>
                     </div>
                     <div class="form-group">
                         <label>Email Address:</label>
-                        <p id="viewEmail">{{ current_user.email }}</p>
+                        <p id="viewEmail">{{ current_user.email | e }}</p>
                     </div>
                     <div class="form-group">
                         <label>Role:</label>
-                        <p id="viewRole">{{ current_user.role|title }}</p>
+                        <p id="viewRole">{{ current_user.role|title | e }}</p>
                     </div>
                     <div class="form-group">
                         <label>User ID:</label>
-                        <p id="viewUserId">{{ current_user.user_id }}</p>
+                        <p id="viewUserId">{{ current_user.user_id | e }}</p>
                     </div>
                     <button class="btn btn-primary" onclick="toggleEditMode()">Edit Profile</button>
                     <button class="btn btn-secondary" onclick="togglePasswordMode()">Change Password</button>
@@ -73,15 +73,15 @@
                 <!-- Edit Mode -->
                 <div id="editMode" class="edit-mode">
                     <form action="{{ url_for('update_profile') }}" method="POST" id="profileForm">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token | e }}">
                         <div class="form-group">
                             <label for="username">Username *</label>
-                            <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
+                            <input type="text" id="username" name="username" value="{{ current_user.username | e }}" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="email">Email Address *</label>
-                            <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+                            <input type="email" id="email" name="email" value="{{ current_user.email | e }}" required>
                         </div>
                         
                         <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -98,7 +98,7 @@
                                 {% for category, message in messages %}
                                     {% if category == 'password_error' or category == 'password_success' %}
                                         <div class="alert alert-{{ 'success' if category == 'password_success' else 'error' }}">
-                                            {{ message }}
+                                            {{ message | e }}
                                         </div>
                                     {% endif %}
                                 {% endfor %}
@@ -107,7 +107,7 @@
                     </div>
                     
                     <form action="{{ url_for('change_password') }}" method="POST" id="passwordForm">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token | e }}">
                         <div class="form-group">
                             <label for="currentPassword">Current Password *</label>
                             <input type="password" id="currentPassword" name="currentPassword" required>
@@ -141,24 +141,24 @@
                 <!-- Report Statistics -->
                 <div class="reports-stats">
                     <div class="stat-card">
-                        <div class="stat-number" id="totalReports">{{ user_reports|length }}</div>
+                        <div class="stat-number" id="totalReports">{{ user_reports|length | e }}</div>
                         <div class="stat-label">Total Reports</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="pendingReports">
-                            {{ user_reports|selectattr('status_name', 'equalto', 'pending')|list|length }}
+                            {{ user_reports|selectattr('status_name', 'equalto', 'pending')|list|length | e }}
                         </div>
                         <div class="stat-label">Pending</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="reviewingReports">
-                            {{ user_reports|selectattr('status_name', 'equalto', 'reviewing')|list|length }}
+                            {{ user_reports|selectattr('status_name', 'equalto', 'reviewing')|list|length | e }}
                         </div>
                         <div class="stat-label">Reviewing</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="resolvedReports">
-                            {{ user_reports|selectattr('status_name', 'equalto', 'resolved')|list|length }}
+                            {{ user_reports|selectattr('status_name', 'equalto', 'resolved')|list|length | e }}
                         </div>
                         <div class="stat-label">Resolved</div>
                     </div>
@@ -215,23 +215,23 @@
                     </thead>
                     <tbody id="reportsTableBody">
                         {% for report in user_reports %}
-                        <tr data-status="{{ report.status_name|lower|replace(' ', '-') }}" 
-                            data-category="{{ report.category_name|lower }}" 
-                            data-title="{{ report.title }}"
-                            data-description="{{ report.description }}">
-                            <td>#{{ report.report_id }}</td>
-                            <td>{{ report.title }}</td>
-                            <td>{{ report.category_name }}</td>
+                        <tr data-status="{{ report.status_name|lower|replace(' ', '-') | e}}" 
+                            data-category="{{ report.category_name|lower | e}}" 
+                            data-title="{{ report.title | e}}"
+                            data-description="{{ report.description | e}}">
+                            <td>#{{ report.report_id | e}}</td>
+                            <td>{{ report.title | e}}</td>
+                            <td>{{ report.category_name | e}}</td>
                             <td>
-                                <span class="status-{{ report.status_name|lower|replace(' ', '-') }}">
-                                    {{ report.status_name }}
+                                <span class="status-{{ report.status_name|lower|replace(' ', '-') | e}}">
+                                    {{ report.status_name | e}}
                                 </span>
                             </td>
-                            <td>{{ report.created_at.strftime('%d %b %Y') if report.created_at else 'N/A' }}</td>
-                            <td>{{ report.updated_at.strftime('%d %b %Y') if report.updated_at else 'N/A' }}</td>
+                            <td>{{ report.created_at.strftime('%d %b %Y') if report.created_at else 'N/A' | e}}</td>
+                            <td>{{ report.updated_at.strftime('%d %b %Y') if report.updated_at else 'N/A' | e}}</td>
                             <td>
                                 <div class="report-actions">
-                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('{{ report.report_id }}')">View</button>
+                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('{{ report.report_id | e }}')">View</button>
                                 </div>
                             </td>
                         </tr>
@@ -433,8 +433,16 @@
                     // Update status
                     const statusElement = document.getElementById('modalReportStatus');
                     if (statusElement) {
-                        statusElement.innerHTML = 
-                            `<span class="status-${data.status_name.toLowerCase().replace(' ', '-')}">${data.status_name}</span>`;
+                        // Clear previous content
+                        statusElement.textContent = '';
+
+                        // Create and style the new span
+                        const span = document.createElement('span');
+                        span.className = `status-${data.status_name.toLowerCase().replace(/\s+/g, '-')}`;
+                        span.textContent = data.status_name;
+
+                        // Append the new span
+                        statusElement.appendChild(span);
                     }
                     
                     // Admin comments

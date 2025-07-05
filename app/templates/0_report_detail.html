@@ -19,10 +19,10 @@
             <div class="report-detail-section">
                 <div class="report-detail-card">
                     <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
-                    <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") }}</p>
-                    <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") }}</p>
+                    <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") | e}}</p>
+                    <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") | e}}</p>
                     <p class="report-detail-category">
-                        <i class="{{ report.category_icon }}"></i>
+                        <i class="{{ report.category_icon | e}}"></i>
                         {{ report.category_name | e }}
                     </p>
                     <h1>{{ report.title | e}}</h1>
