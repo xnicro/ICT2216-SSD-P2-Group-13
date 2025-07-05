@@ -33,14 +33,16 @@
             <div class="profile-edit-section">
                 <h3>Profile Information</h3>
                 
-                <!-- Success/Error Messages -->
+                <!-- Success/Error Messages (Non-password related) -->
                 <div id="alertContainer">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
-                                    {{ message }}
-                                </div>
+                                {% if category != 'password_error' and category != 'password_success' %}
+                                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                                        {{ message }}
+                                    </div>
+                                {% endif %}
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
@@ -89,6 +91,21 @@
 
                 <!-- Password Change Mode -->
                 <div id="passwordMode" class="edit-mode">
+                    <!-- Password-specific error messages -->
+                    <div id="passwordAlertContainer">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    {% if category == 'password_error' or category == 'password_success' %}
+                                        <div class="alert alert-{{ 'success' if category == 'password_success' else 'error' }}">
+                                            {{ message }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    
                     <form action="{{ url_for('change_password') }}" method="POST" id="passwordForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <div class="form-group">
@@ -169,6 +186,7 @@
                                 <option value="faulty facilities/equipment">Faulty Facilities/Equipment</option>
                                 <option value="vandalism">Vandalism</option>
                                 <option value="suspicious activity">Suspicious Activity</option>
+                                <option value="others">Others</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -312,15 +330,23 @@
             document.getElementById('alertContainer').innerHTML = '';
         }
 
-        // Filter reports functionality - matches FR5 (filter by category or date)
-        function filterReports() {
+        // Combined filtering function - all filters work together
+        function applyAllFilters() {
             const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
             const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
+            const searchTerm = document.getElementById('searchReports').value.toLowerCase();
             const rows = document.querySelectorAll('#reportsTableBody tr');
             
             rows.forEach(row => {
+                // Skip the "no reports" row
+                if (row.cells.length === 1 && row.cells[0].colSpan === 7) {
+                    return;
+                }
+                
                 const status = row.getAttribute('data-status');
                 const category = row.getAttribute('data-category');
+                const title = row.getAttribute('data-title') || '';
+                const description = row.getAttribute('data-description') || '';
                 
                 let showRow = true;
                 
@@ -329,31 +355,32 @@
                     showRow = false;
                 }
                 
-                // Category filter - matches FR10 categories
-                if (categoryFilter && category && category !== categoryFilter) {
+                // Category filter
+                if (categoryFilter && category !== categoryFilter) {
                     showRow = false;
+                }
+                
+                // Search filter (title and description)
+                if (searchTerm) {
+                    const matchesSearch = title.toLowerCase().includes(searchTerm) || 
+                                        description.toLowerCase().includes(searchTerm);
+                    if (!matchesSearch) {
+                        showRow = false;
+                    }
                 }
                 
                 row.style.display = showRow ? '' : 'none';
             });
         }
 
-        // Search reports functionality - supports FR4 (view past reports)
+        // Individual filter functions now call the combined function
+        function filterReports() {
+            applyAllFilters();
+        }
+
+        // Search reports functionality - now works with other filters
         function searchReports() {
-            const searchTerm = document.getElementById('searchReports').value.toLowerCase();
-            const rows = document.querySelectorAll('#reportsTableBody tr');
-            
-            rows.forEach(row => {
-                const title = row.getAttribute('data-title');
-                const description = row.getAttribute('data-description');
-                
-                if ((title && title.toLowerCase().includes(searchTerm)) || 
-                    (description && description.toLowerCase().includes(searchTerm))) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+            applyAllFilters();
         }
 
         // Clear all filters
