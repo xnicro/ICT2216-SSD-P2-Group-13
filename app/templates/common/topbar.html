@@ -1,6 +1,9 @@
 <div class="top-bar">
     <div class="user-info">
-        <p><i class="fi fi-rc-circle-user"></i>{{ session.username if session.username else 'Guest' }}</p>
+        <!-- Make username clickable to redirect to profile -->
+        <a href="/profile" class="user-profile-link">
+            <p><i class="fi fi-rc-circle-user"></i>{{ session.username if session.username else 'Guest' }}</p>
+        </a>
         {% if session.username %}
             <a href="{{ url_for('accounts.logout') }}" class="logout-btn">
                 <i class="fi fi-rc-sign-out-alt"></i> Logout
@@ -22,11 +25,22 @@
     gap: 15px;
 }
 
+.user-profile-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.user-profile-link:hover {
+    color: #467B65;
+}
+
 .user-info p {
     margin: 0;
     display: flex;
     align-items: center;
     gap: 5px;
+    cursor: pointer;
 }
 
 .logout-btn {

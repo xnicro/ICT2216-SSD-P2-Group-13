@@ -3,6 +3,8 @@ from datetime import datetime
 from datetime import timedelta
 import mysql.connector
 import os
+import re
+from datetime import datetime
 from report_submission import bp as reports_bp
 from home_dashboard import get_report_by_id, get_report_attachments
 from admin_dashboard import get_statuses, get_all_reports
@@ -211,21 +213,103 @@ def profile():
                          current_user=current_user,
                          user_reports=user_reports)
 
+# Replace your existing update_profile function in app.py with this secure version:
+
 @app.route('/update_profile', methods=['POST'])
 @login_required
 @role_required('user')
 def update_profile():
-    """Update user profile information"""
+    """Update user profile information with comprehensive validation"""
     user_id = session.get('user_id')
     
     try:
         # Get form data
-        username = request.form.get('username')
-        email = request.form.get('email')
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
         
-        # Update user in database
+        # INPUT VALIDATION - FSR 4
+        validation_errors = []
+        
+        # Basic field validation
+        if not username:
+            validation_errors.append("Username is required")
+        if not email:
+            validation_errors.append("Email is required")
+        
+        # Username validation
+        if username:
+            if len(username) < 3:
+                validation_errors.append("Username must be at least 3 characters long")
+            if len(username) > 50:
+                validation_errors.append("Username must be less than 50 characters")
+            if not re.match(r'^[a-zA-Z0-9_.-]+$', username):
+                validation_errors.append("Username can only contain letters, numbers, dots, hyphens, and underscores")
+        
+        # Email validation - Comprehensive check
+        if email:
+            # Basic email pattern validation
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                validation_errors.append("Please enter a valid email address (e.g., user@example.com)")
+            
+            # Additional email checks
+            if len(email) > 254:  # RFC 5321 limit
+                validation_errors.append("Email address is too long")
+            
+            # Check for valid domain part
+            if '@' in email:
+                local_part, domain_part = email.rsplit('@', 1)
+                
+                # Local part validation
+                if len(local_part) > 64:  # RFC 5321 limit
+                    validation_errors.append("Email username part is too long")
+                if not local_part:
+                    validation_errors.append("Email must have a username before @")
+                
+                # Domain part validation
+                if not domain_part:
+                    validation_errors.append("Email must have a domain after @")
+                elif not re.match(r'^[a-zA-Z0-9.-]+$', domain_part):
+                    validation_errors.append("Email domain contains invalid characters")
+                elif domain_part.startswith('.') or domain_part.endswith('.'):
+                    validation_errors.append("Email domain cannot start or end with a dot")
+                elif '..' in domain_part:
+                    validation_errors.append("Email domain cannot have consecutive dots")
+                elif not '.' in domain_part:
+                    validation_errors.append("Email domain must contain at least one dot")
+        
+        # Show validation errors if any
+        if validation_errors:
+            for error in validation_errors:
+                flash(error, 'error')
+            return redirect(url_for('profile'))
+        
+        # Check for duplicate username/email in database
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        # Check if username already exists (excluding current user)
+        cursor.execute('SELECT user_id FROM users WHERE username = %s AND user_id != %s', (username, user_id))
+        if cursor.fetchone():
+            flash('Username already exists. Please choose a different username.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('profile'))
+        
+        # Check if email already exists (excluding current user)
+        cursor.execute('SELECT user_id FROM users WHERE email = %s AND user_id != %s', (email, user_id))
+        if cursor.fetchone():
+            flash('Email address already exists. Please use a different email.', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('profile'))
+        
+        # Sanitize inputs to prevent XSS attacks
+        import html
+        username = html.escape(username)
+        email = html.escape(email)
+        
+        # Update user in database
         cursor.execute('''
             UPDATE users 
             SET username = %s, email = %s 
@@ -241,8 +325,13 @@ def update_profile():
         
         flash('Profile updated successfully!', 'success')
         
+        # Log security event for audit trail (FSR 12)
+        print(f"Profile updated for user_id: {user_id} - username: {username}, email: {email} at {datetime.now()}")
+        
     except Exception as e:
-        flash(f'Error updating profile: {str(e)}', 'error')
+        flash('Error updating profile. Please try again.', 'error')
+        # Log detailed error for debugging (don't expose to user)
+        print(f"Profile update error for user {user_id}: {str(e)}")
     
     return redirect(url_for('profile'))
 
@@ -250,25 +339,61 @@ def update_profile():
 @login_required
 @role_required('user')
 def change_password():
-    """Change user password"""
+    """Change user password with strong security validation"""
     user_id = session.get('user_id')
     
     try:
         # Get form data
-        current_password = request.form.get('currentPassword')
-        new_password = request.form.get('newPassword')
-        confirm_password = request.form.get('confirmPassword')
+        current_password = request.form.get('currentPassword', '').strip()
+        new_password = request.form.get('newPassword', '').strip()
+        confirm_password = request.form.get('confirmPassword', '').strip()
         
-        # Validation
+        # Basic validation
         if not current_password or not new_password or not confirm_password:
             flash('All password fields are required', 'error')
             return redirect(url_for('profile'))
         
+        # PASSWORD SECURITY VALIDATION
+        password_errors = []
+        
+        # Minimum length check
+        if len(new_password) < 8:
+            password_errors.append("at least 8 characters")
+        
+        # Uppercase letter check
+        if not re.search(r'[A-Z]', new_password):
+            password_errors.append("at least one uppercase letter (A-Z)")
+        
+        # Lowercase letter check
+        if not re.search(r'[a-z]', new_password):
+            password_errors.append("at least one lowercase letter (a-z)")
+        
+        # Number check
+        if not re.search(r'\d', new_password):
+            password_errors.append("at least one number (0-9)")
+        
+        # Special character check
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', new_password):
+            password_errors.append("at least one special character (!@#$%^&*(),.?\":{}|<>)")
+        
+        # Check if passwords match
         if new_password != confirm_password:
-            flash('New passwords do not match', 'error')
+            password_errors.append("passwords must match")
+        
+        # Check if new password is same as current password
+        if current_password == new_password:
+            password_errors.append("new password must be different from current password")
+        
+        # If there are password validation errors, show them
+        if password_errors:
+            if len(password_errors) == 1:
+                flash(f'Password must have {password_errors[0]}.', 'error')
+            else:
+                error_msg = "Password must have: " + ", ".join(password_errors[:-1]) + f", and {password_errors[-1]}."
+                flash(error_msg, 'error')
             return redirect(url_for('profile'))
         
-        # Get current user data
+        # Get current user data to verify current password
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM users WHERE user_id = %s', (user_id,))
@@ -276,6 +401,8 @@ def change_password():
         
         if not user:
             flash('User not found', 'error')
+            cursor.close()
+            conn.close()
             return redirect(url_for('profile'))
         
         # Import password hasher
@@ -290,22 +417,34 @@ def change_password():
             cursor.close()
             conn.close()
             return redirect(url_for('profile'))
+        except Exception as e:
+            flash('Error verifying current password', 'error')
+            cursor.close()
+            conn.close()
+            return redirect(url_for('profile'))
         
-        # Hash new password and update
+        # Hash new password securely
         new_hashed_password = ph.hash(new_password)
+        
+        # Update password in database
         cursor.execute('''
             UPDATE users 
-            SET pwd = %s 
+            SET pwd = %s
             WHERE user_id = %s
         ''', (new_hashed_password, user_id))
         conn.commit()
         cursor.close()
         conn.close()
         
-        flash('Password changed successfully!', 'success')
+        flash('Password changed successfully! Please use your new password for future logins.', 'success')
+        
+        # Log security event for audit trail
+        print(f"Password changed successfully for user_id: {user_id} at {datetime.now()}")
         
     except Exception as e:
-        flash(f'Error changing password: {str(e)}', 'error')
+        flash('Error changing password. Please try again.', 'error')
+        # Log detailed error for debugging (don't expose to user)
+        print(f"Password change error for user {user_id}: {str(e)}")
     
     return redirect(url_for('profile'))
 
@@ -322,15 +461,11 @@ def get_report_details(report_id):
         cursor = conn.cursor(dictionary=True)
         
         # Get report details - ensure user owns this report
+        # Use JOIN to get actual status names from status table
         cursor.execute('''
-            SELECT r.*, 
-                   CASE 
-                       WHEN r.status_id = 1 THEN 'Pending'
-                       WHEN r.status_id = 2 THEN 'In Progress' 
-                       WHEN r.status_id = 3 THEN 'Resolved'
-                       ELSE 'Unknown'
-                   END as status_name
+            SELECT r.*, s.name AS status_name
             FROM reports r 
+            JOIN status s ON r.status_id = s.status_id
             WHERE r.report_id = %s AND r.user_id = %s
         ''', (report_id, user_id))
         
@@ -366,6 +501,7 @@ def role():
 def report():
     return redirect(url_for('reports.submit_report'))
 
+
 @app.route('/settings')
 @login_required
 def settings():
@@ -378,6 +514,63 @@ def settings():
         return render_template('5_admin_settings.html', user=current_user)
     else:
         return render_template('5_user_settings.html', user=current_user)
+    
+@app.route('/delete_account', methods=['POST'])
+@login_required
+@role_required('user')
+def delete_account():
+    """Delete user account and all associated data"""
+    user_id = session.get('user_id')
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Start transaction to ensure data integrity
+        cursor.execute('START TRANSACTION')
+        
+        # Delete user's report attachments first (if any exist)
+        cursor.execute('''
+            DELETE FROM report_attachments 
+            WHERE report_id IN (SELECT report_id FROM reports WHERE user_id = %s)
+        ''', (user_id,))
+        
+        # Delete user's reports
+        cursor.execute('DELETE FROM reports WHERE user_id = %s', (user_id,))
+        
+        # Delete user's notifications (if you have this table)
+        try:
+            cursor.execute('DELETE FROM notification WHERE user_id = %s', (user_id,))
+        except:
+            # Table might not exist, ignore error
+            pass
+        
+        # Finally delete the user
+        cursor.execute('DELETE FROM users WHERE user_id = %s', (user_id,))
+        
+        # Commit all changes
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Clear the session
+        session.clear()
+        
+        flash('Your account has been successfully deleted. We\'re sorry to see you go!', 'success')
+        return redirect(url_for('login'))
+        
+    except Exception as e:
+        # Rollback on any error
+        try:
+            conn.rollback()
+            cursor.close()
+            conn.close()
+        except:
+            pass
+        
+        print(f"Error deleting account: {e}")
+        flash(f'Error deleting account: {str(e)}', 'error')
+        return redirect(url_for('profile'))
 
 @app.route('/health')
 def health():
