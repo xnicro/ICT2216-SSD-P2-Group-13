@@ -7,7 +7,8 @@ from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
 from extensions import limiter
 from flask_limiter.errors import RateLimitExceeded
-from access_control import login_required, permission_required
+from access_control import login_required, permission_required, ROLE_REDIRECT_MAP
+import re
 
 bp = Blueprint('accounts', __name__)
 
@@ -28,13 +29,53 @@ def get_db_connection():
         password=cfg['MYSQL_PASSWORD'],
         database=cfg['MYSQL_DB'],
     )
-# Validation and Security Functions
+# Validation and Security Functions ======================== 
 def is_valid_integer(val):
     try:
         return int(val)
     except (TypeError, ValueError):
         return None
     
+def validate_registration_fields():
+    username = request.form['username'].strip()
+    email = request.form['email'].strip()
+    password = request.form['password']
+    confirm_password = request.form['confirm_password']
+
+    if not re.fullmatch(r'^[a-zA-Z0-9_.-]{3,20}$', username):
+        flash("Username must be 3–20 characters, only letters, numbers, _, -, or .", "error")
+        return False
+
+    if not re.fullmatch(r"^[^@]+@[^@]+\.[^@]+$", email):
+        flash("Invalid email format", "error")
+        return False
+
+    if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
+        flash("Password must be at least 8 characters, include uppercase and a number.", "error")
+        return False
+
+    if password != confirm_password:
+        flash("Passwords do not match", "error")
+        return False
+
+    return True
+
+
+def validate_login_fields():
+    username = request.form['username'].strip()
+    password = request.form['password']
+
+    if not username or not password:
+        flash("Username and password are required.", "error")
+        return False
+    if len(username) > 20:
+        flash("Username too long", "error")
+        return False
+    if len(password) > 128:
+        flash("Password too long", "error")
+        return False
+    return True
+
 # GET routes =============================================   
 def get_all_users():
     conn = get_db_connection()
@@ -54,67 +95,48 @@ def get_all_users():
 
 # POST routes =============================================    
 @bp.route("/register", methods=["POST"])
-@limiter.limit("5 per 2 minutes")
+@limiter.limit("5 per minute")
 def register_user():
-    # Check if CSRF token matches
     csrf_token = request.form.get("csrf_token")
     try:
         validate_csrf(csrf_token)
     except ValidationError:
         flash("Invalid or missing CSRF token", "error")
         return redirect(url_for('register'))
-    
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
 
-        # Basic validation
-        if len(username) < 3:
-            flash("Username must be at least 3 characters", "error")
-            return redirect(url_for('register'))
-        if not username.isalnum():  # Only allow letters and numbers
-            flash("Username can only contain letters and numbers", "error")
-            return redirect(url_for('register'))
-        if not email:
-            flash("Email cannot be empty", "error")
-            return redirect(url_for('register'))
-        if not password:
-            flash("Password cannot be empty", "error")
-            return redirect(url_for('register'))
-        if not confirm_password:
-            flash("Confirm Password cannot be empty", "error")
-            return redirect(url_for('register'))
-        if password != confirm_password:
-            flash("Passwords don't match", "error")
-            return redirect(url_for('register'))
-        
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
+    # Call the central validation function
+    if not validate_registration_fields():
+        return redirect(url_for('register'))
 
-            # Check if username or email already exists
-            check_query = "SELECT * FROM users WHERE username = %s OR email = %s"
-            cursor.execute(check_query, (username, email))
-            if cursor.fetchone():
-                flash("Username or email already exists", "error")
-                return redirect(url_for('register'))
-            else:
-                # Insert new user with prepared statement
-                insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
-                hashed = ph.hash(password) #hash password
-                cursor.execute(insert_query, (username, email, hashed))
-                conn.commit()
-                
-            cursor.close()
-            conn.close()
-            flash("Registration successful! Please login.", "success")
-            return redirect(url_for('login'))
-        except Exception as e:
-            flash(f'Registration error: {str(e)}', "error")
+    # Proceed with sanitized inputs
+    username = request.form['username'].strip()
+    email = request.form['email'].strip()
+    password = request.form['password']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        check_query = "SELECT * FROM users WHERE username = %s OR email = %s"
+        cursor.execute(check_query, (username, email))
+        if cursor.fetchone():
+            flash("Username or email already exists", "error")
             return redirect(url_for('register'))
-        
+
+        hashed = ph.hash(password)
+        insert_query = """INSERT INTO users (username, email, pwd) VALUES (%s, %s, %s)"""
+        cursor.execute(insert_query, (username, email, hashed))
+        conn.commit()
+
+        flash("Registration successful! Please login.", "success")
+        return redirect(url_for('login'))
+
+    except Exception as e:
+        flash(f'Registration error: {str(e)}', "error")
+        return redirect(url_for('register'))
+    finally:
+        cursor.close()
+        conn.close()
+
         
 @bp.route("/login", methods=["POST"])
 @limiter.limit("5 per minute")
@@ -125,6 +147,9 @@ def login_user():
         validate_csrf(csrf_token)
     except ValidationError:
         flash("Invalid or missing CSRF token", "error")
+        return redirect(url_for('login'))
+    
+    if not validate_login_fields():
         return redirect(url_for('login'))
     
     if request.method == 'POST':
@@ -167,13 +192,8 @@ def login_user():
                 session['verified'] = verify_user.get('verified', 0)  # Default to 0 if column doesn't exist
                 
                 role = verify_user['role']
-                if role == 'admin':
-                    return redirect(url_for('admin'))  
-                elif role == 'superadmin':
-                    return redirect(url_for('role'))
-                else:
-                    return redirect(url_for('profile'))  # Regular user
-
+                default_route = ROLE_REDIRECT_MAP.get(role, 'profile')  # 'profile' is fallback
+                return redirect(url_for(default_route))
             
             except VerifyMismatchError:
                 flash("Invalid username or password", "error")

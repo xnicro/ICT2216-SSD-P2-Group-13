@@ -1,6 +1,11 @@
 from flask import session, abort, flash, render_template, abort
 from functools import wraps
 
+ROLE_REDIRECT_MAP = {
+    'admin': 'admin',
+    'superadmin': 'role',
+    'user': 'profile',
+}
 ROLE_PERMISSIONS = {
     'user': ['view_all_reports', 'view_report_attachments', 'submit_report', 
              'update_profile', 'change_password', 'update_user_settings'],
