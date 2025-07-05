@@ -29,6 +29,7 @@ MAX_TITLE_LENGTH = 255
 MAX_DESCRIPTION_LENGTH = 1000
 MAX_CATEGORY_DESCRIPTION_LENGTH = 255
 
+MAX_ATTACHMENTS_PER_REPORT = 5
 MAX_TOTAL_UPLOAD_SIZE_MB = 5
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -214,11 +215,17 @@ def submit_report():
         report_id = cursor.lastrowid
 
         attachments = []
+        uploaded_files_count = 0
         total_upload_size = 0
 
         for f in request.files.getlist('attachments'):
             if not f or f.filename == '':
                 continue
+
+            uploaded_files_count += 1
+            if uploaded_files_count > MAX_ATTACHMENTS_PER_REPORT:
+                flash(f"You can only upload a maximum of {MAX_ATTACHMENTS_PER_REPORT} files.", 'error')
+                break 
 
             f.seek(0, os.SEEK_END)
             file_size = f.tell()

@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let selectedFiles = [];
     let rateLimitTimer = null; // NEW: To store the countdown timer
+
+    const MAX_ATTACHMENTS_PER_REPORT = 5;
     const MAX_TOTAL_UPLOAD_SIZE_MB = 5;
 
     // Helper to format file size
@@ -160,6 +162,11 @@ document.addEventListener('DOMContentLoaded', function () {
             clearAlerts();
 
             for (const newFile of newFiles) {
+                if (selectedFiles.length >= MAX_ATTACHMENTS_PER_REPORT) {
+                    showClientFlash(`You can only upload a maximum of ${MAX_ATTACHMENTS_PER_REPORT} files.`, 'error');
+                    break; // Stop adding files if limit reached
+                }
+
                 if ((currentTotalSize + newFile.size) > MAX_TOTAL_UPLOAD_SIZE_MB * 1024 * 1024) {
                     showClientFlash(`Total upload size exceeds the maximum allowed of ${MAX_TOTAL_UPLOAD_SIZE_MB}MB. Please reduce the number of files and try again.`, 'error');
                     continue;
