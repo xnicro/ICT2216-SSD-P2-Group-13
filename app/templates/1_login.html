@@ -64,8 +64,8 @@
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'info' }}">
-                                    {{ message }}
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'info' | e }}">
+                                    {{ message | e }}
                                 </div>
                             {% endfor %}
                         {% endif %}
@@ -76,7 +76,7 @@
                 <form action="{{ url_for('accounts.login_user') }}" method="post" class="login-form" id="login-form"
                     {% if rate_limited %}onsubmit="return false;"{% endif %}>
 
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token | e }}">
                     <div>
                         <label for="username">Username:</label>
                         <input type="text" id="username" name="username" required {% if rate_limited %}disabled{% endif %}>
@@ -114,7 +114,7 @@
             });
         });
         // Rate limit logic 
-        const retryAfter = parseInt("{{ retry_after }}", 10);
+        const retryAfter = parseInt("{{ retry_after | e }}", 10);
         if (!isNaN(retryAfter) && retryAfter > 0) {
             setTimeout(() => {
                 document.getElementById("username").disabled = false;
