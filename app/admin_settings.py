@@ -52,14 +52,12 @@ def get_admin_settings():
                 'emailNotifications': True,
                 'browserNotifications': False,
                 'loginAlerts': True,
-                'sessionTimeout': True
             })
         
         return jsonify({
             'emailNotifications': bool(preferences['email_notifications']),
             'browserNotifications': bool(preferences['browser_notifications']),
             'loginAlerts': bool(preferences['login_alerts']),
-            'sessionTimeout': bool(preferences['session_timeout'])
         })
         
     except Exception as e:
@@ -95,7 +93,6 @@ def update_admin_settings():
                 data.get('emailNotifications', True),
                 data.get('browserNotifications', False),
                 data.get('loginAlerts', True),
-                data.get('sessionTimeout', True),
                 user_id
             ))
         else:
@@ -110,8 +107,7 @@ def update_admin_settings():
                 user_id,
                 data.get('emailNotifications', True),
                 data.get('browserNotifications', False),
-                data.get('loginAlerts', True),
-                data.get('sessionTimeout', True)
+                data.get('loginAlerts', True)
             ))
         
         conn.commit()

@@ -179,7 +179,6 @@ async function loadAdminPreferences() {
       // Update notification checkboxes
       document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false;
       document.getElementById('loginAlerts').checked = preferences.loginAlerts !== false;
-      document.getElementById('sessionTimeout').checked = preferences.sessionTimeout !== false;
       
       // Update browser notifications
       updateBrowserNotificationsCheckbox(preferences.browserNotifications || false);
@@ -235,8 +234,7 @@ async function saveAdminSettings() {
     const preferences = {
       emailNotifications: document.getElementById('emailNotifications').checked,
       browserNotifications: document.getElementById('browserNotifications').checked,
-      loginAlerts: document.getElementById('loginAlerts').checked,
-      sessionTimeout: document.getElementById('sessionTimeout').checked
+      loginAlerts: document.getElementById('loginAlerts').checked
     };
     
     const response = await fetch('/api/admin/settings', {
