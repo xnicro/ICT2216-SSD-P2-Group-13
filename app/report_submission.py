@@ -11,6 +11,7 @@ from wtforms.validators import ValidationError
 from extensions import limiter
 from flask_limiter.errors import RateLimitExceeded
 from user_settings import send_notifications_for_new_report
+from access_control import login_required, permission_required
 
 bp = Blueprint('reports', __name__, template_folder='templates')
 
@@ -68,6 +69,8 @@ def get_db_connection():
 
 @bp.route('/report', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
+@login_required
+@permission_required('submit_report')
 def submit_report():
     if session.get("role") != "user":
         if is_ajax_request():

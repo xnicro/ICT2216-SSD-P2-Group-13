@@ -16,6 +16,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from extensions import limiter
+from access_control import ROLE_PERMISSIONS, permission_required, login_required, role_required
 
 app = Flask(__name__)
 
@@ -42,8 +43,6 @@ app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'mysql')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'x')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'x')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'flask_db')
-print("aaa", flush=True)
-print(app.config['MYSQL_HOST'],app.config['MYSQL_USER'],app.config['MYSQL_PASSWORD'],app.config['MYSQL_DB'], flush=True)
 
 # Email configuration for notifications
 app.config['SMTP_SERVER'] = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
@@ -80,32 +79,6 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
     return conn
-
-# Login required decorator
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in to access this page.', 'error')
-            return render_template('1_login.html')
-        return f(*args, **kwargs)
-    return decorated_function
-
-# Role Decorator
-def role_required(*allowed_roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if 'role' not in session:
-                flash('Unauthorized access.', 'error')
-                return render_template('1_login.html')
-            
-            if session['role'] not in allowed_roles:
-                abort(403)
-            
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 # Helper function to get user by ID
 def get_user_by_id(user_id):
@@ -220,6 +193,7 @@ def profile():
 @app.route('/update_profile', methods=['POST'])
 @login_required
 @role_required('user')
+@permission_required('update_profile')
 def update_profile():
     """Update user profile information with comprehensive validation"""
     user_id = session.get('user_id')
@@ -340,6 +314,7 @@ def update_profile():
 @app.route('/change_password', methods=['POST'])
 @login_required
 @role_required('user')
+@permission_required('change_password')
 def change_password():
     """Change user password with strong security validation"""
     user_id = session.get('user_id')
@@ -489,7 +464,6 @@ def get_report_details(report_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/role')
 @login_required
 @role_required('superadmin')
@@ -500,22 +474,25 @@ def role():
 @app.route('/report')
 @login_required
 @role_required('user')
+@permission_required('submit_report')
 def report():
     return redirect(url_for('reports.submit_report'))
-
 
 @app.route('/settings')
 @login_required
 def settings():
-    # Get current user for template
     user_id = session.get('user_id')
     current_user = get_user_by_id(user_id)
     
-    # Check user role and render appropriate template
-    if current_user and current_user.get('role') == 'admin':
+    # Check if user has admin-level permission
+    allowed_permissions = ROLE_PERMISSIONS.get(current_user.get('role'), [])
+    
+    if 'update_admin_settings' in allowed_permissions:
         return render_template('5_admin_settings.html', user=current_user)
-    else:
+    elif 'update_user_settings' in allowed_permissions:
         return render_template('5_user_settings.html', user=current_user)
+    else:
+        abort(403)
     
 @app.route('/delete_account', methods=['POST'])
 @login_required
