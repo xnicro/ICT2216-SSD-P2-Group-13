@@ -10,6 +10,7 @@ from home_dashboard import get_report_by_id, get_report_attachments
 from admin_dashboard import get_statuses, get_all_reports
 from admin_dashboard import bp as admin_bp
 from accounts import bp as accounts_bp
+from admin_settings import admin_settings_bp
 from accounts import get_all_users
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -55,6 +56,7 @@ app.config['APP_NAME'] = os.getenv('APP_NAME', 'Your App Name')
 app.register_blueprint(reports_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(accounts_bp)
+app.register_blueprint(admin_settings_bp)
 
 # Import and register notification system blueprint
 try:

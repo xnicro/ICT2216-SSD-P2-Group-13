@@ -22,7 +22,7 @@
             <div class="settings-section">
                 <div class="settings-section-header">
                     <h1>Settings</h1>
-                    <p>Customize your notification preferences and privacy settings</p>
+                    <p>Customize your notification preferences</p>
                 </div>
 
                 <!-- Notification Preferences Section (Collapsible) -->
@@ -76,45 +76,6 @@
                                 <small>Get notified about miscellaneous incidents and reports</small>
                             </div>
                             <input type="checkbox" id="otherIncident">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Privacy & Permissions Section (Collapsible) -->
-                <div class="section">
-                    <h2 onclick="toggleSection('privacyPermissions')">
-                        <div class="header-content">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Privacy & Permissions</span>
-                        </div>
-                    </h2>
-                    <div id="privacyPermissions" class="section-content">
-                        <p class="section-description">
-                            Manage your privacy settings and app permissions.
-                        </p>
-                        
-                        <div class="checkbox-container">
-                            <div class="label-group">
-                                <label for="locationAccess">Enable Location Access</label>
-                                <small>Allow the app to access your location for report submissions</small>
-                            </div>
-                            <input type="checkbox" id="locationAccess">
-                        </div>
-
-                        <div class="checkbox-container">
-                            <div class="label-group">
-                                <label for="cameraAccess">Enable Camera Access</label>
-                                <small>*Required to submit photos with your reports</small>
-                            </div>
-                            <input type="checkbox" id="cameraAccess">
-                        </div>
-
-                        <div class="checkbox-container">
-                            <div class="label-group">
-                                <label for="dataSharing">Allow Data Sharing</label>
-                                <small>Share anonymized data to improve app performance</small>
-                            </div>
-                            <input type="checkbox" id="dataSharing">
                         </div>
                     </div>
                 </div>

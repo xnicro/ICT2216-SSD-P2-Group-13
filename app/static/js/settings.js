@@ -75,11 +75,6 @@ async function loadUserPreferences() {
       document.getElementById('suspiciousActivity').checked = preferences.suspiciousActivity || false;
       document.getElementById('otherIncident').checked = preferences.otherIncident || false;
       
-      // Update privacy preference checkboxes
-      document.getElementById('locationAccess').checked = preferences.locationAccess || false;
-      document.getElementById('cameraAccess').checked = preferences.cameraAccess || false;
-      document.getElementById('dataSharing').checked = preferences.dataSharing || false;
-      
       // Update delivery preference checkboxes
       document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false;
       document.getElementById('smsNotifications').checked = preferences.smsNotifications || false;
@@ -127,9 +122,6 @@ async function saveUserPreferences() {
     vandalism: document.getElementById('vandalism').checked,
     suspiciousActivity: document.getElementById('suspiciousActivity').checked,
     otherIncident: document.getElementById('otherIncident').checked,
-    locationAccess: document.getElementById('locationAccess').checked,
-    cameraAccess: document.getElementById('cameraAccess').checked,
-    dataSharing: document.getElementById('dataSharing').checked,
     emailNotifications: document.getElementById('emailNotifications').checked,
     smsNotifications: document.getElementById('smsNotifications').checked,
     browserNotifications: document.getElementById('browserNotifications').checked
@@ -145,7 +137,7 @@ async function saveUserPreferences() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
+        'X-CSRF-Token': csrfToken  // Fixed: Changed from X-CSRFToken to X-CSRF-Token
       },
       body: JSON.stringify(preferences)
     });
@@ -186,20 +178,11 @@ async function loadAdminPreferences() {
       
       // Update notification checkboxes
       document.getElementById('emailNotifications').checked = preferences.emailNotifications !== false;
-      document.getElementById('criticalAlerts').checked = preferences.criticalAlerts !== false;
       document.getElementById('loginAlerts').checked = preferences.loginAlerts !== false;
       document.getElementById('sessionTimeout').checked = preferences.sessionTimeout !== false;
       
       // Update browser notifications
       updateBrowserNotificationsCheckbox(preferences.browserNotifications || false);
-      
-      // Load profile data if fields exist
-      if (document.getElementById('adminName')) {
-        document.getElementById('adminName').value = document.getElementById('adminName').dataset.value || '';
-      }
-      if (document.getElementById('adminEmail')) {
-        document.getElementById('adminEmail').value = document.getElementById('adminEmail').dataset.value || '';
-      }
     } else {
       console.error('Failed to load admin preferences:', response.status, response.statusText);
       const errorData = await response.json().catch(() => ({}));
@@ -237,21 +220,6 @@ async function saveAdminSettings() {
     saveButton.disabled = true;
   }
   
-  // Get profile data
-  const profileData = {
-    username: document.getElementById('adminName').value,
-    email: document.getElementById('adminEmail').value
-  };
-  
-  // Get preferences
-  const preferences = {
-    emailNotifications: document.getElementById('emailNotifications').checked,
-    criticalAlerts: document.getElementById('criticalAlerts').checked,
-    browserNotifications: document.getElementById('browserNotifications').checked,
-    loginAlerts: document.getElementById('loginAlerts').checked,
-    sessionTimeout: document.getElementById('sessionTimeout').checked
-  };
-  
   try {
     const csrfToken = getCSRFToken();
     if (!csrfToken) {
@@ -260,30 +228,25 @@ async function saveAdminSettings() {
     
     const headers = {
       'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken
+      'X-CSRF-Token': csrfToken  // Fixed: Changed from X-CSRFToken to X-CSRF-Token
     };
     
-    // First update profile
-    const profileResponse = await fetch('/api/admin/update-profile', {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(profileData)
-    });
+    // Get preferences
+    const preferences = {
+      emailNotifications: document.getElementById('emailNotifications').checked,
+      browserNotifications: document.getElementById('browserNotifications').checked,
+      loginAlerts: document.getElementById('loginAlerts').checked,
+      sessionTimeout: document.getElementById('sessionTimeout').checked
+    };
     
-    if (!profileResponse.ok) {
-      const errorData = await profileResponse.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to update profile');
-    }
-    
-    // Then update preferences
-    const prefsResponse = await fetch('/api/admin/settings', {
+    const response = await fetch('/api/admin/settings', {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(preferences)
     });
     
-    if (!prefsResponse.ok) {
-      const errorData = await prefsResponse.json().catch(() => ({}));
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || 'Failed to update preferences');
     }
     
