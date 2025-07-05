@@ -121,14 +121,13 @@ button {
 /* Side Bar */
 body div.main {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .sidebar {
   background-color: var(--dark-blue);
   color: var(--light);
   width: 300px;
-  height: 100%;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -259,7 +258,7 @@ body div.main {
   border-radius: 8px;
   font-size: 14px;
   width: fit-content;
-  margin-top: 16px;
+  /* margin-top: 16px; */
 }
 
 .upload-btn:hover {
@@ -273,7 +272,6 @@ body div.main {
 /* Reports for users (homepage) */
 .main-content {
   flex: 1;
-  height: 100%;
 }
 
 .reports-section {
