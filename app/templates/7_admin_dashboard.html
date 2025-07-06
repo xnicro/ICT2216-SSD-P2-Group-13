@@ -27,8 +27,11 @@
     <div class="card-body-admin">
     <h1>Admin Dashboard</h1>    
     <hr>
+    <div id="flashMessageContainer" class="flash-message-container"></div>
     <div class="row">
     <div class="admin-content-row">
+    
+
 
     <!-- Status Sidebar -->
     <div class="col-md-2 mb-3 mb-md-0 border-end adminsidebar">
@@ -106,6 +109,7 @@
         data-reportid="{{ report.report_id | e}}"
         data-title="{{ report.title | e}}" 
         data-category="{{ report.category_name.replace('_', ' ').title() | e}}" 
+        data-username="{{report.username | e }}"
         data-status="{{ report.status_name | lower | e}}" 
         data-description="{{ report.description | e }}" 
         data-createdat="{{report.created_at | e}}">

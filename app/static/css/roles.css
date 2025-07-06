@@ -159,3 +159,44 @@
     background-color: var(--border);   
     margin: 1rem 0;           
 }
+
+/* Flash Message */
+.flash-message-container {
+  position: relative;
+  z-index: 10;
+}
+
+.flash-message {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1rem;
+  max-width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: opacity 0.3s ease-in-out;
+}
+
+.flash-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+
+.flash-error {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+.flash-warning {
+  background-color: #fff3cd;
+  color: #664d03;
+  border: 1px solid #ffecb5;
+}
+
+.flash-info {
+  background-color: #cff4fc;
+  color: #055160;
+  border: 1px solid #b6effb;
+}
