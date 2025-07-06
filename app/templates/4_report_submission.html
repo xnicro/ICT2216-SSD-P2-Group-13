@@ -1,33 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Submit Incident Report</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/report_submission.css') }}" /> {# NEW LINE #}
-    <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report_submission.css') }}" />
+    <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}"
+          type="image/svg+xml">
 </head>
-
 <body>
     <div class="main">
         {% include 'common/sidebar.html' %}
-
         <div class="main-content">
             {% include 'common/topbar.html' %}
-
             <div class="submit-report-section">
                 <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
                 <h1>Add Incident Report</h1>
 
-                {# ── FLASH MESSAGES ── #}
                 <div id="alertContainer">
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error'}}">
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
                                     {{ message | e }}
                                 </div>
                             {% endfor %}
@@ -35,59 +32,93 @@
                     {% endwith %}
                 </div>
 
-                <form id="report-form" method="POST" action="{{ url_for('reports.submit_report') }}" enctype="multipart/form-data"
-                    {% if rate_limited %}onsubmit="return false;"{% endif %}>
+                <form id="report-form" method="POST"
+                      action="{{ url_for('reports.submit_report') }}"
+                      enctype="multipart/form-data"
+                      {% if rate_limited %} onsubmit="return false;" {% endif %}>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token | e }}">
+
                     <div>
                         <label for="title">Title</label>
-                        <input type="text" id="title" name="title" value="{{ title | e }}" {% if rate_limited %}disabled{% endif %}>
+                        <input type="text" id="title" name="title"
+                               value="{{ title | e }}"
+                               {% if rate_limited %} disabled {% endif %}>
                     </div>
 
                     <div>
                         <label for="description">Description</label>
-                        <textarea id="description" name="description" {% if rate_limited %}disabled{% endif %}>{{ description | e }}</textarea>
+                        <textarea id="description" name="description"
+                                  {% if rate_limited %} disabled {% endif %}>{{ description | e }}</textarea>
                     </div>
 
                     <div>
                         <label for="category">Category</label>
-                        <select id="category" name="category" {% if rate_limited %}disabled{% endif %}>
-                            <option value="" disabled {% if not selected_category %}selected{% endif %}>Select a category</option>
-                            <option value="fires" {% if selected_category == 'fires' %}selected{% endif %}>Fires</option>
-                            <option value="faulty_facilities" {% if selected_category == 'faulty_facilities' %}selected{% endif %}>Faulty Facilities/Equipment</option>
-                            <option value="vandalism" {% if selected_category == 'vandalism' %}selected{% endif %}>Vandalism</option>
-                            <option value="suspicious_activity" {% if selected_category == 'suspicious_activity' %}selected{% endif %}>Suspicious Activity</option>
-                            <option value="other" {% if selected_category == 'other' %}selected{% endif %}>Others</option>
+                        <select id="category" name="category"
+                                {% if rate_limited %} disabled {% endif %}>
+                            <option value="" disabled
+                                {% if not selected_category %} selected {% endif %}>
+                                  Select a category
+                            </option>
+                            <option value="fires"
+                                {% if selected_category == 'fires' %} selected {% endif %}>
+                                Fires
+                            </option>
+                            <option value="faulty_facilities"
+                                {% if selected_category == 'faulty_facilities' %} selected {% endif %}>
+                                Faulty Facilities/Equipment
+                            </option>
+                            <option value="vandalism"
+                                {% if selected_category == 'vandalism' %} selected {% endif %}>
+                                Vandalism
+                            </option>
+                            <option value="suspicious_activity"
+                                {% if selected_category == 'suspicious_activity' %} selected {% endif %}>
+                                Suspicious Activity
+                            </option>
+                            <option value="other"
+                                {% if selected_category == 'other' %} selected {% endif %}>
+                                Others
+                            </option>
                         </select>
                     </div>
 
-                    <div id="other-desc-container" {% if selected_category != 'other' %}style="display: none;"{% endif %}>
+                    <div id="other-desc-container"
+                         {% if selected_category != 'other' %} style="display:none;" {% endif %}>
                         <label for="category_description">Please specify</label>
-                        <input type="text" id="category_description" name="category_description"
-                            placeholder="Short description of category" value="{{ category_description | e }}" {% if rate_limited %}disabled{% endif %}>
+                        <input type="text" id="category_description"
+                               name="category_description"
+                               placeholder="Short description of category"
+                               value="{{ category_description | e }}"
+                               {% if rate_limited %} disabled {% endif %}>
                     </div>
 
                     <div class="check-container">
-                        <input class="check" type="checkbox" name="anonymous" value="1" {% if is_anonymous %}checked{% endif %} {% if rate_limited %}disabled{% endif %}>
-                        <label>
-                            Submit anonymously
-                        </label>
+                        <input class="check" type="checkbox"
+                               name="anonymous" value="1"
+                               {% if is_anonymous %} checked {% endif %}
+                               {% if rate_limited %} disabled {% endif %}>
+                        <label>Submit anonymously</label>
                     </div>
 
-                    {# --- START: ATTACHMENT SECTION MODIFICATION --- #}
                     <div class="attachment-upload-section">
                         <label for="file-upload-input">Attachments</label>
-                        <input type="file" id="file-upload-input" name="attachments[]" multiple style="display: none;" {% if rate_limited %}disabled{% endif %}>
-                        <button type="button" id="custom-file-upload-button" class="custom-file-upload-button" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>
+                        <input type="file" id="file-upload-input"
+                               name="attachments[]" multiple style="display:none;"
+                               {% if rate_limited %} disabled {% endif %}>
+                        <button type="button" id="custom-file-upload-button"
+                                class="custom-file-upload-button"
+                                {% if rate_limited %} disabled style="background-color:#ccc;" {% endif %}>
                             <i class="fa-solid fa-upload"></i> Choose Files
                         </button>
-                        <div id="file-preview-container" class="file-preview-container">
-                        </div>
+                        <div id="file-preview-container" class="file-preview-container"></div>
                     </div>
-                    {# --- END: ATTACHMENT SECTION MODIFICATION --- #}
 
                     <div>
-                        <button type="submit" class="upload-btn" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}><i
-                                class="fa-sharp fa-solid fa-arrow-up-from-bracket"></i>Submit</button>
+                        <button type="submit" class="upload-btn"
+                                {% if rate_limited %} disabled style="background-color:#ccc;" {% endif %}>
+                            <i class="fa-sharp fa-solid fa-arrow-up-from-bracket"></i>
+                            Submit
+                        </button>
                     </div>
                 </form>
             </div>
@@ -95,7 +126,5 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/report_submission.js') }}"></script>
-
 </body>
-
 </html>

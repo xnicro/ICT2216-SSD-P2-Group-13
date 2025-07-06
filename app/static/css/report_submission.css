@@ -200,8 +200,8 @@
 
 /* Specific icon styles based on file extension/type (using Font Awesome classes) */
 .fa-file-image::before { content: "\f1c5"; }
-.fa-file-pdf::before { content: "\f1c1"; }
-.fa-file-word::before { content: "\f1c6"; }
+.fa-file-pdf::before { content: "\f1c6"; }
+.fa-file-word::before { content: "\f1c2"; }
 .fa-file-excel::before { content: "\f1c3"; }
 .fa-file-powerpoint::before { content: "\f1c4"; }
 .fa-file-archive::before { content: "\f1c6"; }

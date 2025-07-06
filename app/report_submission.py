@@ -115,9 +115,6 @@ def submit_report():
                                is_anonymous=is_anon)
 
     # Get raw values for contains_invalid_chars check (before stripping)
-    # IMPORTANT: Your current code was directly using stripped values for contains_invalid_chars
-    # which is not ideal. It should use raw values for that check.
-    # Let's align this with the previous suggestion.
     raw_title = request.form.get('title', '')
     raw_description = request.form.get('description', '')
     raw_category_description = request.form.get('category_description', '') if request.form.get('category', '') == 'other' else ''
@@ -178,7 +175,6 @@ def submit_report():
             validation_errors.append(f"{fields_str} contain invalid characters.")
 
     if validation_errors:
-        current_app.logger.debug(f"Validation errors detected (server): {validation_errors}")
         if is_ajax_request():
             return jsonify({"message": "Validation failed", "error_messages": validation_errors}), 400
         for error_msg in validation_errors:
@@ -220,15 +216,32 @@ def submit_report():
         attachments = []
         uploaded_files_count = 0
         total_upload_size = 0
+        uploaded_filenames = set()
 
         for f in request.files.getlist('attachments'):
             if not f or f.filename == '':
                 continue
 
+            if f.filename in uploaded_filenames:
+                if is_ajax_request():
+                    conn.rollback()
+                    return jsonify({
+                        "message": "Duplicate file detected",
+                        "error_messages": [f"File '{f.filename}' is already added for this report."]
+                    }), 400
+                flash(f"File '{f.filename}' is already added for this report.", 'error')
+                conn.rollback() # Rollback the report insertion
+                return render_template('4_report_submission.html',
+                                       title=title, description=description,
+                                       selected_category=category_value,
+                                       category_description=category_description,
+                                       is_anonymous=is_anon)
+            uploaded_filenames.add(f.filename)
+
             uploaded_files_count += 1
             if uploaded_files_count > MAX_ATTACHMENTS_PER_REPORT:
                 flash(f"You can only upload a maximum of {MAX_ATTACHMENTS_PER_REPORT} files.", 'error')
-                break 
+                break
 
             f.seek(0, os.SEEK_END)
             file_size = f.tell()
@@ -257,7 +270,7 @@ def submit_report():
                     f.save(save_path)
                     attachments.append((report_id, save_name, save_path, f.mimetype))
                 except Exception as e:
-                    current_app.logger.error(f"Error saving file {fn}: {e}")
+                    current_app.logger.error(f"Error saving file {fn}: %s", e)
                     if is_ajax_request():
                         conn.rollback()
                         return jsonify({"message": f"Failed to save file '{fn}'.", "error_messages": [f"Failed to save file '{fn}'. Please try again."]})
@@ -286,9 +299,8 @@ def submit_report():
                     category_display_name,
                     user_id
                 )
-                current_app.logger.info(f"Notifications sent for report {report_id}")
             except Exception as e:
-                current_app.logger.error(f"Error sending notifications for report {report_id}: {e}")
+                current_app.logger.error(f"Error sending notifications for report {report_id}: %s", e)
 
         if is_ajax_request():
             return jsonify({"message": "Report submitted successfully!", "redirect": url_for('index')}), 200
@@ -315,7 +327,7 @@ def submit_report():
 
 @bp.errorhandler(RateLimitExceeded)
 def rate_limit_exceeded(e):
-    retry_after = int(e.description.split(" ")[-1]) if "second" in str(e.description) else 60 
+    retry_after = int(e.description.split(" ")[-1]) if "second" in str(e.description) else 60
     flash("You are submitting too many reports. Please try again in a few minutes.", "error")
     return render_template('4_report_submission.html',
                            title=request.form.get('title', '').strip(),
