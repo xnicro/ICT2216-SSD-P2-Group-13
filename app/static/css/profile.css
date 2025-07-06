@@ -421,3 +421,153 @@ tbody tr:hover {
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* Profile Search Validation Styles */
+.input-error {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5 !important;
+}
+
+.input-warning {
+    border: 2px solid #ffc107 !important;
+    background-color: #fffdf0 !important;
+}
+
+.input-success {
+    border: 2px solid #28a745 !important;
+    background-color: #f0fff4 !important;
+}
+
+.validation-message {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
+.error-message {
+    color: #dc3545;
+}
+
+.warning-message {
+    color: #856404;
+}
+
+.success-message {
+    color: #155724;
+}
+
+.character-count {
+    font-size: 11px;
+    color: #666;
+    float: right;
+    margin-top: 2px;
+}
+
+/* Profile Search Validation Styles */
+.input-error {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5 !important;
+}
+
+.input-warning {
+    border: 2px solid #ffc107 !important;
+    background-color: #fffdf0 !important;
+}
+
+.input-success {
+    border: 2px solid #28a745 !important;
+    background-color: #f0fff4 !important;
+}
+
+.validation-message {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+}
+
+.error-message {
+    color: #dc3545;
+}
+
+.warning-message {
+    color: #856404;
+}
+
+.success-message {
+    color: #155724;
+}
+
+.character-count {
+    font-size: 10px;
+    color: #999;
+    position: absolute;
+    bottom: 2px;
+    right: 8px;
+    background: white;
+    padding: 1px 3px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Filter alignment fixes - Override existing styles */
+.filter-section .form-group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 0;
+}
+
+/* Special styling for search form group to accommodate character count */
+.filter-section .filter-row .form-group:has(#searchReports) {
+    position: relative;
+}
+
+.filter-section .filter-row .form-group:has(#searchReports) input {
+    padding-right: 45px; /* Make room for character count */
+}
+
+.filter-section .filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 15px;
+    flex-wrap: wrap;
+    grid-template-columns: none !important;
+}
+
+.filter-section .filter-row .form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-section .filter-row .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.filter-section .filter-row .form-group input,
+.filter-section .filter-row .form-group select {
+    width: 100%;
+    height: 40px;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.filter-section .filter-row .form-group input:focus,
+.filter-section .filter-row .form-group select:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+}
+
+.filter-section .filter-row .form-group button {
+    height: 40px;
+    margin-top: 0;
+    align-self: flex-end;
+}

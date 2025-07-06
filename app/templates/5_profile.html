@@ -8,15 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-validation.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
 </head>
 <body>
     <div class="main">
-        <!-- Include your sidebar -->
         {% include 'common/sidebar.html' %}
 
         <div class="main-content">
-            <!-- Include your topbar -->
             {% include 'common/topbar.html' %}
 
             <div class="profile-container">
@@ -66,8 +65,8 @@
                         <label>User ID:</label>
                         <p id="viewUserId">{{ current_user.user_id | e }}</p>
                     </div>
-                    <button class="btn btn-primary" onclick="toggleEditMode()">Edit Profile</button>
-                    <button class="btn btn-secondary" onclick="togglePasswordMode()">Change Password</button>
+                    <button class="btn btn-primary" data-action="edit-profile">Edit Profile</button>
+                    <button class="btn btn-secondary" data-action="change-password">Change Password</button>
                 </div>
 
                 <!-- Edit Mode -->
@@ -85,7 +84,7 @@
                         </div>
                         
                         <button type="submit" class="btn btn-primary">Update Profile</button>
-                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+                        <button type="button" class="btn btn-secondary" data-action="cancel-edit">Cancel</button>
                     </form>
                 </div>
 
@@ -127,7 +126,7 @@
                         </div>
                         
                         <button type="submit" class="btn btn-primary">Change Password</button>
-                        <button type="button" class="btn btn-secondary" onclick="cancelPasswordEdit()">Cancel</button>
+                        <button type="button" class="btn btn-secondary" data-action="cancel-password">Cancel</button>
                     </form>
                 </div>
             </div>
@@ -164,12 +163,12 @@
                     </div>
                 </div>
 
-                <!-- Filter Section - Based on FR10 Categories -->
+                <!-- Filter Section -->
                 <div class="filter-section">
                     <div class="filter-row">
                         <div class="form-group">
                             <label for="statusFilter">Filter by Status</label>
-                            <select id="statusFilter" onchange="filterReports()">
+                            <select id="statusFilter">
                                 <option value="">All Statuses</option>
                                 <option value="unresolved">Unresolved</option>
                                 <option value="pending">Pending</option>
@@ -180,7 +179,7 @@
                         </div>
                         <div class="form-group">
                             <label for="categoryFilter">Filter by Category</label>
-                            <select id="categoryFilter" onchange="filterReports()">
+                            <select id="categoryFilter">
                                 <option value="">All Categories</option>
                                 <option value="fires">Fires</option>
                                 <option value="faulty facilities/equipment">Faulty Facilities/Equipment</option>
@@ -191,11 +190,16 @@
                         </div>
                         <div class="form-group">
                             <label for="searchReports">Search Reports</label>
-                            <input type="text" id="searchReports" placeholder="Search by title or description..." onkeyup="searchReports()">
+                            <input type="text" 
+                                   id="searchReports" 
+                                   placeholder="Search by title..." 
+                                   maxlength="30">
+                            <span class="character-count" id="searchCharCount">0/30</span>
+                            <span class="validation-message" id="searchValidationMessage"></span>
                         </div>
                         <div class="form-group">
                             <label>&nbsp;</label>
-                            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                            <button class="btn btn-secondary" data-action="clear-filters">Clear Filters</button>
                         </div>
                     </div>
                 </div>
@@ -231,7 +235,7 @@
                             <td>{{ report.updated_at.strftime('%d %b %Y') if report.updated_at else 'N/A' | e}}</td>
                             <td>
                                 <div class="report-actions">
-                                    <button class="btn btn-primary btn-small" onclick="viewReportDetails('{{ report.report_id | e }}')">View</button>
+                                    <button class="btn btn-primary btn-small" data-action="view-report" data-report-id="{{ report.report_id | e }}">View</button>
                                 </div>
                             </td>
                         </tr>
@@ -246,11 +250,11 @@
                 </table>
             </div>
 
-            <!-- Delete Account Section (Based on FR12 - User Account Management) -->
+            <!-- Delete Account Section -->
             <div class="danger-zone">
                 <h3>⚠️ Delete Account</h3>
                 <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
-                <button class="btn btn-danger" onclick="deleteAccount()">Delete My Account</button>
+                <button class="btn btn-danger" data-action="delete-account">Delete My Account</button>
             </div>
         </div>
     </div>
@@ -260,7 +264,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalReportTitle">Report Details</h3>
-                <span class="close" onclick="closeReportModal()">&times;</span>
+                <span class="close">&times;</span>
             </div>
             
             <div id="modalReportContent">
@@ -293,234 +297,7 @@
         </div>
     </div>
 
-    <script>
-        // Toggle between view and edit modes
-        function toggleEditMode() {
-            document.getElementById('viewMode').classList.remove('active');
-            document.getElementById('editMode').classList.add('active');
-            document.getElementById('passwordMode').classList.remove('active');
-            clearAlerts();
-        }
-
-        // Toggle to password change mode
-        function togglePasswordMode() {
-            document.getElementById('viewMode').classList.remove('active');
-            document.getElementById('editMode').classList.remove('active');
-            document.getElementById('passwordMode').classList.add('active');
-            clearAlerts();
-        }
-
-        // Cancel edit and return to view mode
-        function cancelEdit() {
-            document.getElementById('editMode').classList.remove('active');
-            document.getElementById('viewMode').classList.add('active');
-            clearAlerts();
-        }
-
-        // Cancel password edit and return to view mode
-        function cancelPasswordEdit() {
-            document.getElementById('passwordMode').classList.remove('active');
-            document.getElementById('viewMode').classList.add('active');
-            document.getElementById('passwordForm').reset();
-            clearAlerts();
-        }
-
-        // Clear alert messages
-        function clearAlerts() {
-            document.getElementById('alertContainer').innerHTML = '';
-        }
-
-        // Combined filtering function - all filters work together
-        function applyAllFilters() {
-            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
-            const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
-            const searchTerm = document.getElementById('searchReports').value.toLowerCase();
-            const rows = document.querySelectorAll('#reportsTableBody tr');
-            
-            rows.forEach(row => {
-                // Skip the "no reports" row
-                if (row.cells.length === 1 && row.cells[0].colSpan === 7) {
-                    return;
-                }
-                
-                const status = row.getAttribute('data-status');
-                const category = row.getAttribute('data-category');
-                const title = row.getAttribute('data-title') || '';
-                const description = row.getAttribute('data-description') || '';
-                
-                let showRow = true;
-                
-                // Status filter
-                if (statusFilter && status !== statusFilter) {
-                    showRow = false;
-                }
-                
-                // Category filter
-                if (categoryFilter && category !== categoryFilter) {
-                    showRow = false;
-                }
-                
-                // Search filter (title and description)
-                if (searchTerm) {
-                    const matchesSearch = title.toLowerCase().includes(searchTerm) || 
-                                        description.toLowerCase().includes(searchTerm);
-                    if (!matchesSearch) {
-                        showRow = false;
-                    }
-                }
-                
-                row.style.display = showRow ? '' : 'none';
-            });
-        }
-
-        // Individual filter functions now call the combined function
-        function filterReports() {
-            applyAllFilters();
-        }
-
-        // Search reports functionality - now works with other filters
-        function searchReports() {
-            applyAllFilters();
-        }
-
-        // Clear all filters
-        function clearFilters() {
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('categoryFilter').value = '';
-            document.getElementById('searchReports').value = '';
-            
-            const rows = document.querySelectorAll('#reportsTableBody tr');
-            rows.forEach(row => {
-                row.style.display = '';
-            });
-        }
-
-        // View report details - supports FR4 (read and view reports)
-        function viewReportDetails(reportId) {
-            const modal = document.getElementById('reportModal');
-            if (!modal) {
-                alert('Modal not found');
-                return;
-            }
-            
-            modal.style.display = 'block';
-            
-            // Show loading state
-            document.getElementById('modalReportTitle').textContent = 'Loading...';
-            document.getElementById('modalReportDescription').textContent = 'Loading report details...';
-            
-            // Fetch report details
-            fetch(`/api/report/${reportId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        alert('Error loading report details: ' + data.error);
-                        return;
-                    }
-                    
-                    // Populate modal with report data
-                    document.getElementById('modalReportId').textContent = '#' + data.report_id;
-                    document.getElementById('modalReportTitle').textContent = data.title || 'No title';
-                    document.getElementById('modalReportCategory').textContent = data.category_name || 'No category';
-                    document.getElementById('modalReportDescription').textContent = data.description || 'No description';
-                    document.getElementById('modalReportLocation').textContent = data.location || 'Not specified';
-                    
-                    // Update status
-                    const statusElement = document.getElementById('modalReportStatus');
-                    if (statusElement) {
-                        // Clear previous content
-                        statusElement.textContent = '';
-
-                        // Create and style the new span
-                        const span = document.createElement('span');
-                        span.className = `status-${data.status_name.toLowerCase().replace(/\s+/g, '-')}`;
-                        span.textContent = data.status_name;
-
-                        // Append the new span
-                        statusElement.appendChild(span);
-                    }
-                    
-                    // Admin comments
-                    const commentsElement = document.getElementById('modalAdminComments');
-                    if (commentsElement) {
-                        commentsElement.textContent = data.admin_comments || 'No comments yet.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error loading report details: ' + error.message);
-                    modal.style.display = 'none';
-                });
-        }
-
-        // Edit report - redirects to edit page for pending reports only
-        function editReport(reportId) {
-            window.location.href = `/reports/edit/${reportId}`;
-        }
-
-        // Delete account function - implements FR12 (user account CRUD)
-        function deleteAccount() {
-            if (confirm('Are you ABSOLUTELY sure you want to delete your account? This action cannot be undone and will permanently delete all your data including reports.')) {
-                if (confirm('This is your final warning. All your reports and data will be permanently lost. Continue?')) {
-                    const confirmation = prompt('Type "DELETE" to confirm account deletion:');
-                    if (confirmation === 'DELETE') {
-                        // Get CSRF token
-                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                        
-                        // Send DELETE request using fetch
-                        fetch('/delete_account', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'X-CSRFToken': csrfToken
-                            },
-                            body: 'csrf_token=' + encodeURIComponent(csrfToken)
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                window.location.href = '/login';
-                            } else {
-                                alert('Error deleting account. Please try again.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Error deleting account. Please try again.');
-                        });
-                    } else if (confirmation !== null) {
-                        alert('Account deletion cancelled. You must type "DELETE" exactly to confirm.');
-                    }
-                }
-            }
-        }
-
-        // Close modal
-        function closeReportModal() {
-            document.getElementById('reportModal').style.display = 'none';
-        }
-
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            const modal = document.getElementById('reportModal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // Auto-hide flash messages
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 5000);
-            });
-        });
-    </script>
+    <!-- Include the external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 </body>
 </html>
