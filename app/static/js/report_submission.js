@@ -11,11 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const filePreviewContainer = document.getElementById('file-preview-container');
 
     const reportForm = document.getElementById('report-form');
-    // NEW: Get the submit button element
     const submitButton = reportForm.querySelector('button[type="submit"]');
 
     let selectedFiles = [];
-    let rateLimitTimer = null; // NEW: To store the countdown timer
+    let rateLimitTimer = null;
 
     const MAX_ATTACHMENTS_PER_REPORT = 5;
     const MAX_TOTAL_UPLOAD_SIZE_MB = 5;
@@ -33,21 +32,36 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to get file icon class based on type/extension
     function getFileIconClass(filename, mimetype) {
         const ext = filename.split('.').pop().toLowerCase();
-        if (mimetype === 'application/pdf' || ext === 'pdf') {
-            return 'fa-file-pdf';
-        } else if (mimetype.startsWith('image/')) {
+        
+        // Prioritize PDF with a generic document icon (fa-file-lines)
+        if (ext === 'pdf' || mimetype === 'application/pdf') {
+            return 'fa-file-lines'; // Use a generic document icon for PDFs
+        } 
+        // Image files
+        else if (mimetype.startsWith('image/')) {
             return 'fa-file-image';
-        } else if (['doc', 'docx'].includes(ext) || mimetype === 'application/msword' || mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        } 
+        // Word documents
+        else if (['doc', 'docx'].includes(ext) || mimetype === 'application/msword' || mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
             return 'fa-file-word';
-        } else if (['xls', 'xlsx'].includes(ext) || mimetype === 'application/vnd.ms-excel' || mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        } 
+        // Excel spreadsheets
+        else if (['xls', 'xlsx'].includes(ext) || mimetype === 'application/vnd.ms-excel' || mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
             return 'fa-file-excel';
-        } else if (['ppt', 'pptx'].includes(ext) || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        } 
+        // PowerPoint presentations
+        else if (['ppt', 'pptx'].includes(ext) || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
             return 'fa-file-powerpoint';
-        } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimetype === 'application/zip' || mimetype === 'application/x-rar-compressed') {
-            return 'fa-file-archive';
-        } else if (['txt', 'log', 'csv'].includes(ext)) {
-            return 'fa-file-alt';
+        } 
+        // Archive files (this is the one that looks like PDF in Solid style of FA)
+        else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimetype === 'application/zip' || mimetype === 'application/x-rar-compressed') {
+            return 'fa-file-archive'; 
+        } 
+        // Text files (also use fa-file-lines)
+        else if (['txt', 'log', 'csv'].includes(ext)) {
+            return 'fa-file-lines'; 
         }
+        // Fallback generic file icon
         return 'fa-file';
     }
 
@@ -206,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 
                 if (selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size)) {
-                    showClientFlash(`File '${newFile.name}' is already added.`, 'warning');
+                    showClientFlash(`File '${newFile.name}' is already added.`, 'error');
                     continue;
                 }
 
@@ -348,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clientValidationErrors.push("Category description contains invalid characters.");
                 }
             } else if (!categoryValue) {
-                 clientValidationErrors.push("Please select a category.");
+                    clientValidationErrors.push("Category cannot be empty.");
             }
 
 
@@ -396,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 try {
                     result = JSON.parse(responseText);
                 } catch (e) {
-                    console.error("Server responded with non-JSON. Full response:", responseText);
+                    // If parsing fails, it might be a direct redirect or non-JSON error page
                     if (response.redirected) {
                         window.location.href = response.url;
                     } else {
@@ -434,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             } catch (error) {
-                console.error('Network error during form submission:', error);
+                console.error('Network error during form submission:', error); // Keep this as it indicates a critical network issue
                 showClientFlash('Network error or server unreachable. Please try again.', 'error');
                 enableForm(); // Re-enable on network errors
             }
