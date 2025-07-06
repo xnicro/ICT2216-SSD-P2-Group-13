@@ -41,7 +41,7 @@
     </style>
 </head>
 
-<body>
+<body data-retry-after="{{ retry_after | default(0, true) | e }}">
     <video autoplay muted loop playsinline id="bg-video">
         <source src="{{ url_for('static', filename='assets/tree.mp4') }}" type="video/mp4" />
         Your browser does not support HTML5 video.
@@ -98,35 +98,7 @@
         </div>
 
     </div>
-
-    <script>
-        // Auto-hide flash messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.transition = 'opacity 0.5s ease';
-                    alert.style.opacity = '0';
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 500);
-                }, 5000);
-            });
-        });
-        // Rate limit logic 
-        const retryAfter = parseInt("{{ retry_after | e }}", 10);
-        if (!isNaN(retryAfter) && retryAfter > 0) {
-            setTimeout(() => {
-                document.getElementById("username").disabled = false;
-                document.getElementById("password").disabled = false;
-
-                const btn = document.querySelector("button[type='submit']");
-                btn.disabled = false;
-                btn.style.backgroundColor = ""; 
-                document.querySelector("form#login-form").onsubmit = null;
-            }, retryAfter * 1000);
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
 </body>
 

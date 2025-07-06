@@ -1,3 +1,18 @@
+function showFlashMessage(message, type = "success") {
+  const container = document.getElementById("flashMessageContainer");
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = `flash-message flash-${type}`;
+  div.textContent = message;
+
+  container.appendChild(div);
+
+  setTimeout(() => {
+    div.remove();
+  }, 4000); 
+}
+
 function handleRoleChange(event) {
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   const label = event.currentTarget;
@@ -43,6 +58,8 @@ function handleRoleChange(event) {
 
         selectedDiv.dataset.default = updatedRoleCap;
 
+        showFlashMessage("Role updated successfully.", "success");
+
         // Update the role cell in the table
         const tableRow = selectContainer.closest("tr");
         const roleCell = tableRow.children[3];
@@ -81,12 +98,12 @@ function handleRoleChange(event) {
         });
       } else {
         console.error("Update failed:", result.error);
-        alert("Failed to update role.");
+        showFlashMessage("Failed to update role. Please refresh and try again.", "error");
       }
     })
     .catch(err => {
       console.error("Request error:", err);
-      alert("Error updating role.");
+      showFlashMessage("Error updating role. Please refresh and try again.", "error");
     });
 };
 
@@ -101,25 +118,30 @@ const originalRows = Array.from(tableBody.querySelectorAll("tr"));
 const rowsPerPage = 7;
 const allRows = [...originalRows];
 const paginationContainer = document.getElementById("role-pagination");
-console.log(allRows);
+let filteredRows = [...allRows]; 
 
 // === Pagination ===
-function showPage(page) {
-  const totalPages = Math.ceil(allRows.length / rowsPerPage);
-  page = Math.min(Math.max(page, 1), totalPages);
+  function showPage(page) {
+    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+    page = Math.min(Math.max(page, 1), totalPages);
 
-  const start = (page - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
+    // Hide all rows first
+    allRows.forEach(row => row.style.display = "none");
 
-  allRows.forEach((row, i) => {
-    row.style.display = i >= start && i < end ? "" : "none";
-  });
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
 
-  renderPaginationButtons(page);
-}
+    // Show only the filtered rows for current page
+    filteredRows.slice(start, end).forEach(row => {
+      row.style.display = "";
+    });
+
+    renderPaginationButtons(page);
+  }
+
 
 function renderPaginationButtons(currentPage) {
-  const totalPages = Math.ceil(allRows.length / rowsPerPage);
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
   paginationContainer.innerHTML = "";
 
   const ul = document.createElement("ul");
@@ -164,33 +186,46 @@ function renderPaginationButtons(currentPage) {
 showPage(1);
 
 document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.getElementById("searchInput");
-    const roleFilter = document.getElementById("roleFilter");
-    const tableRows = document.querySelectorAll("#rolesTableBody tr");
+  const searchInput = document.getElementById("searchInput");
+  const roleFilter = document.getElementById("roleFilter");
+  const tableRows = document.querySelectorAll("#rolesTableBody tr");
+  const VALID_ROLES = ["", "user", "admin"];
 
-    function filterTable() {
-        let val = searchInput.value
-            .slice(0, 100)
-            .replace(/[^\w\s\-@.]/g, '')
-            .trim();
-        searchInput.value = val;
+  function filterTable() {
+    let val = searchInput.value
+      .slice(0, 100)
+      .replace(/[^\w\s\-@.]/g, '')
+      .trim();
+    searchInput.value = val;
 
-        const searchText = val.toLowerCase();
-        const selectedRole = roleFilter.value.toLowerCase();
-
-        tableRows.forEach(row => {
-            const username = row.children[1].textContent.toLowerCase();
-            const email = row.children[2].textContent.toLowerCase();
-            const role = row.children[3].textContent.toLowerCase();
-
-            const matchesSearch = username.includes(searchText) || email.includes(searchText);
-            const matchesRole = selectedRole === "" || role === selectedRole;
-
-            row.style.display = (matchesSearch && matchesRole) ? "" : "none";
-        });
+    let selectedRole = roleFilter.value.toLowerCase();
+    if (!VALID_ROLES.includes(selectedRole)) {
+      selectedRole = "";
+      roleFilter.value = "";
     }
 
+    const searchText = val.toLowerCase();
 
-    searchInput.addEventListener("input", filterTable);
-    roleFilter.addEventListener("change", filterTable);
+    filteredRows = [];
+
+    allRows.forEach(row => {
+      const username = row.children[1].textContent.toLowerCase();
+      const email = row.children[2].textContent.toLowerCase();
+      const role = row.children[3].textContent.toLowerCase();
+
+      const matchesSearch = username.includes(searchText) || email.includes(searchText);
+      const matchesRole = selectedRole === "" || role === selectedRole;
+
+      if (matchesSearch && matchesRole) {
+        filteredRows.push(row);
+      }
+    });
+
+    showPage(1);  // Show first page of filtered results
+  }
+
+
+  searchInput.addEventListener("input", filterTable);
+  roleFilter.addEventListener("change", filterTable);
 });
+

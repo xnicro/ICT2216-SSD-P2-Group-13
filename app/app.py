@@ -577,7 +577,6 @@ def health():
 def uploaded_file(filename):
     # Check allowed extensions (security will remove when change to cloud)
     def is_allowed_file(filename):
-        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
     if not is_allowed_file(filename):
@@ -615,10 +614,10 @@ def register():
 
 # This route is the catch-all so u guys don't have to make a specific route for each page everytime, IT HAS TO BE THE LAST ROUTE
 # Not secure, if u want a specific page to be secure OR with custom logic, make a new route above
-@app.route('/<filename>')
-def catch_all(filename):
-    print(filename, flush=True)
-    return render_template(filename)
+# @app.route('/<filename>')
+# def catch_all(filename):
+#     print(filename, flush=True)
+#     return render_template(filename)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

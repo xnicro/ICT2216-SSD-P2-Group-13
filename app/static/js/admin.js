@@ -1,3 +1,18 @@
+function showFlashMessage(message, type = "success") {
+  const container = document.getElementById("flashMessageContainer");
+  if (!container) return;
+
+  const div = document.createElement("div");
+  div.className = `flash-message flash-${type}`;
+  div.textContent = message;
+
+  container.appendChild(div);
+
+  setTimeout(() => {
+    div.remove();
+  }, 4000); 
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // === State & References ===
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -5,12 +20,20 @@ document.addEventListener("DOMContentLoaded", function () {
   const originalRows = Array.from(tableBody.querySelectorAll("tr"));
   const rowsPerPage = 7;
   const CATEGORY_MAPPING = {
+    'all': 'All',
     'fires': 'Fires',
     'faulty_facilities': 'Faulty Facilities/Equipment',
     'vandalism': 'Vandalism',
     'suspicious_activity': 'Suspicious Activity',
     'other': 'Others'
   };
+  const VALID_CATEGORY_OPTIONS = Object.keys(CATEGORY_MAPPING).concat("all");
+  const VALID_SORT_OPTIONS = [
+    "id-asc",
+    "id-desc",
+    "desc-asc",
+    "desc-desc"
+  ];
   const allRows = [...originalRows];
   let currentStatusFilter = "all";
   let selectedReportId = null;
@@ -54,7 +77,10 @@ document.addEventListener("DOMContentLoaded", function () {
     })
       .then(res => res.ok ? res.json() : Promise.reject(res))
       .then(data => {
-        if (!data.success) return alert("Failed to update status");
+        if (!data.success) {
+          showFlashMessage("Failed to update status.", "error");
+          return;
+        }
 
         const row = selectedDiv.closest("tr");
         const badge = row.querySelector(".status-badge");
@@ -86,8 +112,12 @@ document.addEventListener("DOMContentLoaded", function () {
             input.addEventListener("change", handleStatusChange);
           }
         });
+        showFlashMessage("Status Updated Succesfully!", "success");
       })
-      .catch(err => console.error("Update status error:", err));
+      .catch(err => {
+        console.error("Update status error:", err);
+        showFlashMessage("Failed to update status. Please refresh and try again.", "error");
+      });
   }
 
   // === Sidebar Filtering ===
@@ -119,6 +149,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const searchVal = searchInput.value.toLowerCase();
     const sortVal = sortSelect.value;
     const categoryVal = filterCategory.value;
+
+    if (!VALID_CATEGORY_OPTIONS.includes(categoryVal)) {
+      showFlashMessage("Invalid Category Selected. Resetting to all.", "error");
+      categoryVal = "all";
+      filterCategory.value = categoryVal;
+    }
+    if (!VALID_SORT_OPTIONS.includes(sortVal)) {
+      showFlashMessage("Invalid Sort Selection. Resetting to default.", "error");
+      sortVal = "id-asc";
+      sortSelect.value = sortVal;
+    }
 
     let filteredRows = originalRows.filter(row => {
       const title = row.children[1].textContent.toLowerCase();
@@ -159,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".animated-button").forEach(button => {
     button.addEventListener("click", async function () {
       const row = this.closest("tr");
-      const { title = "", category = "", status = "", description = "", createdat = "", reportid } = row.dataset;
+      const { title = "", category = "", status = "", description = "", username = "", createdat = "", reportid } = row.dataset;
 
       if (!/^\d+$/.test(reportid)) return;
 
@@ -192,6 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       } catch (err) {
         console.error("Attachment load error:", err);
+        showFlashMessage("Could not load attachments. Try again later.", "error");
       }
 
       const infoSection = document.createElement('div');
@@ -202,6 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
         { label: 'Category', value: category },
         { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
         { label: 'Description', value: description },
+        {label: 'Owner', value: username},
         { label: 'Created At', value: createdat }
       ].forEach(field => {
         const wrapper = document.createElement('div');
@@ -246,11 +289,14 @@ document.addEventListener("DOMContentLoaded", function () {
       if (res.ok) {
         selectedRow?.remove();
         bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal"))?.hide();
+        showFlashMessage("Report Deleted Succesfully!", "success");
       } else {
         console.error("Failed to delete report");
+        showFlashMessage("Failed to delete report. Please refresh and try again.", "error");
       }
     } catch (err) {
       console.error("Error deleting report", err);
+      showFlashMessage("An error occurred while deleting the report.", "error");
     }
   });
 
