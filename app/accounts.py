@@ -97,6 +97,12 @@ def get_all_users():
 @bp.route("/register", methods=["POST"])
 @limiter.limit("5 per minute")
 def register_user():
+    if 'user_id' in session:
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     csrf_token = request.form.get("csrf_token")
     try:
         validate_csrf(csrf_token)
@@ -141,6 +147,12 @@ def register_user():
 @bp.route("/login", methods=["POST"])
 @limiter.limit("5 per minute")
 def login_user():
+    if 'user_id' in session:
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     # Check if CSRF token matches
     csrf_token = request.form.get("csrf_token")
     try:
