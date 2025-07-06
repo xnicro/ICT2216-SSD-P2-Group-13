@@ -20,3 +20,6 @@ docker exec -i mysql_db mysql -u {username} -p{password} flask_db < data_dump.sq
 docker exec -it mysql_db mysql -u {username} -p{password}
 
 
+mysql -u 'user1!' -p'user1!@sitsecure' flask_db < 
+pkill gunicorn
+gunicorn --bind 0.0.0.0:5000 app:app &
