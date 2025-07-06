@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from extensions import limiter
-from access_control import ROLE_PERMISSIONS, permission_required, login_required, role_required
+from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, role_required
 
 app = Flask(__name__)
 
@@ -606,10 +606,22 @@ def test_db():
 # To hide filename/path
 @app.route('/login')
 def login():
+    if 'user_id' in session:
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     return render_template('1_login.html')
 
 @app.route('/register')
 def register():
+    if 'user_id' in session:
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     return render_template('1_register.html')
 
 # This route is the catch-all so u guys don't have to make a specific route for each page everytime, IT HAS TO BE THE LAST ROUTE
