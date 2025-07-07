@@ -11,6 +11,7 @@ from wtforms.validators import ValidationError
 from extensions import limiter
 from flask_limiter.errors import RateLimitExceeded
 from user_settings import send_notifications_for_new_report
+from admin_settings import send_admin_notifications_for_new_report
 from access_control import login_required, permission_required
 
 bp = Blueprint('reports', __name__, template_folder='templates')
@@ -292,7 +293,17 @@ def submit_report():
 
         if not is_anon and user_id:
             try:
+                # Notify regular users who have preferences set
                 send_notifications_for_new_report(
+                    report_id,
+                    title,
+                    description,
+                    category_display_name,
+                    user_id
+                )
+                
+                # Also notify admins 
+                send_admin_notifications_for_new_report(
                     report_id,
                     title,
                     description,

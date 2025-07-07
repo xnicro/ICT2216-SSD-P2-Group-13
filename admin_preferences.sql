@@ -27,7 +27,6 @@ CREATE TABLE `admin_preferences` (
   `user_id` int NOT NULL,
   `email_notifications` tinyint(1) DEFAULT '1',
   `browser_notifications` tinyint(1) DEFAULT '0',
-  `login_alerts` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -42,7 +41,7 @@ CREATE TABLE `admin_preferences` (
 
 LOCK TABLES `admin_preferences` WRITE;
 /*!40000 ALTER TABLE `admin_preferences` DISABLE KEYS */;
-INSERT INTO `admin_preferences` VALUES (1,8,1,0,0,'2025-07-05 07:32:16','2025-07-05 08:34:52');
+INSERT INTO `admin_preferences` VALUES (1,8,1,0,'2025-07-05 07:32:16','2025-07-07 12:24:57');
 /*!40000 ALTER TABLE `admin_preferences` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -55,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-05  8:44:17
+-- Dump completed on 2025-07-07 12:29:35

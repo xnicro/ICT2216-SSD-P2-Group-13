@@ -30,9 +30,6 @@ CREATE TABLE `user_preferences` (
   `vandalism` tinyint(1) DEFAULT '0',
   `suspicious_activity` tinyint(1) DEFAULT '0',
   `other_incident` tinyint(1) DEFAULT '0',
-  `location_access` tinyint(1) DEFAULT '0',
-  `camera_access` tinyint(1) DEFAULT '0',
-  `data_sharing` tinyint(1) DEFAULT '0',
   `email_notifications` tinyint(1) DEFAULT '1',
   `sms_notifications` tinyint(1) DEFAULT '0',
   `browser_notifications` tinyint(1) DEFAULT '0',
@@ -50,7 +47,7 @@ CREATE TABLE `user_preferences` (
 
 LOCK TABLES `user_preferences` WRITE;
 /*!40000 ALTER TABLE `user_preferences` DISABLE KEYS */;
-INSERT INTO `user_preferences` VALUES (1,6,0,1,0,1,0,0,1,0,1,0,0,'2025-07-04 08:02:25','2025-07-04 08:13:37');
+INSERT INTO `user_preferences` VALUES (1,6,0,1,0,1,0,1,0,0,'2025-07-04 08:02:25','2025-07-05 07:59:09');
 /*!40000 ALTER TABLE `user_preferences` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -63,4 +60,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-04  8:19:20
+-- Dump completed on 2025-07-05  8:44:55
