@@ -160,7 +160,6 @@ def update_settings():
 
 # ===== NOTIFICATION SYSTEM =====
 
-# Modified send_notifications_for_new_report function
 def send_notifications_for_new_report(report_id, report_title, report_description, report_category_name, report_user_id):
     """Send notifications to users who have enabled notifications for this report category"""
     current_app.logger.info(f"\n=== STARTING NOTIFICATION PROCESS ===")
