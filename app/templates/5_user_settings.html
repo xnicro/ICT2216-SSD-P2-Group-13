@@ -130,53 +130,6 @@
         </div>
     </div>
 
-    <script>
-        function toggleSection(id) {
-            const section = document.getElementById(id).parentElement;
-            section.classList.toggle('active');
-        }
-
-        // Request browser notification permission
-        function requestNotificationPermission() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then(function(permission) {
-                    if (permission === 'granted') {
-                        document.getElementById('browserNotifications').checked = true;
-                        showNotification('Browser notifications enabled!', 'success');
-                    }
-                });
-            }
-        }
-
-        // Add event listener for browser notifications checkbox
-        document.addEventListener('DOMContentLoaded', function() {
-            const browserNotificationsCheckbox = document.getElementById('browserNotifications');
-            if (browserNotificationsCheckbox) {
-                browserNotificationsCheckbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        requestNotificationPermission();
-                    }
-                    else {
-                        // User unchecked the box
-                        console.log('Browser notifications disabled by user');
-                        
-                        // Note: You cannot programmatically revoke notification permission
-                        // The user must do this through browser settings
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            if (confirm('To fully disable browser notifications, you need to:\n\n' +
-                                      '1. Click the lock/info icon in your address bar\n' +
-                                      '2. Find "Notifications" in the permissions\n' +
-                                      '3. Change it to "Block"\n\n' +
-                                      'Would you like to keep notifications enabled for now?')) {
-                                this.checked = true;
-                            }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
-
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 </body>
 

@@ -137,7 +137,7 @@ async function saveUserPreferences() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken  // Fixed: Changed from X-CSRFToken to X-CSRF-Token
+        'X-CSRF-Token': csrfToken  
       },
       body: JSON.stringify(preferences)
     });
@@ -226,7 +226,7 @@ async function saveAdminSettings() {
     
     const headers = {
       'Content-Type': 'application/json',
-      'X-CSRF-Token': csrfToken  // Fixed: Changed from X-CSRFToken to X-CSRF-Token
+      'X-CSRF-Token': csrfToken  
     };
     
     // Get preferences
@@ -346,16 +346,39 @@ function requestNotificationPermission() {
   }
 }
 
+// Add event listener for browser notifications checkbox
+document.addEventListener('DOMContentLoaded', function() {
+    const browserNotificationsCheckbox = document.getElementById('browserNotifications');
+    if (browserNotificationsCheckbox) {
+        browserNotificationsCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                requestNotificationPermission();
+            }
+            else {
+                // User unchecked the box
+                console.log('Browser notifications disabled by user');
+                
+                // Note: You cannot programmatically revoke notification permission
+                // The user must do this through browser settings
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    if (confirm('To fully disable browser notifications, you need to:\n\n' +
+                                '1. Click the lock/info icon in your address bar\n' +
+                                '2. Find "Notifications" in the permissions\n' +
+                                '3. Change it to "Block"\n\n' +
+                                'Would you like to keep notifications enabled for now?')) {
+                        this.checked = true;
+                    }
+                }
+            }
+        });
+    }
+});
+
+
 // Enable 2FA (admin only)
 function enable2FA() {
   showNotification('Two-factor authentication setup initiated', 'info');
   // Actual 2FA implementation would go here
-}
-
-// Change password (admin only)
-function changePassword() {
-  showNotification('Password change requested', 'info');
-  // Actual password change implementation would go here
 }
 
 // Show notification to user
@@ -447,32 +470,3 @@ function debounce(func, wait) {
     timeout = setTimeout(later, wait);
   };
 }
-
-// Check for new notifications (optional - for real-time updates)
-async function checkForNewNotifications() {
-  try {
-    const endpoint = isAdminSettingsPage() ? '/api/admin/notifications/unread' : '/api/notifications/unread';
-    const response = await fetch(endpoint);
-    if (response.ok) {
-      const notifications = await response.json();
-      
-      if (notifications.length > 0) {
-        updateNotificationBadge(notifications.length);
-      }
-    }
-  } catch (error) {
-    console.error('Error checking notifications:', error);
-  }
-}
-
-// Update notification badge (if you have one in your UI)
-function updateNotificationBadge(count) {
-  const badge = document.querySelector('.notification-badge');
-  if (badge) {
-    badge.textContent = count;
-    badge.style.display = count > 0 ? 'block' : 'none';
-  }
-}
-
-// Poll for new notifications every 30 seconds (optional)
-// setInterval(checkForNewNotifications, 30000);
