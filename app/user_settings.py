@@ -7,6 +7,8 @@ from email.mime.multipart import MIMEMultipart
 import os
 from threading import Thread
 from access_control import permission_required
+from flask_wtf.csrf import validate_csrf
+from wtforms.validators import ValidationError
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -79,6 +81,13 @@ def update_settings():
     if 'user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
     
+    # Validate CSRF token
+    csrf_token = request.headers.get('X-CSRF-Token')
+    try:
+        validate_csrf(csrf_token)
+    except ValidationError:
+        return jsonify({'error': 'Invalid or missing CSRF token'}), 400
+    
     user_id = session['user_id']
     data = request.get_json()
     
@@ -95,6 +104,7 @@ def update_settings():
         
         if existing:
             # Update existing preferences
+            # Convert boolean to int for tinyint(1) fields
             cursor.execute('''
                 UPDATE user_preferences SET
                     fire_hazard = %s,
@@ -108,14 +118,14 @@ def update_settings():
                     updated_at = NOW()
                 WHERE user_id = %s
             ''', (
-                data.get('fireHazard', False),
-                data.get('faultyEquipment', False),
-                data.get('vandalism', False),
-                data.get('suspiciousActivity', False),
-                data.get('otherIncident', False),
-                data.get('emailNotifications', True),
-                data.get('smsNotifications', False),
-                data.get('browserNotifications', False),
+                int(data.get('fireHazard', False)),
+                int(data.get('faultyEquipment', False)),
+                int(data.get('vandalism', False)),
+                int(data.get('suspiciousActivity', False)),
+                int(data.get('otherIncident', False)),
+                int(data.get('emailNotifications', True)),
+                int(data.get('smsNotifications', False)),
+                int(data.get('browserNotifications', False)),
                 user_id
             ))
         else:
@@ -128,21 +138,21 @@ def update_settings():
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
             ''', (
                 user_id,
-                data.get('fireHazard', False),
-                data.get('faultyEquipment', False),
-                data.get('vandalism', False),
-                data.get('suspiciousActivity', False),
-                data.get('otherIncident', False),
-                data.get('emailNotifications', True),
-                data.get('smsNotifications', False),
-                data.get('browserNotifications', False)
+                int(data.get('fireHazard', False)),
+                int(data.get('faultyEquipment', False)),
+                int(data.get('vandalism', False)),
+                int(data.get('suspiciousActivity', False)),
+                int(data.get('otherIncident', False)),
+                int(data.get('emailNotifications', True)),
+                int(data.get('smsNotifications', False)),
+                int(data.get('browserNotifications', False))
             ))
         
         conn.commit()
         cursor.close()
         conn.close()
         
-        return jsonify({'message': 'Settings updated successfully'}), 200
+        return jsonify({'success': True, 'message': 'Settings updated successfully'}), 200
         
     except Exception as e:
         print(f"Error updating settings: {str(e)}", flush=True)
@@ -153,6 +163,8 @@ def update_settings():
 # Modified send_notifications_for_new_report function
 def send_notifications_for_new_report(report_id, report_title, report_description, report_category_name, report_user_id):
     """Send notifications to users who have enabled notifications for this report category"""
+    current_app.logger.info(f"\n=== STARTING NOTIFICATION PROCESS ===")
+    current_app.logger.info(f"Report ID: {report_id}, Category: {report_category_name}, Submitted by: {report_user_id}")
     
     # Map display names to preference field names
     category_mapping = {
@@ -165,138 +177,158 @@ def send_notifications_for_new_report(report_id, report_title, report_descriptio
     
     preference_field = category_mapping.get(report_category_name)
     if not preference_field:
-        print(f"Unknown report category: {report_category_name}")
+        current_app.logger.error(f"Unknown report category: {report_category_name}")
+        current_app.logger.info("Available categories: %s", list(category_mapping.keys()))
         return
+    
+    current_app.logger.info(f"Using preference field: {preference_field}")
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Get users who want notifications for this category
+        # Get users who want notifications for this category AND have email notifications enabled
         query = f'''
             SELECT u.user_id, u.username, u.email, up.*
             FROM users u
             JOIN user_preferences up ON u.user_id = up.user_id
             WHERE up.{preference_field} = 1 
+            AND up.email_notifications = 1
             AND u.user_id != %s
         '''
         
+        current_app.logger.info("Executing query:\n%s\nWith params: %s", query, (report_user_id,))
         cursor.execute(query, (report_user_id,))
         users_to_notify = cursor.fetchall()
         
-        print(f"Found {len(users_to_notify)} users to notify for {report_category_name} report")
+        current_app.logger.info(f"Found {len(users_to_notify)} users to notify")
         
+        if not users_to_notify:
+            current_app.logger.info("No users found with notifications enabled for this category")
+            return
+            
         for user in users_to_notify:
+            current_app.logger.info(f"Processing user {user['user_id']} ({user['email']})")
+            
             # Create in-app notification
-            cursor.execute('''
-                INSERT INTO notification (user_id, report_id, message, is_read, created_at)
-                VALUES (%s, %s, %s, 0, NOW())
-            ''', (
-                user['user_id'],
-                report_id,
-                f"New {report_category_name} report: {report_title}"
-            ))
-            
-            # Send email notification if enabled
-            if user['email_notifications']:
-                send_email_notification_async(
-                    user['email'], 
-                    user['username'],
+            try:
+                cursor.execute('''
+                    INSERT INTO notification (user_id, report_id, message, is_read, created_at)
+                    VALUES (%s, %s, %s, 0, NOW())
+                ''', (
+                    user['user_id'],
                     report_id,
-                    report_title,
-                    report_description,
-                    report_category_name  # Pass display name directly
-                )
-            
-            print(f"Notification queued for user {user['username']}")
+                    f"New {report_category_name} report: {report_title}"
+                ))
+                current_app.logger.info("Created in-app notification")
+            except Exception as e:
+                current_app.logger.error(f"Failed to create in-app notification: {str(e)}")
+                continue
+                
+            # Send email notification
+            if user['email_notifications'] and user['email']:
+                current_app.logger.info(f"Preparing email to {user['email']}")
+                try:
+                    app = current_app._get_current_object()
+                    thread = Thread(
+                        target=send_email_notification_with_context,
+                        args=(app, user['email'], user['username'], report_id, report_title, report_description, report_category_name)
+                    )
+                    thread.daemon = True
+                    thread.start()
+                    current_app.logger.info("Email thread started successfully")
+                except Exception as e:
+                    current_app.logger.error(f"Failed to start email thread: {str(e)}")
+            else:
+                current_app.logger.info("Email notifications disabled or no email address for user")
         
         conn.commit()
-        cursor.close()
-        conn.close()
-        
-        print("All notifications saved successfully")
+        current_app.logger.info("Database changes committed")
         
     except Exception as e:
-        print(f"Error sending notifications: {str(e)}")
+        current_app.logger.error(f"Error in notification process: {str(e)}")
+    finally:
+        try:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals() and conn.is_connected():
+                conn.close()
+        except Exception as e:
+            current_app.logger.error(f"Error closing DB connection: {str(e)}")
+        
+    current_app.logger.info("=== NOTIFICATION PROCESS COMPLETE ===\n")
 
-def send_email_notification_async(email, username, report_id, report_title, report_description, report_category):
-    """Send email notification in a background thread"""
-    thread = Thread(target=send_email_notification, args=(email, username, report_id, report_title, report_description, report_category))
-    thread.daemon = True
-    thread.start()
+def send_email_notification_with_context(app, email, username, report_id, report_title, report_description, report_category):
+    """Send email notification with app context"""
+    with app.app_context():
+        send_email_notification(email, username, report_id, report_title, report_description, report_category)
 
 def send_email_notification(email, username, report_id, report_title, report_description, report_category):
     """Send email notification to user"""
+    current_app.logger.info(f"\n=== STARTING EMAIL PROCESS ===")
+    current_app.logger.info(f"Preparing email to: {email}")
+    
     try:
-        # Email configuration
         SMTP_SERVER = current_app.config.get('SMTP_SERVER', 'smtp.gmail.com')
         SMTP_PORT = current_app.config.get('SMTP_PORT', 587)
-        SENDER_EMAIL = current_app.config.get('SENDER_EMAIL', 'your-app@example.com')
+        SENDER_EMAIL = current_app.config.get('SENDER_EMAIL', 'sitsecure.notifications@gmail.com')
         SENDER_PASSWORD = current_app.config.get('SENDER_PASSWORD', 'your-app-password')
-        APP_NAME = current_app.config.get('APP_NAME', 'Your App Name')
+        APP_NAME = current_app.config.get('APP_NAME', 'SITSecure')
+        
+        current_app.logger.info(f"SMTP Server: {SMTP_SERVER}:{SMTP_PORT}")
+        current_app.logger.info(f"Sender: {SENDER_EMAIL}")
+        current_app.logger.info(f"Password configured: {'Yes' if SENDER_PASSWORD else 'No'}")
         
         msg = MIMEMultipart()
-        msg['From'] = SENDER_EMAIL
+        msg['From'] = f"{APP_NAME} <{SENDER_EMAIL}>"
         msg['To'] = email
-        msg['Subject'] = f"🔔 New {report_category.replace('_', ' ').title()} Report Alert"
-        
-        # Create HTML email body
-        html_body = f"""
+        msg['Subject'] = f"🔔 New {report_category} Report Alert"
+
+        # Create HTML version
+        html = f"""
         <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #e74c3c;">📢 New Report Alert</h2>
-                
-                <p>Hello <strong>{username}</strong>,</p>
-                
-                <p>A new report has been submitted in a category you're subscribed to:</p>
-                
-                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #467b65;">
-                    <h3 style="margin-top: 0; color: #467b65;">📋 Report Details</h3>
-                    <p><strong>Category:</strong> {report_category.replace('_', ' ').title()}</p>
-                    <p><strong>Title:</strong> {report_title}</p>
-                    <p><strong>Description:</strong> {report_description[:200]}{'...' if len(report_description) > 200 else ''}</p>
-                    <p><strong>Submitted:</strong> {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
-                </div>
-                
-                <p style="margin-top: 30px;">
-                    <a href="http://localhost:5000/report/{report_id}" 
-                       style="background-color: #467b65; color: white; padding: 12px 24px; 
-                              text-decoration: none; border-radius: 6px; display: inline-block;">
-                        View Full Report
-                    </a>
-                </p>
-                
-                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-                
-                <p style="font-size: 14px; color: #6c757d;">
-                    You're receiving this because you've enabled notifications for {report_category.replace('_', ' ').title()} reports. 
-                    You can change your notification preferences in your 
-                    <a href="http://localhost:5000/settings" style="color: #467b65;">account settings</a>.
-                </p>
-                
-                <p style="font-size: 12px; color: #999;">
-                    Best regards,<br>
-                    The {APP_NAME} Team
-                </p>
-            </div>
+        <body>
+            <p>Hi {username},</p>
+            <p>A new <strong>{report_category}</strong> report has been submitted:</p>
+            <h3>{report_title}</h3>
+            <p>{report_description}</p>
+            <p>
+                <a href="{current_app.config.get('BASE_URL', 'https://yourdomain.com')}/reports/{report_id}">
+                    View Report
+                </a>
+            </p>
         </body>
         </html>
         """
+
+        # Attach both versions
+        msg.attach(MIMEText(html, 'html'))
+
+        # Send email
+        try:
+            with smtplib.SMTP(current_app.config.get('SMTP_SERVER'), 
+                            current_app.config.get('SMTP_PORT')) as server:
+                server.starttls()
+                server.login(current_app.config.get('SENDER_EMAIL'), 
+                            current_app.config.get('SENDER_PASSWORD'))
+                server.send_message(msg)
+            current_app.logger.info(f"Email sent to {email}")
+        except Exception as e:
+            current_app.logger.error(f"Email failed to {email}: {str(e)}")
+            raise  # Re-raise if you want calling code to handle the failure
         
-        msg.attach(MIMEText(html_body, 'html'))
-        
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        text = msg.as_string()
-        server.sendmail(SENDER_EMAIL, email, text)
-        server.quit()
-        
-        print(f"Email notification sent successfully to {email}")
-        
+    except smtplib.SMTPAuthenticationError as e:
+        current_app.logger.error(f"SMTP Authentication failed: {str(e)}")
+        current_app.logger.error("Please verify:")
+        current_app.logger.error("1. SENDER_EMAIL is correct")
+        current_app.logger.error("2. SENDER_PASSWORD is an App Password (not regular password)")
+        current_app.logger.error("3. Less secure apps access is enabled if required")
+    except smtplib.SMTPException as e:
+        current_app.logger.error(f"SMTP Protocol error: {str(e)}")
     except Exception as e:
-        print(f"Failed to send email to {email}: {str(e)}")
+        current_app.logger.error(f"Unexpected error sending email: {str(e)}")
+    finally:
+        current_app.logger.info("=== EMAIL PROCESS COMPLETE ===\n")
 
 # ===== ADDITIONAL API ENDPOINTS =====
 
@@ -367,46 +399,3 @@ def mark_notification_read(notification_id):
     except Exception as e:
         print(f"Error marking notification as read: {str(e)}")
         return jsonify({'error': 'Failed to mark notification as read'}), 500
-
-# ===== TESTING FUNCTION =====
-
-@settings_bp.route('/api/test-notification', methods=['POST'])
-def test_notification():
-    """Test notification system"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    try:
-        # Create a test report
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO reports (title, description, category, user_id, status_id, created_at)
-            VALUES (%s, %s, %s, %s, 1, NOW())
-        ''', (
-            "Test Fire Hazard Report",
-            "This is a test notification to verify the system is working.",
-            "fire_hazard",
-            session['user_id']
-        ))
-        
-        report_id = cursor.lastrowid
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        # Send test notifications
-        send_notifications_for_new_report(
-            report_id,
-            "Test Fire Hazard Report",
-            "This is a test notification to verify the system is working.",
-            "fire_hazard",
-            session['user_id']
-        )
-        
-        return jsonify({'message': 'Test notification sent'}), 200
-        
-    except Exception as e:
-        print(f"Error sending test notification: {str(e)}")
-        return jsonify({'error': 'Failed to send test notification'}), 500
