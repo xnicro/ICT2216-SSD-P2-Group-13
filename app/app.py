@@ -244,7 +244,7 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     
-    # Updated CSP covering all your resources
+    # Allow our resources
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
         "script-src 'self' cdnjs.cloudflare.com cdn.jsdelivr.net 'unsafe-inline'; "
