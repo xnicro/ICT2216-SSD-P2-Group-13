@@ -238,6 +238,24 @@ def log_response_info(response):
 
     return response
 
+@app.after_request
+def add_security_headers(response):
+    # Basic security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    # Updated CSP covering all your resources
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' cdnjs.cloudflare.com cdn.jsdelivr.net 'unsafe-inline'; "
+        "style-src 'self' cdnjs.cloudflare.com fonts.googleapis.com cdn-uicons.flaticon.com cdn.jsdelivr.net 'unsafe-inline'; "
+        "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com cdn-uicons.flaticon.com cdn.jsdelivr.net data:; "
+        "img-src 'self' data: cdn-uicons.flaticon.com cdn.jsdelivr.net; "
+        "connect-src 'self'; "
+        "frame-src 'none'; "
+        "object-src 'none'"
+    )
+    return response
 
 # App routes ============================================================
 @app.route('/')
