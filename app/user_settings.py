@@ -9,6 +9,7 @@ from threading import Thread
 from access_control import permission_required
 from flask_wtf.csrf import validate_csrf
 from wtforms.validators import ValidationError
+from extensions import limiter
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -75,6 +76,7 @@ def get_settings():
         return jsonify({'error': 'Failed to get settings'}), 500
 
 @settings_bp.route('/api/settings', methods=['POST'])
+@limiter.limit("5 per minute")
 @permission_required('update_user_settings')
 def update_settings():
     """Update user settings"""

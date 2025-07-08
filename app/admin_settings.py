@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from threading import Thread
+from extensions import limiter
 
 admin_settings_bp = Blueprint('admin_settings', __name__, url_prefix='/api/admin')
 
@@ -69,6 +70,7 @@ def get_admin_settings():
         return jsonify({'error': 'Failed to get admin settings'}), 500
 
 @admin_settings_bp.route('/settings', methods=['POST'])
+@limiter.limit("5 per minute")
 @admin_required
 @permission_required('update_admin_settings')
 def update_admin_settings():
