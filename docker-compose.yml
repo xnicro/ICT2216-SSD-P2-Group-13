@@ -12,6 +12,8 @@ services:
       - my_network
     volumes:
       - ./app:/app
+    depends_on:
+      - graylog
 
   nginx:
     image: nginx:latest
@@ -20,9 +22,9 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./nginx/cert.crt:/etc/nginx/ssl/cert.crt
-      - ./nginx/cert.key:/etc/nginx/ssl/cert.key
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/cert.crt:/etc/nginx/conf.d/cert.crt:ro
+      - ./nginx/cert.key:/etc/nginx/conf.d/cert.key:ro
     depends_on:
       - flask
     networks:
@@ -33,18 +35,71 @@ services:
     container_name: mysql_db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_ROOT_HOST: '%'  # This allows root access from any host, remove if uneeded
+      MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: flask_db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - ./mysql_data:/var/lib/mysql #contains the local DB data
+      - ./mysql_data:/var/lib/mysql
     ports:
-    - "3307:3306" #Expose the port to access DB outside Docker
+    - "3307:3306"
     networks:
       - my_network
+
+  # MongoDB for Graylog
+  mongo:
+    image: mongo:5.0
+    container_name: graylog_mongo
+    networks:
+      - my_network
+    volumes:
+      - ./graylog_data/mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: graylog123
+
+  # Elasticsearch for Graylog
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+    container_name: graylog_elasticsearch
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./graylog_data/elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - my_network
+
+  # Graylog
+  graylog:
+    image: graylog/graylog:4.3
+    container_name: graylog_server
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - GRAYLOG_MONGODB_URI=mongodb://admin:graylog123@mongo:27017/graylog?authSource=admin
+      - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+    restart: always
+    networks:
+      - my_network
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      - 9000:9000
+      - 1514:1514
+      - 1514:1514/udp
+      - 12201:12201
+      - 12201:12201/udp
 
 networks:
   my_network:
     driver: bridge
-    
