@@ -17,7 +17,7 @@ from access_control import login_required, permission_required
 bp = Blueprint('reports', __name__, template_folder='templates')
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 CATEGORY_DISPLAY_NAMES = {
     'fires': 'Fires',

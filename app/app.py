@@ -86,7 +86,7 @@ def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
 
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 def get_db_connection():
