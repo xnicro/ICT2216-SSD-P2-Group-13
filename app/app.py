@@ -648,6 +648,7 @@ def role():
 
 @app.route('/report')
 @login_required
+@otp_verified_required
 @role_required('user')
 @otp_verified_required
 @permission_required('submit_report')
