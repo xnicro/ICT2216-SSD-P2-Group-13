@@ -245,7 +245,27 @@ document.addEventListener("DOMContentLoaded", function () {
         { label: 'Status', value: status.charAt(0).toUpperCase() + status.slice(1) },
         { label: 'Description', value: description },
         {label: 'Owner', value: username},
-        { label: 'Created At', value: createdat }
+        {
+        label: 'Created At',
+        value: (() => {
+          // Convert DB time (UTC) into proper ISO format
+          const rawDate = new Date(createdat.replace(" ", "T") + "Z");
+
+          // Format date like: July 9, 2025
+          const dateOptions = { year: "numeric", month: "long", day: "numeric" };
+          const formattedDate = rawDate.toLocaleDateString(undefined, dateOptions);
+
+          // Format time like: 12:02 PM
+          let hours = rawDate.getHours();
+          const minutes = rawDate.getMinutes().toString().padStart(2, "0");
+          const ampm = hours >= 12 ? "PM" : "AM";
+          hours = hours % 12 || 12;
+          const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+          return `${formattedDate} at ${formattedTime}`;
+        })()
+      }
+
       ].forEach(field => {
         const wrapper = document.createElement('div');
         wrapper.className = 'info-field';

@@ -465,8 +465,12 @@ def logout():
                        details={"username": username},
                        request=request)
 
-    # Logout user and clear session
+    verified = session.get('verified', False)
     session.clear()
+    if not verified:
+        flash("Login cancelled. You have been logged out.", "info")
+    else:
+        flash("You have been logged out successfully.", "info")
 
     log_security_event("logout_successful",
                        user_id=user_id,
@@ -477,7 +481,6 @@ def logout():
                           user_id=user_id,
                           details={"username": username})
 
-    flash("You have been logged out successfully", "info")
     return redirect(url_for('login'))
 
 
