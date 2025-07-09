@@ -1,55 +1,9 @@
 services:
-  flask:
-    build: 
-      context: .
-      dockerfile: FlaskApp.Dockerfile
-    container_name: flask_app
-    env_file:
-      - .env
-    expose:
-      - 5000
-    networks:
-      - my_network
-    volumes:
-      - ./app:/app
-    depends_on:
-      - graylog
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx_proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/cert.crt:/etc/nginx/conf.d/cert.crt:ro
-      - ./nginx/cert.key:/etc/nginx/conf.d/cert.key:ro
-    depends_on:
-      - flask
-    networks:
-      - my_network
-  
-  mysql:
-    image: mysql:8.0
-    container_name: mysql_db
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: flask_db
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - ./mysql_data:/var/lib/mysql
-    ports:
-    - "3307:3306"
-    networks:
-      - my_network
-
   # MongoDB for Graylog
   mongo:
     image: mongo:5.0
     container_name: graylog_mongo
+    restart: unless-stopped
     networks:
       - my_network
     volumes:
@@ -57,6 +11,12 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: graylog123
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # OpenSearch for Graylog
   opensearch:
@@ -126,6 +86,69 @@ services:
       retries: 3
       start_period: 120s
 
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: flask_db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Flask Application
+  flask:
+    build: 
+      context: .
+      dockerfile: FlaskApp.Dockerfile
+    container_name: flask_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - 5000
+    networks:
+      - my_network
+    volumes:
+      - ./app:/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      graylog:
+        condition: service_healthy
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:latest
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/cert.crt:/etc/nginx/conf.d/cert.crt:ro
+      - ./nginx/cert.key:/etc/nginx/conf.d/cert.key:ro
+    depends_on:
+      - flask
+      - graylog
+    networks:
+      - my_network
+
 networks:
   my_network:
     driver: bridge
+    name: graylog_network
