@@ -79,12 +79,12 @@ services:
       - 1514:1514/udp
       - 12201:12201
       - 12201:12201/udp
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/lbstatus || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 120s
+ #   healthcheck:
+ #     test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/lbstatus || exit 1"]
+ #     interval: 30s
+ #    timeout: 10s
+ #     retries: 3
+ #     start_period: 120s
 
   # MySQL Database
   mysql:
@@ -127,8 +127,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      graylog:
-        condition: service_healthy
+  #    graylog:
+  #     condition: service_healthy
 
   # Nginx Reverse Proxy
   nginx:
