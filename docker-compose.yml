@@ -59,10 +59,13 @@ services:
       - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
       - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
       - GRAYLOG_HTTP_EXTERNAL_URI=https://wesitsecure.zapto.org/graylog/
-      - GRAYLOG_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - GRAYLOG_HTTP_PUBLISH_URI=https://wesitsecure.zapto.org/graylog/
+      - GRAYLOG_WEB_ENDPOINT_URI=https://wesitsecure.zapto.org/graylog/api/
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://opensearch:9200  # Fixed: point to opensearch
       - GRAYLOG_MONGODB_URI=mongodb://admin:graylog123@mongo:27017/graylog?authSource=admin
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
-      - GRAYLOG_HTTP_PUBLISH_URI=https://wesitsecure.zapto.org/graylog/
+      - GRAYLOG_REST_LISTEN_URI=http://0.0.0.0:9000/api/
+      - GRAYLOG_WEB_LISTEN_URI=http://0.0.0.0:9000/
     networks:
       - my_network
     depends_on:
