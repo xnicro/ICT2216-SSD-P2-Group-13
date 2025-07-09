@@ -137,12 +137,6 @@ jobs:
           GRAYLOG_PORT=${{ secrets.GRAYLOG_PORT }}
           EOF
 
-      - name: Transfer files to server
-        run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ~/projects/ICT2216-SSD-P2-Group-13"
-          scp flask-app.tar docker-compose.yml .env nginx/default.conf nginx/cert.crt nginx/cert.key \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/projects/ICT2216-SSD-P2-Group-13/
-
       - name: Deploy on server
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
