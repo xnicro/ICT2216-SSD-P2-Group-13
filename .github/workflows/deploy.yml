@@ -137,22 +137,10 @@ jobs:
           GRAYLOG_PORT=${{ secrets.GRAYLOG_PORT }}
           EOF
 
-      - name: Deploy on server & seed database
+      - name: Transfer files to server
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd ~/projects/ICT2216-SSD-P2-Group-13
-            docker load < flask-app.tar
-            docker-compose down || true
-            docker-compose up -d --build
-
-            # Seed MySQL DB
-            docker exec -i mysql_db mysql -u test -ptest flask_db < users.sql && \
-            docker exec -i mysql_db mysql -u test -ptest flask_db < usersV2.sql && \
-            docker exec -i mysql_db mysql -u test -ptest flask_db < notification.sql && \
-            docker exec -i mysql_db mysql -u test -ptest flask_db < flask_db_report_tables.sql && \
-            docker exec -i mysql_db mysql -u test -ptest flask_db < user_preferences.sql && \
-            docker exec -i mysql_db mysql -u test -ptest flask_db < admin_preferences.sql
-            EOF 
+          scp flask-app.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/projects/ICT2216-SSD-P2-Group-13/
+          scp .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/projects/ICT2216-SSD-P2-Group-13/
 
       - name: Deploy on server
         run: |
@@ -161,6 +149,57 @@ jobs:
             docker load < flask-app.tar
             docker-compose down || true
             docker-compose up -d --build
+          ENDSSH
+
+      - name: Wait for services to be ready
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            echo "Waiting for MySQL to be ready..."
+            for i in {1..30}; do
+              if docker exec mysql_db mysqladmin ping -h localhost --silent; then
+                echo "MySQL is ready!"
+                break
+              fi
+              echo "Waiting for MySQL... (attempt $i)"
+              sleep 10
+            done
+          ENDSSH
+
+      - name: Seed database
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            cd ~/projects/ICT2216-SSD-P2-Group-13
+            
+            # Check if SQL files exist
+            if [ -f "users.sql" ]; then
+              echo "Seeding users.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < users.sql
+            fi
+            
+            if [ -f "usersV2.sql" ]; then
+              echo "Seeding usersV2.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < usersV2.sql
+            fi
+            
+            if [ -f "notification.sql" ]; then
+              echo "Seeding notification.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < notification.sql
+            fi
+            
+            if [ -f "flask_db_report_tables.sql" ]; then
+              echo "Seeding flask_db_report_tables.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < flask_db_report_tables.sql
+            fi
+            
+            if [ -f "user_preferences.sql" ]; then
+              echo "Seeding user_preferences.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < user_preferences.sql
+            fi
+            
+            if [ -f "admin_preferences.sql" ]; then
+              echo "Seeding admin_preferences.sql..."
+              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < admin_preferences.sql
+            fi
           ENDSSH
 
       - name: Health check main site
@@ -196,3 +235,4 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/id_rsa .env flask-app.tar
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "rm -f ~/projects/ICT2216-SSD-P2-Group-13/flask-app.tar"
