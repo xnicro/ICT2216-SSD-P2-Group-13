@@ -152,7 +152,7 @@ jobs:
             docker exec -i mysql_db mysql -u test -ptest flask_db < flask_db_report_tables.sql && \
             docker exec -i mysql_db mysql -u test -ptest flask_db < user_preferences.sql && \
             docker exec -i mysql_db mysql -u test -ptest flask_db < admin_preferences.sql
-          EOF 
+            EOF 
 
       - name: Deploy on server
         run: |
