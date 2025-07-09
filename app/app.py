@@ -17,7 +17,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from extensions import limiter
-from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, role_required
+from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, otp_verified_required, role_required
 
 # Import logging configuration
 from logging_config import setup_graylog_logging, log_security_event, log_application_event, log_database_event
@@ -282,6 +282,7 @@ def view_report(report_id):
 
 @app.route('/admin')
 @login_required
+@otp_verified_required
 @role_required('admin')
 def admin():
     log_security_event("admin_dashboard_accessed", user_id=session.get('user_id'), request=request)
@@ -292,6 +293,7 @@ def admin():
 
 @app.route('/profile')
 @login_required
+@otp_verified_required
 @role_required('user')
 def profile():
     """User profile page with real user data and reports"""
@@ -788,11 +790,15 @@ def test_db():
 def login():
     log_application_event("login_page_accessed")
     if 'user_id' in session:
-        role = session.get('role')
-        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-        log_application_event("login_already_authenticated", user_id=session.get('user_id'))
-        flash("You are already logged in.", "info")
-        return redirect(url_for(default_route))
+        if not session.get('verified', False):
+            return redirect(url_for('accounts.verify_otp'))
+    role = session.get('role')
+    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+    flash("You are already logged in.", "info")
+    return redirect(url_for(default_route))
+
+
 
     return render_template('1_login.html')
 
@@ -801,11 +807,14 @@ def login():
 def register():
     log_application_event("register_page_accessed")
     if 'user_id' in session:
-        role = session.get('role')
-        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-        log_application_event("register_already_authenticated", user_id=session.get('user_id'))
-        flash("You are already logged in.", "info")
-        return redirect(url_for(default_route))
+        if not session.get('verified', False):
+            return redirect(url_for('accounts.verify_otp'))
+    role = session.get('role')
+    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+    flash("You are already logged in.", "info")
+    return redirect(url_for(default_route))
+
 
     return render_template('1_register.html')
 
