@@ -84,7 +84,7 @@ jobs:
           docker build -f FlaskApp.Dockerfile -t $IMAGE_NAME:${{ github.sha }} .
           docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
 
-  # Job 3: Deploy to EC2-Server
+  # Job 3: Deploy to EC2
   deploy:
     needs: build
     runs-on: ubuntu-latest
