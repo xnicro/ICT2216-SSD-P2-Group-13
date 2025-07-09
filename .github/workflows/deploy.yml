@@ -137,6 +137,23 @@ jobs:
           GRAYLOG_PORT=${{ secrets.GRAYLOG_PORT }}
           EOF
 
+      - name: Deploy on server & seed database
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/projects/ICT2216-SSD-P2-Group-13
+            docker load < flask-app.tar
+            docker-compose down || true
+            docker-compose up -d --build
+
+            # Seed MySQL DB
+            docker exec -i mysql_db mysql -u test -ptest flask_db < users.sql && \
+            docker exec -i mysql_db mysql -u test -ptest flask_db < usersV2.sql && \
+            docker exec -i mysql_db mysql -u test -ptest flask_db < notification.sql && \
+            docker exec -i mysql_db mysql -u test -ptest flask_db < flask_db_report_tables.sql && \
+            docker exec -i mysql_db mysql -u test -ptest flask_db < user_preferences.sql && \
+            docker exec -i mysql_db mysql -u test -ptest flask_db < admin_preferences.sql
+          EOF 
+
       - name: Deploy on server
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
