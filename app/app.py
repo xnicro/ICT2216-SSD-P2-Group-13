@@ -6,6 +6,7 @@ import mysql.connector
 import os
 import re
 from datetime import datetime
+from flask import make_response
 from report_submission import bp as reports_bp
 from home_dashboard import get_report_by_id, get_report_attachments
 from admin_dashboard import get_statuses, get_all_reports
@@ -17,7 +18,7 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from extensions import limiter
-from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, role_required
+from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, otp_verified_required, role_required
 
 # Import logging configuration
 from logging_config import setup_graylog_logging, log_security_event, log_application_event, log_database_event
@@ -264,7 +265,12 @@ def add_security_headers(response):
 def index():
     log_application_event("index_accessed", user_id=session.get('user_id'))
     reports = get_all_reports()
-    return render_template('0_index.html', reports=reports)
+    response = make_response(render_template('0_index.html', reports=reports))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 
 
 @app.route('/report/<int:report_id>')
@@ -282,6 +288,7 @@ def view_report(report_id):
 
 @app.route('/admin')
 @login_required
+@otp_verified_required
 @role_required('admin')
 def admin():
     log_security_event("admin_dashboard_accessed", user_id=session.get('user_id'), request=request)
@@ -292,6 +299,7 @@ def admin():
 
 @app.route('/profile')
 @login_required
+@otp_verified_required
 @role_required('user')
 def profile():
     """User profile page with real user data and reports"""
@@ -788,26 +796,38 @@ def test_db():
 def login():
     log_application_event("login_page_accessed")
     if 'user_id' in session:
-        role = session.get('role')
-        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-        log_application_event("login_already_authenticated", user_id=session.get('user_id'))
-        flash("You are already logged in.", "info")
-        return redirect(url_for(default_route))
+        if not session.get('verified', False):
+            return redirect(url_for('accounts.verify_otp'))
+    role = session.get('role')
+    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+    flash("You are already logged in.", "info")
+    return redirect(url_for(default_route))
+    response = make_response(render_template('1_login.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
-    return render_template('1_login.html')
 
 
 @app.route('/register')
 def register():
     log_application_event("register_page_accessed")
     if 'user_id' in session:
-        role = session.get('role')
-        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-        log_application_event("register_already_authenticated", user_id=session.get('user_id'))
-        flash("You are already logged in.", "info")
-        return redirect(url_for(default_route))
+        if not session.get('verified', False):
+            return redirect(url_for('accounts.verify_otp'))
+    role = session.get('role')
+    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+    flash("You are already logged in.", "info")
+    return redirect(url_for(default_route))
+    response = make_response(render_template('1_register.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
-    return render_template('1_register.html')
 
 
 # Error handlers with logging

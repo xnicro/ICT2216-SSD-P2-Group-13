@@ -1,5 +1,11 @@
 import mysql.connector
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import random
+from flask import make_response
+import datetime
 from flask import Flask, Blueprint, abort, current_app, jsonify, render_template, request, session, redirect, url_for, \
     flash
 from argon2 import PasswordHasher
@@ -240,6 +246,36 @@ def register_user():
         cursor.close()
         conn.close()
 
+def generate_otp():
+    otp = random.randint(100000, 999999)
+    return otp
+
+# Function to send OTP via email using smtplib
+def send_otp_email(email, otp):
+    sender_email = "sitsecure.notifications@gmail.com"
+    sender_password = "wurhnkuxldbfnokf"
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587  # For TLS, change if using another provider
+
+    # Create the message
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = email
+    message["Subject"] = "Your OTP Code"
+    
+    body = f"Your one-time password is: {otp}. It will expire in 1 minutes."
+    message.attach(MIMEText(body, "plain"))
+
+    try:
+        # Establish a connection to the SMTP server
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  # Secure connection using TLS
+        server.login(sender_email, sender_password)  # Log in to the email account
+        server.sendmail(sender_email, email, message.as_string())  # Send email
+        server.close()
+        print("Email sent successfully!")  # For debugging
+    except Exception as e:
+        print(f"Error sending email: {e}")  # For debugging
 
 @bp.route("/login", methods=["POST"])
 @limiter.limit("5 per minute")
@@ -338,7 +374,18 @@ def login_user():
 
                 role = verify_user['role']
                 default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-                return redirect(url_for(default_route))
+                
+                # Generate OTP and store it in the session
+                otp = generate_otp()
+                session['otp'] = otp
+                session['otp_expiry'] = (datetime.datetime.now() + datetime.timedelta(minutes=1)).timestamp()
+                
+                 # Send OTP to user's email
+                send_otp_email(verify_user['email'], otp)
+
+                return redirect(url_for('accounts.verify_otp'))
+                
+                #return redirect(url_for(default_route))
 
             except VerifyMismatchError:
                 log_security_event("login_wrong_password",
@@ -359,6 +406,53 @@ def login_user():
                                request=request)
             flash(f'Login error: {str(e)}', "error")
             return redirect(url_for('login'))
+
+# OTP Verification Route
+@bp.route("/verify_otp", methods=["GET", "POST"])
+@login_required
+def verify_otp():
+    if session.get('verified', False):
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        return redirect(url_for(default_route))
+    
+    if request.method == "POST":
+        entered_otp = request.form['otp']
+        
+        # Check if OTP is valid and not expired
+        if 'otp' not in session or 'otp_expiry' not in session:
+            flash("Session expired, please log in again.", "error")
+            session.clear()
+            return redirect(url_for('login'))
+
+        if datetime.datetime.now().timestamp() > session['otp_expiry']:
+            flash("OTP expired, please request a new one.", "error")
+            session.pop('otp', None)
+            session.pop('otp_expiry', None)
+            session.clear()
+            return redirect(url_for('login'))
+        
+        if not entered_otp.isdigit():
+            flash("Invalid OTP format. Please enter only numerical values", "error")
+            return redirect(url_for('accounts.verify_otp'))
+
+        if int(entered_otp) == session['otp']:
+            session['verified'] = True
+            session.pop('otp', None)
+            session.pop('otp_expiry', None)
+            flash("Login successful!", "success")
+            role = session.get('role')
+            default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+            return redirect(url_for(default_route))
+        else:
+            flash("Invalid OTP, please try again.", "error")
+            return redirect(url_for('accounts.verify_otp'))
+
+    response = make_response(render_template('verify_otp.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @bp.route("/logout")
