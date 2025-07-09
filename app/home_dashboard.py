@@ -4,6 +4,7 @@ from flask import (
     Blueprint, current_app, request, session, jsonify
 )
 import datetime
+from access_control import login_required, permission_required
 
 CATEGORY_ICONS = {
     "Fires": "fa-solid fa-fire category-fires",

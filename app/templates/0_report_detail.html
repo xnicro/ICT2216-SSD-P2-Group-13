@@ -7,6 +7,7 @@
     <title>SITSecure | Report Detail</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/report_detail.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
 </head>
 
@@ -19,12 +20,13 @@
             <div class="report-detail-section">
                 <div class="report-detail-card">
                     <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
-                    <p class="report-detail-date">{{ report.created_at.strftime("%-d %B, %Y") | e}}</p>
-                    <p class="report-detail-date">{{ report.created_at.strftime("%-I:%M %p") | e}}</p>
+                    <p class="report-detail-date" id="report-detail-date"></p>
+                    <p class="report-detail-date" id="report-detail-time"></p>
                     <p class="report-detail-category">
                         <i class="{{ report.category_icon | e}}"></i>
                         {{ report.category_name | e }}
                     </p>
+                    <div id="report-detail-images"></div>
                     <h1>{{ report.title | e}}</h1>
                     <p>{{ report.description | e}}</p>
                 </div>
@@ -33,8 +35,10 @@
 
         </div>
     </div>
-
-    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <script>
+        const rawDate = new Date("{{ report.created_at.isoformat() }}Z");
+    </script>
+    <script src="{{ url_for('static', filename='js/report_detail.js') }}"></script>
 </body>
 
 </html>

@@ -285,6 +285,13 @@ def view_report(report_id):
         return "Report not found", 404
     return render_template('0_report_detail.html', report=report)
 
+@app.route("/report_attachments/<int:report_id>", methods=["GET"])
+@login_required
+@role_required('user')
+def fetch_report_attachments(report_id):
+    attachments = get_report_attachments(report_id)
+    return jsonify(attachments)
+
 
 @app.route('/admin')
 @login_required

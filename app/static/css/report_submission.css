@@ -225,3 +225,84 @@
         height: 60px; /* Maintain consistent height */
     }
 }
+
+/* Submit Report Section */
+a.back {
+  display: inline-block;
+  font-weight: 500;
+  margin-bottom: 32px;
+  ;
+  font-size: 12px;
+}
+
+a.back:hover {
+  text-decoration: underline;
+}
+
+a.back i {
+  padding-right: 8px;
+}
+
+.submit-report-section {
+  padding: 22px;
+  max-width: 640px;
+  width: 100%;
+  margin: auto;
+}
+
+.submit-report-section>h1 {
+  margin-bottom: 16px;
+}
+
+.submit-report-section form {
+  display: flex;
+  flex-direction: column;
+  row-gap: 16px;
+}
+
+.submit-report-section form div {
+  display: flex;
+  flex-direction: column;
+}
+
+.submit-report-section form div.check-container {
+  flex-direction: row;
+  column-gap: 8px;
+  margin-top: 16px;
+}
+
+.submit-report-section form div label {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 16px;
+}
+
+.submit-report-section form div input,
+.submit-report-section form div select {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.submit-report-section form div textarea {
+  display: block;
+  outline-style: solid;
+  outline-color: var(--border);
+  outline-width: 1px;
+  padding: 8px;
+  border-radius: 4px;
+  height: 150px;
+  resize: vertical;
+}
+
+.submit-report-section form div input.check {
+  height: 16px;
+  width: 16px;
+  border: 1px solid var(--border);
+  outline-style: none;
+  ;
+}
