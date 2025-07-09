@@ -52,7 +52,7 @@
     white-space: nowrap;
 
     /* your existing styling */
-    background-color: #007bff;
+    background-color: #1A1B29;
     color: white;
     padding: 10px 15px;
     border: none;
@@ -64,7 +64,7 @@
 }
 
 .custom-file-upload-button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    opacity: 0.8; /* Darker blue on hover */
 }
 
 /* ... (previous CSS unchanged until .file-preview-container) ... */
