@@ -316,9 +316,14 @@ def profile():
     # Get user's reports
     user_reports = get_user_reports(user_id)
 
-    return render_template('5_profile.html',
-                           current_user=current_user,
-                           user_reports=user_reports)
+    response = make_response(render_template('5_profile.html',
+                                             current_user=current_user,
+                                             user_reports=user_reports))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 
 
 @app.route('/update_profile', methods=['POST'])
@@ -798,16 +803,18 @@ def login():
     if 'user_id' in session:
         if not session.get('verified', False):
             return redirect(url_for('accounts.verify_otp'))
-    role = session.get('role')
-    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
-    flash("You are already logged in.", "info")
-    return redirect(url_for(default_route))
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     response = make_response(render_template('1_login.html'))
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
+
 
 
 
@@ -817,16 +824,18 @@ def register():
     if 'user_id' in session:
         if not session.get('verified', False):
             return redirect(url_for('accounts.verify_otp'))
-    role = session.get('role')
-    default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
-    log_application_event("login_already_authenticated", user_id=session.get('user_id'))
-    flash("You are already logged in.", "info")
-    return redirect(url_for(default_route))
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        log_application_event("login_already_authenticated", user_id=session.get('user_id'))
+        flash("You are already logged in.", "info")
+        return redirect(url_for(default_route))
+    
     response = make_response(render_template('1_register.html'))
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
+
 
 
 
