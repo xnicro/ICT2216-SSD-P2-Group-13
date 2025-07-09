@@ -83,13 +83,6 @@ jobs:
         run: |
           docker build -f FlaskApp.Dockerfile -t $IMAGE_NAME:${{ github.sha }} .
           docker tag $IMAGE_NAME:${{ github.sha }} $IMAGE_NAME:latest
-          docker save $IMAGE_NAME:latest -o flask-app.tar
-
-      - name: Upload Docker image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-images
-          path: flask-app.tar
 
   # Job 3: Deploy to EC2-Server
   deploy:
@@ -99,11 +92,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-images
 
       - name: Setup SSH
         run: |
@@ -137,16 +125,22 @@ jobs:
           GRAYLOG_PORT=${{ secrets.GRAYLOG_PORT }}
           EOF
 
-      - name: Transfer files to server
+      - name: Transfer .env file to server
         run: |
-          scp flask-app.tar ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/projects/ICT2216-SSD-P2-Group-13/
           scp .env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/projects/ICT2216-SSD-P2-Group-13/
 
-      - name: Deploy on server
+      - name: Build and deploy on server
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             cd ~/projects/ICT2216-SSD-P2-Group-13
-            docker load < flask-app.tar
+            
+            # Pull latest code
+            git pull origin main
+            
+            # Build Docker image directly on server
+            docker build -f FlaskApp.Dockerfile -t flask-app:latest .
+            
+            # Deploy
             docker-compose down || true
             docker-compose up -d --build
           ENDSSH
@@ -215,7 +209,7 @@ jobs:
 
       - name: Health check Graylog
         run: |
-          if curl -sSf https://wesitsecure.zapto.org/graylog; then
+          if curl -sSf https://wesitsecure.zapto.org/graylog/; then
             echo "✅ Graylog is healthy!"
           else
             echo "❌ Graylog check failed"
@@ -234,4 +228,4 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          rm -f ~/.ssh/id_rsa .env flask-app.tar
+          rm -f ~/.ssh/id_rsa .env
