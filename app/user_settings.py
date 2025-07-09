@@ -294,7 +294,7 @@ def send_email_notification(email, username, report_id, report_title, report_des
             <h3>{report_title}</h3>
             <p>{report_description}</p>
             <p>
-                <a href="{current_app.config.get('BASE_URL', 'https://yourdomain.com')}/reports/{report_id}">
+                <a href="{current_app.config.get('BASE_URL', 'https://wesitsecure.zapto.org/login')}/reports/{report_id}">
                     View Report
                 </a>
             </p>
