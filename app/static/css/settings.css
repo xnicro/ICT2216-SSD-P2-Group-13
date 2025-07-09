@@ -215,7 +215,7 @@ input[type="checkbox"]:checked::before {
 
 /* Save button - keeping original for compatibility */
 .settings-section button {
-    background-color: #3498db;
+    background-color: #467B65;
     color: white;
     border: none;
     padding: 12px 24px;
@@ -229,7 +229,7 @@ input[type="checkbox"]:checked::before {
 }
 
 .settings-section button:hover {
-    background-color: #4aa8ff;
+    background-color: #3B6755;
 }
 
 /* Helper text */
