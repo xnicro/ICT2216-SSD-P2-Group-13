@@ -261,6 +261,7 @@ def add_security_headers(response):
 # App routes ============================================================
 @app.route('/')
 @login_required
+@otp_verified_required
 @role_required('user')
 def index():
     log_application_event("index_accessed", user_id=session.get('user_id'))
@@ -275,6 +276,7 @@ def index():
 
 @app.route('/report/<int:report_id>')
 @login_required
+@otp_verified_required
 @role_required('user')
 def view_report(report_id):
     log_application_event("report_viewed", user_id=session.get('user_id'), details={"report_id": report_id})
@@ -328,6 +330,7 @@ def profile():
 
 @app.route('/update_profile', methods=['POST'])
 @login_required
+@otp_verified_required
 @role_required('user')
 @permission_required('update_profile')
 def update_profile():
@@ -462,6 +465,7 @@ def update_profile():
 
 @app.route('/change_password', methods=['POST'])
 @login_required
+@otp_verified_required
 @role_required('user')
 @permission_required('change_password')
 def change_password():
@@ -588,6 +592,7 @@ def change_password():
 
 @app.route('/api/report/<int:report_id>')
 @login_required
+@otp_verified_required
 @role_required('user')
 def get_report_details(report_id):
     """Get report details for the modal"""
@@ -633,6 +638,7 @@ def get_report_details(report_id):
 
 @app.route('/role')
 @login_required
+@otp_verified_required
 @role_required('superadmin')
 def role():
     log_security_event("role_management_accessed", user_id=session.get('user_id'), request=request)
@@ -643,6 +649,7 @@ def role():
 @app.route('/report')
 @login_required
 @role_required('user')
+@otp_verified_required
 @permission_required('submit_report')
 def report():
     log_application_event("report_page_accessed", user_id=session.get('user_id'))
@@ -651,6 +658,7 @@ def report():
 
 @app.route('/settings')
 @login_required
+@otp_verified_required
 def settings():
     user_id = session.get('user_id')
     log_application_event("settings_accessed", user_id=user_id)
@@ -671,6 +679,7 @@ def settings():
 
 @app.route('/delete_account', methods=['POST'])
 @login_required
+@otp_verified_required
 @role_required('user')
 def delete_account():
     """Delete user account and all associated data"""
