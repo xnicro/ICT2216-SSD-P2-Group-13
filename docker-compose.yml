@@ -62,11 +62,13 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
     container_name: graylog_elasticsearch
+    user: "1000:1000"  # ADD THIS LINE
     environment:
       - http.host=0.0.0.0
       - transport.host=localhost
       - network.host=0.0.0.0
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node  # ADD THIS LINE
     ulimits:
       memlock:
         soft: -1
