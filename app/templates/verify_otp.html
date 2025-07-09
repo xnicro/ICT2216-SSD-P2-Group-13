@@ -7,37 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
-    <style>
-        /* Add some basic styling for flash messages */
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-        
-        .alert {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .alert-info {
-            background-color: #cce7ff;
-            color: #004085;
-            border: 1px solid #b8daff;
-        }
-    </style>
 </head>
 <body data-retry-after="{{ retry_after | default(0, true) | e }}">
     <video autoplay muted loop playsinline id="bg-video">
@@ -70,21 +39,23 @@
                     {% endwith %}
                 </div>
           
-                <form method="POST">
+                <form method="POST" class="login-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <div>
-                    <label for="username">Enter OTP:</label>
-                    <input type="text" id= "otp" name="otp" required {% if rate_limited %}disabled{% endif %}>
+                    <div class="controls">
+                        <label for="otp">Enter OTP:</label>
+                        <input type="text" id="otp" name="otp" required {% if rate_limited %}disabled{% endif %}>
                     </div>
-                    <button type="submit" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>Verify</button>
+                    <div class="controls--actions">
+                        <button type="submit" class="upload-btn" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>
+                            Verify
+                        </button>
+                    </div>
                 </form>
             </div>
             <div class="campus-container">
                 <img src="{{ url_for('static', filename='assets/campus.svg') }}" alt="Logo" id="campus">
             </div>
-
         </div>
-
     </div>
     <script src="{{ url_for('static', filename='js/verify_otp.js') }}"></script>
 </body>
