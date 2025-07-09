@@ -5,6 +5,15 @@ div.report-detail-section {
   justify-content: center;
 }
 
+div.report-detail-section a.back {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+div.report-detail-section a.back:hover {
+  text-decoration: underline;
+}
+
 div.report-detail-section div.report-detail-card {
   padding: 22px;
   border-radius: 16px;
@@ -55,4 +64,33 @@ div.report-detail-section h1 {
 
 #report-detail-date {
     margin-top: 16px;
+}
+
+#report-detail-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 24px 0;
+}
+
+#report-detail-images img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+#report-detail-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#report-detail-status {
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  user-select: none;
+  text-transform: capitalize;
 }

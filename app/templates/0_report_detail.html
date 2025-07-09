@@ -20,15 +20,23 @@
             <div class="report-detail-section">
                 <div class="report-detail-card">
                     <a href="/" class="back"><i class="fa-solid fa-angle-left"></i>Back to Reports</a>
-                    <p class="report-detail-date" id="report-detail-date"></p>
-                    <p class="report-detail-date" id="report-detail-time"></p>
+                    <div id="report-detail-top-bar">
+                        <div>
+                            <p class="report-detail-date" id="report-detail-date"></p>
+                            <p class="report-detail-date" id="report-detail-time"></p>
+                        </div>
+                        <div>
+                            <p id="report-detail-status"></p>
+                        </div>
+                    </div>
+
                     <p class="report-detail-category">
                         <i class="{{ report.category_icon | e}}"></i>
                         {{ report.category_name | e }}
                     </p>
-                    <div id="report-detail-images"></div>
                     <h1>{{ report.title | e}}</h1>
                     <p>{{ report.description | e}}</p>
+                    <div id="report-detail-images"></div>
                 </div>
 
             </div>
@@ -37,6 +45,7 @@
     </div>
     <script>
         const rawDate = new Date("{{ report.created_at.isoformat() }}Z");
+        const report_detail_report = JSON.parse('{{ report | tojson | safe }}');
     </script>
     <script src="{{ url_for('static', filename='js/report_detail.js') }}"></script>
 </body>
