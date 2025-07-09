@@ -77,7 +77,6 @@ services:
       - my_network
 
   # Graylog
-# Graylog
   graylog:
     image: graylog/graylog:4.3
     container_name: graylog_server
