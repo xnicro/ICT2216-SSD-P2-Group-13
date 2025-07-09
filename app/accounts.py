@@ -431,11 +431,13 @@ def verify_otp():
             return redirect(url_for('accounts.verify_otp'))
 
         if int(entered_otp) == session['otp']:
-            session['verified'] = True  # Mark the user as verified
+            session['verified'] = True
             session.pop('otp', None)
             session.pop('otp_expiry', None)
             flash("Login successful!", "success")
-            return redirect(url_for('profile'))  # Redirect to user's profile or dashboard
+            role = session.get('role')
+            default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+            return redirect(url_for(default_route))
         else:
             flash("Invalid OTP, please try again.", "error")
             return redirect(url_for('accounts.verify_otp'))
