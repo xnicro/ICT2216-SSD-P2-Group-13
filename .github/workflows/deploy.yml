@@ -91,7 +91,7 @@ jobs:
           name: docker-images
           path: flask-app.tar
 
-  # Job 3: Deploy to EC2
+  # Job 3: Deploy to EC2-Server
   deploy:
     needs: build
     runs-on: ubuntu-latest
