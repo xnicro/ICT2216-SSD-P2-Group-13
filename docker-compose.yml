@@ -77,16 +77,18 @@ services:
       - my_network
 
   # Graylog
+# Graylog
   graylog:
     image: graylog/graylog:4.3
     container_name: graylog_server
     environment:
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
+      - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
+      - GRAYLOG_HTTP_EXTERNAL_URI=https://wesitsecure.zapto.org/graylog/
       - GRAYLOG_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - GRAYLOG_MONGODB_URI=mongodb://admin:graylog123@mongo:27017/graylog?authSource=admin
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+      - GRAYLOG_HTTP_PUBLISH_URI=https://wesitsecure.zapto.org/graylog/
     restart: always
     networks:
       - my_network
