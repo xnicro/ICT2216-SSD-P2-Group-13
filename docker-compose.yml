@@ -58,50 +58,73 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: graylog123
 
-  # Elasticsearch for Graylog
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
-    container_name: graylog_elasticsearch
-    user: "1000:1000"  # ADD THIS LINE
+  # OpenSearch for Graylog
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: graylog_opensearch
+    restart: unless-stopped
+    user: "1000:1000"
     environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - discovery.type=single-node  # ADD THIS LINE
+      - cluster.name=graylog-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
     ulimits:
       memlock:
         soft: -1
         hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
-      - ./graylog_data/elasticsearch:/usr/share/elasticsearch/data
+      - ./graylog_data/opensearch:/usr/share/opensearch/data
     networks:
       - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # Graylog
   graylog:
-    image: graylog/graylog:4.3
+    image: graylog/graylog:6.3.1
     container_name: graylog_server
+    restart: unless-stopped
     environment:
       - GRAYLOG_PASSWORD_SECRET=${GRAYLOG_PASSWORD_SECRET}
       - GRAYLOG_ROOT_PASSWORD_SHA2=${GRAYLOG_ROOT_PASSWORD_SHA2}
       - GRAYLOG_HTTP_EXTERNAL_URI=https://wesitsecure.zapto.org/graylog/
-      - GRAYLOG_ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - GRAYLOG_HTTP_PUBLISH_URI=https://wesitsecure.zapto.org/graylog/
+      - GRAYLOG_WEB_ENDPOINT_URI=https://wesitsecure.zapto.org/graylog/api/
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://opensearch:9200
       - GRAYLOG_MONGODB_URI=mongodb://admin:graylog123@mongo:27017/graylog?authSource=admin
       - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
-      - GRAYLOG_HTTP_PUBLISH_URI=https://wesitsecure.zapto.org/graylog/
-    restart: always
+      - GRAYLOG_REST_LISTEN_URI=http://0.0.0.0:9000/api/
+      - GRAYLOG_WEB_LISTEN_URI=http://0.0.0.0:9000/
     networks:
       - my_network
     depends_on:
-      - mongo
-      - elasticsearch
+      mongo:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
     ports:
       - 9000:9000
       - 1514:1514
       - 1514:1514/udp
       - 12201:12201
       - 12201:12201/udp
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/lbstatus || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
 networks:
   my_network:
