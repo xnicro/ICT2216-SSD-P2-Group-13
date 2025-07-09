@@ -235,4 +235,3 @@ jobs:
         if: always()
         run: |
           rm -f ~/.ssh/id_rsa .env flask-app.tar
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "rm -f ~/projects/ICT2216-SSD-P2-Group-13/flask-app.tar"
