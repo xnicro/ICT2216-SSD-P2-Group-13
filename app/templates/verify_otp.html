@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SITSecure | Verify OTP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='assets/logo.svg') }}" type="image/svg+xml">
+</head>
+<body data-retry-after="{{ retry_after | default(0, true) | e }}">
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="{{ url_for('static', filename='assets/tree.mp4') }}" type="video/mp4" />
+        Your browser does not support HTML5 video.
+    </video>
+    <div class="login-container">
+        <div class="login-form-container">
+            <div>
+                <div class="company-logo">
+                    <a href="\">
+                        <div>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <p>SITSecure</p>
+                        </div>
+                    </a>
+                </div>
+                <h2>Enter the OTP sent to your email</h2>
+                
+                <!-- Flash Messages -->
+                <div class="flash-messages">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'info' | e }}">
+                                    {{ message | e }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
+          
+                <form method="POST" class="login-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div class="controls">
+                        <label for="otp">Enter OTP:</label>
+                        <input type="text" id="otp" name="otp" required {% if rate_limited %}disabled{% endif %}>
+                    </div>
+                    <div class="controls--actions">
+                        <button type="submit" class="upload-btn" {% if rate_limited %}disabled style="background-color: #ccc;"{% endif %}>
+                            Verify
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="campus-container">
+                <img src="{{ url_for('static', filename='assets/campus.svg') }}" alt="Logo" id="campus">
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/verify_otp.js') }}"></script>
+</body>
+</html>
