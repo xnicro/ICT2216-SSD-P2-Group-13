@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import random
+from flask import make_response
 import datetime
 from flask import Flask, Blueprint, abort, current_app, jsonify, render_template, request, session, redirect, url_for, \
     flash
@@ -410,6 +411,11 @@ def login_user():
 @bp.route("/verify_otp", methods=["GET", "POST"])
 @login_required
 def verify_otp():
+    if session.get('verified', False):
+        role = session.get('role')
+        default_route = ROLE_REDIRECT_MAP.get(role, 'profile')
+        return redirect(url_for(default_route))
+    
     if request.method == "POST":
         entered_otp = request.form['otp']
         
@@ -442,7 +448,12 @@ def verify_otp():
             flash("Invalid OTP, please try again.", "error")
             return redirect(url_for('accounts.verify_otp'))
 
-    return render_template('verify_otp.html')
+    response = make_response(render_template('verify_otp.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 
 @bp.route("/logout")
 def logout():

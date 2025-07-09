@@ -6,6 +6,7 @@ import mysql.connector
 import os
 import re
 from datetime import datetime
+from flask import make_response
 from report_submission import bp as reports_bp
 from home_dashboard import get_report_by_id, get_report_attachments
 from admin_dashboard import get_statuses, get_all_reports
@@ -264,7 +265,12 @@ def add_security_headers(response):
 def index():
     log_application_event("index_accessed", user_id=session.get('user_id'))
     reports = get_all_reports()
-    return render_template('0_index.html', reports=reports)
+    response = make_response(render_template('0_index.html', reports=reports))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
 
 
 @app.route('/report/<int:report_id>')
@@ -797,10 +803,12 @@ def login():
     log_application_event("login_already_authenticated", user_id=session.get('user_id'))
     flash("You are already logged in.", "info")
     return redirect(url_for(default_route))
+    response = make_response(render_template('1_login.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
-
-
-    return render_template('1_login.html')
 
 
 @app.route('/register')
@@ -814,9 +822,12 @@ def register():
     log_application_event("login_already_authenticated", user_id=session.get('user_id'))
     flash("You are already logged in.", "info")
     return redirect(url_for(default_route))
+    response = make_response(render_template('1_register.html'))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
-
-    return render_template('1_register.html')
 
 
 # Error handlers with logging
