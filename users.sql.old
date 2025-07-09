@@ -1,4 +1,4 @@
--- MySQL dump 10.13  Distrib 8.0.42, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
 --
 -- Host: localhost    Database: flask_db
 -- ------------------------------------------------------
@@ -7,7 +7,7 @@
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
+/*!50503 SET NAMES utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -33,7 +33,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `username_UNIQUE` (`username`),
   UNIQUE KEY `user_id_UNIQUE` (`user_id`),
   UNIQUE KEY `email_UNIQUE` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,7 +42,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'asd','$argon2id$v=19$m=65536,t=3,p=4$4F10+cTioQ7lqof0usT9xQ$+zACrQCnu+jPR8KUMnPVOQafhjrf/wMH8WH3YIK2lUU','a@a',0,'user'),(2,'bbb','$argon2id$v=19$m=65536,t=3,p=4$Vmv0ijoNxRdaNrXmAZe3ZQ$MIV49UnWqhB+YT+RtsrjzNrIuXG2DVJo7oIu2fryMNM','b@b',0,'user'),(3,'cccc','$argon2id$v=19$m=65536,t=3,p=4$M6D6WtRrOo/QJH+VvTjdyQ$7Qk770zRazgN0aCKKjAYZAU2vCWKIaIzrqB1KtJDR1A','c@c',0,'user'),(5,'SITSecureSA','$argon2id$v=19$m=65536,t=3,p=4$pBNKghbD9etoY/7BR8ShkQ$qwW/JmnuyUa51qqMBTfSS/pvCw4ChXsLBaAvR4e+0FI','SSSA@gmail.com',0,'superadmin');
+INSERT INTO `users` VALUES (5,'SITSecureSA','$argon2id$v=19$m=65536,t=3,p=4$pBNKghbD9etoY/7BR8ShkQ$qwW/JmnuyUa51qqMBTfSS/pvCw4ChXsLBaAvR4e+0FI','sitsecuresa@gmail.com',0,'superadmin');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -55,4 +55,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-01 13:06:43
+-- Dump completed on 2025-07-09  0:07:41

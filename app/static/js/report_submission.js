@@ -30,36 +30,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to get file icon class based on type/extension
+    // Function to get file icon class based on type/extension
     function getFileIconClass(filename, mimetype) {
         const ext = filename.split('.').pop().toLowerCase();
-        
-        // Prioritize PDF with a generic document icon (fa-file-lines)
-        if (ext === 'pdf' || mimetype === 'application/pdf') {
-            return 'fa-file-lines'; // Use a generic document icon for PDFs
-        } 
+
         // Image files
-        else if (mimetype.startsWith('image/')) {
+        if (mimetype.startsWith('image/')) {
             return 'fa-file-image';
-        } 
+        }
         // Word documents
         else if (['doc', 'docx'].includes(ext) || mimetype === 'application/msword' || mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
             return 'fa-file-word';
-        } 
+        }
         // Excel spreadsheets
         else if (['xls', 'xlsx'].includes(ext) || mimetype === 'application/vnd.ms-excel' || mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
             return 'fa-file-excel';
-        } 
+        }
         // PowerPoint presentations
         else if (['ppt', 'pptx'].includes(ext) || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
             return 'fa-file-powerpoint';
-        } 
-        // Archive files (this is the one that looks like PDF in Solid style of FA)
+        }
+        // Archive files
         else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimetype === 'application/zip' || mimetype === 'application/x-rar-compressed') {
-            return 'fa-file-archive'; 
-        } 
-        // Text files (also use fa-file-lines)
+            return 'fa-file-archive';
+        }
+        // Text files
         else if (['txt', 'log', 'csv'].includes(ext)) {
-            return 'fa-file-lines'; 
+            return 'fa-file-lines';
         }
         // Fallback generic file icon
         return 'fa-file';
@@ -212,13 +209,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     continue;
                 }
 
-                const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'pdf'];
+                const allowedExtensions = ['png', 'jpg', 'jpeg', 'gif'];
                 const fileExtension = newFile.name.split('.').pop().toLowerCase();
                 if (!allowedExtensions.includes(fileExtension)) {
                     showClientFlash(`File '${newFile.name}' has an unsupported file type. Allowed types are ${allowedExtensions.join(', ')}.`, 'error');
                     continue;
                 }
-                
+
                 if (selectedFiles.some(f => f.name === newFile.name && f.size === newFile.size)) {
                     showClientFlash(`File '${newFile.name}' is already added.`, 'error');
                     continue;
@@ -229,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             renderFilePreviews();
-            event.target.value = ''; 
+            event.target.value = '';
         });
     }
 
@@ -239,8 +236,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (/onerror=|onload=|javascript:|data:text\/html/i.test(value)) return true;
         if (/SELECT\s| FROM\s| INSERT\s| UPDATE\s| DELETE\s| OR\s| AND\s| UNION\s| EXEC\s/i.test(value)) return true;
         if (/<|>/.test(value)) return true;
-        if (/[\x00-\x1F\x7F]/.test(value)) return true; 
-        
+        if (/[\x00-\x1F\x7F]/.test(value)) return true;
+
         return false;
     }
 
@@ -254,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Add a class for visual feedback (e.g., grey out)
             element.classList.add('disabled-form-element');
         });
-        
+
         // Disable delete file buttons too
         filePreviewContainer.querySelectorAll('.file-attachment-delete').forEach(button => {
             button.disabled = true;
@@ -306,26 +303,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Handle form submission
     if (reportForm) {
-        reportForm.addEventListener('submit', async function(event) {
+        reportForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             // Clear ALL previous alerts at the start of a new submission attempt
             clearAlerts();
             // NEW: Disable form immediately on submit to prevent double clicks/submissions
-            disableForm(); 
+            disableForm();
 
             // CLIENT-SIDE VALIDATION BEFORE SUBMISSION
             const title = this.elements.title.value;
             const trimmedTitle = title.trim();
-            
+
             const description = this.elements.description.value;
             const trimmedDescription = description.trim();
 
             const categoryValue = this.elements.category.value;
-            
+
             const categoryDescription = this.elements.category_description.value;
             const trimmedCategoryDescription = categoryDescription.trim();
-            
+
             const clientValidationErrors = [];
 
             // Title Validation
@@ -335,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (trimmedTitle.length > 255) {
                 clientValidationErrors.push("Title must be 255 characters or less.");
             }
-            if (containsInvalidCharsClient(title)) { 
+            if (containsInvalidCharsClient(title)) {
                 clientValidationErrors.push("Title contains invalid characters.");
             }
 
@@ -362,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clientValidationErrors.push("Category description contains invalid characters.");
                 }
             } else if (!categoryValue) {
-                    clientValidationErrors.push("Category cannot be empty.");
+                clientValidationErrors.push("Category cannot be empty.");
             }
 
 
@@ -371,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const uniqueErrors = new Set(clientValidationErrors);
                 uniqueErrors.forEach(msg => showClientFlash(msg, 'error'));
                 // NEW: Re-enable form if client-side validation fails
-                enableForm(); 
+                enableForm();
                 return; // Stop form submission here
             }
             // END CLIENT-SIDE VALIDATION
@@ -401,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest' 
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
 
@@ -416,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         // Fallback: if we get non-JSON and not a redirect, assume a server-rendered error page
                         // and reload to show any flash messages Flask might have rendered.
-                        window.location.reload(); 
+                        window.location.reload();
                     }
                     return;
                 }
@@ -425,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (result && result.redirect) {
                         window.location.href = result.redirect;
                     } else {
-                        window.location.href = '/'; 
+                        window.location.href = '/';
                     }
                 } else {
                     // This handles server-side validation errors AND rate limits

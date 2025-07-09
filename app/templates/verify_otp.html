@@ -51,6 +51,16 @@
                         </button>
                     </div>
                 </form>
+                <!-- Instead of a <form> for logout, use a link: -->
+            <div style="text-align: center; margin-top: 16px;">
+                <a href="{{ url_for('accounts.logout') }}" class="cancel-link" style="color: #888; text-decoration: underline;">
+                    Cancel / Not you?
+                </a>
+                <p style="font-size: 0.92em; color: #aaa; margin-top: 6px;">
+                    (Return to login or Sign up as a different user)
+                </p>
+            </div>
+
             </div>
             <div class="campus-container">
                 <img src="{{ url_for('static', filename='assets/campus.svg') }}" alt="Logo" id="campus">
@@ -58,5 +68,12 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/verify_otp.js') }}"></script>
+    <script>
+    history.replaceState(null, "", location.href);
+    history.pushState(null, "", location.href);
+    window.onpopstate = function(event) {
+        window.location.href = "/login";
+    };
+    </script>
 </body>
 </html>
