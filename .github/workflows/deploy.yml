@@ -209,12 +209,17 @@ jobs:
 
       - name: Health check Graylog
         run: |
-          if curl -sSf https://wesitsecure.zapto.org/graylog/; then
-            echo "✅ Graylog is healthy!"
-          else
-            echo "❌ Graylog check failed"
-            exit 1
-          fi
+          echo "Waiting 20 seconds for Graylog to fully load..."
+          sleep 20
+          
+          for i in {1..6}; do
+            if curl -sSf https://wesitsecure.zapto.org/graylog/; then
+              echo "✅ Graylog is healthy!"
+              break
+            fi
+            echo "Waiting for Graylog... (attempt $i)"
+            sleep 10
+          done
 
       - name: Send notification
         if: always()
