@@ -164,35 +164,47 @@ jobs:
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             cd ~/projects/ICT2216-SSD-P2-Group-13
             
-            # Check if SQL files exist
-            if [ -f "users.sql" ]; then
-              echo "Seeding users.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < users.sql
-            fi
+            # Check if database is already initialized
+            TABLES_EXIST=$(docker exec mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} -e "SHOW TABLES;" 2>/dev/null | wc -l)
             
-            if [ -f "usersV2.sql" ]; then
-              echo "Seeding usersV2.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < usersV2.sql
-            fi
-            
-            if [ -f "notification.sql" ]; then
-              echo "Seeding notification.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < notification.sql
-            fi
-            
-            if [ -f "flask_db_report_tables.sql" ]; then
-              echo "Seeding flask_db_report_tables.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < flask_db_report_tables.sql
-            fi
-            
-            if [ -f "user_preferences.sql" ]; then
-              echo "Seeding user_preferences.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < user_preferences.sql
-            fi
-            
-            if [ -f "admin_preferences.sql" ]; then
-              echo "Seeding admin_preferences.sql..."
-              docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < admin_preferences.sql
+            if [ "$TABLES_EXIST" -le 1 ]; then
+              echo "Database appears to be empty. Seeding database..."
+              
+              # Check if SQL files exist and seed them
+              if [ -f "users.sql" ]; then
+                echo "Seeding users.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < users.sql
+              fi
+              
+              if [ -f "usersV2.sql" ]; then
+                echo "Seeding usersV2.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < usersV2.sql
+              fi
+              
+              if [ -f "notification.sql" ]; then
+                echo "Seeding notification.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < notification.sql
+              fi
+              
+              if [ -f "flask_db_report_tables.sql" ]; then
+                echo "Seeding flask_db_report_tables.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < flask_db_report_tables.sql
+              fi
+              
+              if [ -f "user_preferences.sql" ]; then
+                echo "Seeding user_preferences.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < user_preferences.sql
+              fi
+              
+              if [ -f "admin_preferences.sql" ]; then
+                echo "Seeding admin_preferences.sql..."
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < admin_preferences.sql
+              fi
+              
+              echo "Database seeding completed!"
+            else
+              echo "Database already contains tables. Skipping seeding to preserve existing data."
+              echo "Found $TABLES_EXIST tables in the database."
             fi
           ENDSSH
 
