@@ -73,6 +73,7 @@ def get_settings():
         print(f"Error getting settings: {str(e)}", flush=True)
         return jsonify({'error': 'Failed to get settings'}), 500
 
+# Update user settings
 @settings_bp.route('/api/settings', methods=['POST'])
 @limiter.limit("5 per minute")
 @permission_required('update_user_settings')
@@ -300,7 +301,7 @@ def send_email_notification(email, username, report_id, report_title, report_des
         </html>
         """
 
-        # Attach both versions
+        # Attach message
         msg.attach(MIMEText(html, 'html'))
 
         # Send email
@@ -314,7 +315,7 @@ def send_email_notification(email, username, report_id, report_title, report_des
             current_app.logger.info(f"Email sent to {email}")
         except Exception as e:
             current_app.logger.error(f"Email failed to {email}: {str(e)}")
-            raise  # Re-raise if you want calling code to handle the failure
+            raise  
         
     except smtplib.SMTPAuthenticationError as e:
         current_app.logger.error(f"SMTP Authentication failed: {str(e)}")
@@ -328,73 +329,3 @@ def send_email_notification(email, username, report_id, report_title, report_des
         current_app.logger.error(f"Unexpected error sending email: {str(e)}")
     finally:
         current_app.logger.info("=== EMAIL PROCESS COMPLETE ===\n")
-
-# ===== ADDITIONAL API ENDPOINTS =====
-
-@settings_bp.route('/api/notifications/unread', methods=['GET'])
-def get_unread_notifications():
-    """Get all unread notifications for the current user"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    user_id = session['user_id']
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute('''
-            SELECT n.*, r.title as report_title
-            FROM notification n
-            LEFT JOIN reports r ON n.report_id = r.report_id
-            WHERE n.user_id = %s AND n.is_read = 0
-            ORDER BY n.created_at DESC
-            LIMIT 50
-        ''', (user_id,))
-        
-        notifications = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        notification_list = []
-        for notification in notifications:
-            notification_list.append({
-                'id': notification['id'],
-                'message': notification['message'],
-                'created_at': notification['created_at'].isoformat() if notification['created_at'] else None,
-                'report_id': notification['report_id']
-            })
-        
-        return jsonify(notification_list)
-        
-    except Exception as e:
-        print(f"Error getting notifications: {str(e)}")
-        return jsonify({'error': 'Failed to get notifications'}), 500
-
-@settings_bp.route('/api/notifications/<int:notification_id>/mark-read', methods=['POST'])
-def mark_notification_read(notification_id):
-    """Mark a specific notification as read"""
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not authenticated'}), 401
-    
-    user_id = session['user_id']
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE notification 
-            SET is_read = 1 
-            WHERE id = %s AND user_id = %s
-        ''', (notification_id, user_id))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'message': 'Notification marked as read'}), 200
-        
-    except Exception as e:
-        print(f"Error marking notification as read: {str(e)}")
-        return jsonify({'error': 'Failed to mark notification as read'}), 500
