@@ -66,7 +66,7 @@ def validate_registration_fields():
         validation_errors.append("Username must be 3–20 characters, only letters, numbers, _, -, or .")
         flash("Username must be 3–20 characters, only letters, numbers, _, -, or .", "error")
 
-    if not re.fullmatch(r"^[^@]+@[^@]+\.[^@]+$", email):
+    if not re.fullmatch(r'^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,255}\.[A-Za-z]{2,}$', email):
         validation_errors.append("Invalid email format")
         flash("Invalid email format", "error")
 
