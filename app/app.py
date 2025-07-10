@@ -911,4 +911,3 @@ def test_docker_logs():
 
 if __name__ == '__main__':
     log_application_event("application_started", details={"debug": True, "host": "0.0.0.0"})
-    app.run(debug=True, host='0.0.0.0')
