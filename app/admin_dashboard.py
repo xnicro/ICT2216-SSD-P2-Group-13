@@ -1,7 +1,6 @@
 import mysql.connector
-import os
 from flask import (
-    Blueprint, abort, current_app, request, session, jsonify
+    Blueprint, current_app, request, jsonify
 )
 import datetime
 from flask_wtf.csrf import validate_csrf

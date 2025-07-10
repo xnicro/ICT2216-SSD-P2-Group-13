@@ -3,7 +3,6 @@ import os
 from pygelf import GelfUdpHandler
 import socket
 from datetime import datetime
-import json
 
 # Global variable to store the Graylog handler
 _graylog_handler = None
@@ -14,7 +13,7 @@ def setup_graylog_logging(app):
     global _graylog_handler
 
     # Get Graylog configuration from environment
-    graylog_host = os.getenv('GRAYLOG_HOST', 'localhost')  # Changed from 'graylog' to 'localhost'
+    graylog_host = os.getenv('GRAYLOG_HOST', 'localhost')
     graylog_port = int(os.getenv('GRAYLOG_PORT', 12201))
     app_name = os.getenv('APP_NAME', 'SITSecure')
 

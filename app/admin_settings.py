@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify, session, current_app
 import mysql.connector
-from datetime import datetime
 from functools import wraps
 from access_control import permission_required
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os
 from threading import Thread
 from extensions import limiter
 

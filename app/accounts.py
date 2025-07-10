@@ -1,12 +1,11 @@
 import mysql.connector
-import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import random
 from flask import make_response
 import datetime
-from flask import Flask, Blueprint, abort, current_app, jsonify, render_template, request, session, redirect, url_for, \
+from flask import Blueprint, current_app, jsonify, render_template, request, session, redirect, url_for, \
     flash
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError

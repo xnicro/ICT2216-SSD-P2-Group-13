@@ -1,10 +1,9 @@
 import mysql.connector
-import os
 from flask import (
-    Blueprint, current_app, request, session, jsonify
+    current_app
 )
 import datetime
-from access_control import login_required, permission_required
+from access_control import permission_required
 
 CATEGORY_ICONS = {
     "Fires": "fa-solid fa-fire category-fires",

@@ -1,10 +1,8 @@
-from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for, flash, current_app
+from flask import Blueprint, request, jsonify, session, current_app
 import mysql.connector
-from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os
 from threading import Thread
 from access_control import permission_required
 from flask_wtf.csrf import validate_csrf

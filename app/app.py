@@ -15,7 +15,6 @@ from accounts import bp as accounts_bp
 from admin_settings import admin_settings_bp
 from accounts import get_all_users
 from werkzeug.utils import secure_filename
-from functools import wraps
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from extensions import limiter
 from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, otp_verified_required, role_required
