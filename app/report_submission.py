@@ -42,10 +42,6 @@ def is_ajax_request():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
 def contains_invalid_chars(value):
-    """
-    Simple validation function to replace bleach dependency
-    Uses only built-in Python modules
-    """
     escaped_value = html.escape(value, quote=True)
     if escaped_value != value:
         return True
