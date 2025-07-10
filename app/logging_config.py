@@ -83,10 +83,10 @@ def setup_graylog_logging(app):
             'facility': app_name
         })
 
-        print(f"✅ Graylog logging configured - {graylog_host}:{graylog_port}")
+        print(f"Graylog logging configured - {graylog_host}:{graylog_port}")
 
     except Exception as e:
-        print(f"❌ Failed to configure Graylog logging: {e}")
+        print(f"Failed to configure Graylog logging: {e}")
         app.logger.error(f"Failed to configure Graylog logging: {e}")
         # Fall back to console logging
         console_handler = logging.StreamHandler()
