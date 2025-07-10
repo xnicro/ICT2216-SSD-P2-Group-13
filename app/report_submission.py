@@ -41,7 +41,7 @@ def is_ajax_request():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
 def contains_invalid_chars(value):
-    if re.search(r'<script\b[^>]*>.*?</script>', value, re.IGNORECASE):
+    if re.search(r'<script\b[^>]*?>[\s\S]*?</script\s*>', value, re.IGNORECASE):
         return True
     if re.search(r'onerror=|onload=|javascript:|data:text/html', value, re.IGNORECASE):
         return True
