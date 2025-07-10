@@ -262,8 +262,17 @@ def send_otp_email(email, otp):
     message["To"] = email
     message["Subject"] = "Your OTP Code"
     
-    body = f"Your one-time password is: {otp}. It will expire in 1 minutes."
-    message.attach(MIMEText(body, "plain"))
+    # HTML body with bold OTP
+    html_body = f"""
+    <html>
+      <body>
+        Your one-time password is: <b>{otp}</b>. It will expire in 1 minute.
+      </body>
+    </html>
+    """
+    
+    # Attach HTML content
+    message.attach(MIMEText(html_body, "html"))
 
     try:
         # Establish a connection to the SMTP server

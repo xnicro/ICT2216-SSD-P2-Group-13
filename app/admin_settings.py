@@ -67,6 +67,7 @@ def get_admin_settings():
         current_app.logger.error(f"Error getting admin settings: {str(e)}")
         return jsonify({'error': 'Failed to get admin settings'}), 500
 
+# Update admin settings
 @admin_settings_bp.route('/settings', methods=['POST'])
 @limiter.limit("5 per minute")
 @admin_required
@@ -246,7 +247,7 @@ def send_email_notification(email, username, report_id, report_title, report_des
         </html>
         """
 
-        # Attach both versions
+        # Attach message
         msg.attach(MIMEText(html, 'html'))
 
         # Send email
