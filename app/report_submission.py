@@ -1,5 +1,6 @@
 import os
 import re
+import bleach
 from flask import (
     Blueprint, abort, current_app, flash, jsonify,
     redirect, render_template, request, session, url_for
@@ -41,13 +42,12 @@ def is_ajax_request():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
 def contains_invalid_chars(value):
-    if re.search(r'<script\b[^>]*?>[\s\S]*?</script\s*>', value, re.IGNORECASE):
+    sanitized_value = bleach.clean(value, tags=[], attributes=[], styles=[], strip=True)
+    if sanitized_value != value:  # Check if the input was modified
         return True
     if re.search(r'onerror=|onload=|javascript:|data:text/html', value, re.IGNORECASE):
         return True
     if re.search(r'SELECT\s|\sFROM\s|\sINSERT\s|\sUPDATE\s|\sDELETE\s|\sOR\s|\sAND\s|\sUNION\s|\sEXEC\s', value, re.IGNORECASE):
-        return True
-    if '<' in value or '>' in value: # Basic check for unescaped HTML tags
         return True
     if re.search(r'[\x00-\x1F\x7F-\x9F]', value): # Control characters
         return True

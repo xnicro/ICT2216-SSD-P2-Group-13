@@ -6,3 +6,4 @@ argon2-cffi
 flask-limiter
 pygelf
 structlog
+bleach==6.2.0
