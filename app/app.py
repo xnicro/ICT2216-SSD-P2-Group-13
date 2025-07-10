@@ -634,12 +634,20 @@ def get_report_details(report_id):
 
         log_application_event("api_report_details_success", user_id=user_id, details={"report_id": report_id})
         return jsonify(report)
+    
+    except mysql.connector.Error as db_error:
+        # Log database errors internally
+        app.logger.error(f"API report database error: {str(db_error)}")
+        log_application_event("api_report_db_error", level="error", user_id=user_id,
+                              details={"report_id": report_id, "error": str(db_error), "type": "database"})
+        return jsonify({'error': 'Database error occurred'}), 500
 
     except Exception as e:
+        # Log other errors internally
         app.logger.error(f"API report details error: {str(e)}")
         log_application_event("api_report_details_error", level="error", user_id=user_id,
-                              details={"report_id": report_id, "error": str(e)})
-        return jsonify({'error': str(e)}), 500
+                              details={"report_id": report_id, "error": str(e), "type": type(e).__name__})
+        return jsonify({'error': 'An error occurred while fetching report details'}), 500
 
 
 @app.route('/role')
@@ -746,7 +754,7 @@ def delete_account():
         app.logger.error(f"Error deleting account: {e}")
         log_security_event("account_deletion_error", user_id=user_id,
                            details={"error": str(e)}, request=request)
-        flash(f'Error deleting account: {str(e)}', 'error')
+        flash('Error deleting account. Please try again.', 'error')
         return redirect(url_for('profile'))
 
 
@@ -763,9 +771,12 @@ def health():
         conn.close()
         db_status = "healthy"
     except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
-        log_application_event("health_check_failed", level="error", details={"db_status": db_status})
-
+        # Log the error internally
+        app.logger.error(f"Health check database error: {str(e)}")
+        log_application_event("health_check_failed", level="error", 
+                            details={"error": str(e), "type": type(e).__name__})
+        db_status = "unhealthy"
+        
     return {
         "status": "healthy" if db_status == "healthy" else "degraded",
         "database": db_status,
@@ -807,7 +818,7 @@ def test_db():
         conn.close()
         log_application_event("test_db_success", details={"status": db_status})
     except Exception as e:
-        db_status = f'MySQL connection error: {str(e)}'
+        db_status = 'MySQL connection error'
         log_application_event("test_db_failed", level="error", details={"status": db_status})
     return render_template('test_db.html', db_status=db_status, data=data)
 
