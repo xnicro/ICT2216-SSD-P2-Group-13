@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function for client-side content validation
     function containsInvalidCharsClient(value) {
-        if (/<script\b[^>]*?>[\s\S]*?<\/script\s*>/i.test(value)) return true;
+        if (/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/i.test(value)) return true;
         if (/onerror=|onload=|javascript:|data:text\/html/i.test(value)) return true;
         if (/SELECT\s| FROM\s| INSERT\s| UPDATE\s| DELETE\s| OR\s| AND\s| UNION\s| EXEC\s/i.test(value)) return true;
         if (/<|>/.test(value)) return true;
