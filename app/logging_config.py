@@ -3,9 +3,26 @@ import os
 from pygelf import GelfUdpHandler
 import socket
 from datetime import datetime
+import re
 
 # Global variable to store the Graylog handler
 _graylog_handler = None
+
+
+def sanitize_log_input(value):
+    """Sanitize input to prevent log injection attacks"""
+    if value is None:
+        return None
+    
+    # Convert to string if not already
+    value_str = str(value)
+    
+    # Remove or escape potentially dangerous characters
+    # Remove newlines, carriage returns, and other control characters
+    value_str = re.sub(r'[\r\n\t\x00-\x1f\x7f-\x9f]', '', value_str)
+    
+    
+    return value_str
 
 
 def setup_graylog_logging(app):
@@ -53,7 +70,7 @@ def setup_graylog_logging(app):
             console_handler.setFormatter(formatter)
             app.logger.addHandler(console_handler)
 
-            # Also add console handler to specific loggers
+            # Add console handler to specific loggers
             for logger_name in ['security', 'application', 'database']:
                 logger = logging.getLogger(logger_name)
                 logger.addHandler(console_handler)
@@ -75,7 +92,7 @@ def setup_graylog_logging(app):
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(levelname)s - %(message)s'
         )
         console_handler.setFormatter(formatter)
         app.logger.addHandler(console_handler)
@@ -85,8 +102,11 @@ def log_security_event(event_type, user_id=None, details=None, request=None):
     """Log security events with standardized format"""
     logger = logging.getLogger("security")
 
+    # Sanitize the event_type to prevent log injection
+    safe_event_type = sanitize_log_input(event_type)
+
     log_data = {
-        "event_type": event_type,
+        "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
         "user_id": user_id,
         "details": details or {},
@@ -103,9 +123,9 @@ def log_security_event(event_type, user_id=None, details=None, request=None):
             "referrer": request.referrer
         })
 
-    # Log with extra fields for Graylog
-    logger.info(f"Security event: {event_type}", extra={
-        'event_type': event_type,
+    # Log with extra fields for Graylog - use parameterized logging
+    logger.info("Security event: %s", safe_event_type, extra={
+        'event_type': safe_event_type,
         'user_id': user_id,
         'details': details or {},
         'request_data': {
@@ -122,8 +142,11 @@ def log_application_event(event_type, level="info", details=None, user_id=None):
     """Log application events with standardized format"""
     logger = logging.getLogger("application")
 
+    # Sanitize the event_type to prevent log injection
+    safe_event_type = sanitize_log_input(event_type)
+
     log_data = {
-        "event_type": event_type,
+        "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
         "user_id": user_id,
         "details": details or {},
@@ -132,9 +155,9 @@ def log_application_event(event_type, level="info", details=None, user_id=None):
 
     log_method = getattr(logger, level, logger.info)
 
-    # Log with extra fields for Graylog
-    log_method(f"Application event: {event_type}", extra={
-        'event_type': event_type,
+    # Log with extra fields for Graylog - use parameterized logging
+    log_method("Application event: %s", safe_event_type, extra={
+        'event_type': safe_event_type,
         'user_id': user_id,
         'details': details or {}
     })
@@ -144,19 +167,23 @@ def log_database_event(event_type, table=None, user_id=None, details=None):
     """Log database events with standardized format"""
     logger = logging.getLogger("database")
 
+    # Sanitize the event_type to prevent log injection
+    safe_event_type = sanitize_log_input(event_type)
+    safe_table = sanitize_log_input(table) if table else None
+
     log_data = {
-        "event_type": event_type,
+        "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
-        "table": table,
+        "table": safe_table,
         "user_id": user_id,
         "details": details or {},
         "hostname": socket.gethostname()
     }
 
-    # Log with extra fields for Graylog
-    logger.info(f"Database event: {event_type}", extra={
-        'event_type': event_type,
-        'table': table,
+    # Log with extra fields for Graylog using parameterized logging
+    logger.info("Database event: %s", safe_event_type, extra={
+        'event_type': safe_event_type,
+        'table': safe_table,
         'user_id': user_id,
         'details': details or {}
     })
