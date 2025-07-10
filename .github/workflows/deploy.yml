@@ -137,11 +137,21 @@ jobs:
             # Pull latest code
             git pull origin main
             
+            # Stop and remove existing containers to avoid conflicts
+            echo "Stopping existing containers..."
+            docker-compose down || true
+            
+            # Remove any dangling containers with the same names
+            docker rm -f $(docker ps -aq --filter "name=mysql_db") 2>/dev/null || true
+            docker rm -f $(docker ps -aq --filter "name=flask") 2>/dev/null || true
+            docker rm -f $(docker ps -aq --filter "name=mongo") 2>/dev/null || true
+            docker rm -f $(docker ps -aq --filter "name=opensearch") 2>/dev/null || true
+            docker rm -f $(docker ps -aq --filter "name=graylog") 2>/dev/null || true
+            
             # Build Docker image directly on server
             docker build -f FlaskApp.Dockerfile -t flask-app:latest .
             
-            # Deploy
-            docker-compose down || true
+            # Deploy with fresh containers
             docker-compose up -d --build
           ENDSSH
 
@@ -170,35 +180,54 @@ jobs:
             if [ "$TABLES_EXIST" -le 1 ]; then
               echo "Database appears to be empty. Seeding database..."
               
-              # Check if SQL files exist and seed them
-              if [ -f "users.sql" ]; then
+              # Check if SQL files exist in the new location and seed them
+              if [ -f "sql_import/users.sql" ]; then
                 echo "Seeding users.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < users.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/users.sql"
               fi
               
-              if [ -f "usersV2.sql" ]; then
+              if [ -f "sql_import/usersV2.sql" ]; then
                 echo "Seeding usersV2.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < usersV2.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/usersV2.sql"
               fi
               
-              if [ -f "notification.sql" ]; then
+              if [ -f "sql_import/notification.sql" ]; then
                 echo "Seeding notification.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < notification.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/notification.sql"
               fi
               
-              if [ -f "flask_db_report_tables.sql" ]; then
+              if [ -f "sql_import/flask_db_report_tables.sql" ]; then
                 echo "Seeding flask_db_report_tables.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < flask_db_report_tables.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/flask_db_report_tables.sql"
               fi
               
-              if [ -f "user_preferences.sql" ]; then
+              if [ -f "sql_import/user_preferences.sql" ]; then
                 echo "Seeding user_preferences.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < user_preferences.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/user_preferences.sql"
               fi
               
-              if [ -f "admin_preferences.sql" ]; then
+              if [ -f "sql_import/admin_preferences.sql" ]; then
                 echo "Seeding admin_preferences.sql..."
-                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < admin_preferences.sql
+                docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "sql_import/admin_preferences.sql"
+              fi
+              
+              # Check for any additional SQL files in the sql_import directory
+              if [ -d "sql_import" ]; then
+                echo "Checking for additional SQL files in sql_import directory..."
+                for sql_file in "sql_import"/*.sql; do
+                  if [ -f "$sql_file" ]; then
+                    filename=$(basename "$sql_file")
+                    case $filename in
+                      users.sql|usersV2.sql|notification.sql|flask_db_report_tables.sql|user_preferences.sql|admin_preferences.sql)
+                        echo "Already processed $filename"
+                        ;;
+                      *)
+                        echo "Processing additional SQL file: $filename"
+                        docker exec -i mysql_db mysql -u ${{ secrets.MYSQL_USER }} -p${{ secrets.MYSQL_PASSWORD }} ${{ secrets.MYSQL_DATABASE }} < "$sql_file"
+                        ;;
+                    esac
+                  fi
+                done
               fi
               
               echo "Database seeding completed!"
