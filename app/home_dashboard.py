@@ -3,7 +3,6 @@ from flask import (
     current_app
 )
 import datetime
-from access_control import permission_required
 
 CATEGORY_ICONS = {
     "Fires": "fa-solid fa-fire category-fires",
