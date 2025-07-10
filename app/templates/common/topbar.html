@@ -1,16 +1,25 @@
 <div class="top-bar">
     <div class="user-info">
-        <!-- Make username clickable to redirect to profile -->
-        <a href="/profile" class="user-profile-link">
-            <p><i class="fi fi-rc-circle-user"></i>{{ session.username if session.username else 'Guest' }}</p>
-        </a>
+        <!-- Dynamic profile link based on user role -->
         {% if session.username %}
+            {% if session.role == 'admin' %}
+                <a href="/admin" class="user-profile-link">
+            {% elif session.role == 'superadmin' %}
+                <a href="/role" class="user-profile-link">
+            {% else %}
+                <a href="/profile" class="user-profile-link">
+            {% endif %}
+                <p><i class="fi fi-rc-circle-user"></i>{{ session.username }}</p>
+            </a>
             <a href="{{ url_for('accounts.logout') }}" class="logout-btn">
                 <i class="fi fi-rc-sign-out-alt"></i> Logout
             </a>
+        {% else %}
+            <p><i class="fi fi-rc-circle-user"></i>Guest</p>
         {% endif %}
     </div>
 </div>
+
 
 <style>
 .top-bar {
