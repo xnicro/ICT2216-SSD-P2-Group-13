@@ -21,8 +21,23 @@ def sanitize_log_input(value):
     # Remove newlines, carriage returns, and other control characters
     value_str = re.sub(r'[\r\n\t\x00-\x1f\x7f-\x9f]', '', value_str)
     
-    
     return value_str
+
+
+def sanitize_dict(data):
+    """Recursively sanitize all string values in a dictionary"""
+    if data is None:
+        return None
+    
+    if isinstance(data, dict):
+        return {key: sanitize_dict(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_dict(item) for item in data]
+    elif isinstance(data, str):
+        return sanitize_log_input(data)
+    else:
+        # For non-string types (int, float, bool, etc.), return as-is
+        return data
 
 
 def setup_graylog_logging(app):
@@ -102,38 +117,47 @@ def log_security_event(event_type, user_id=None, details=None, request=None):
     """Log security events with standardized format"""
     logger = logging.getLogger("security")
 
-    # Sanitize the event_type to prevent log injection
+    # Sanitize all user-provided inputs
     safe_event_type = sanitize_log_input(event_type)
+    safe_user_id = sanitize_log_input(user_id) if user_id else None
+    safe_details = sanitize_dict(details) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
-        "user_id": user_id,
-        "details": details or {},
+        "user_id": safe_user_id,
+        "details": safe_details,
         "hostname": socket.gethostname()
     }
 
     # Add request information if available
     if request:
+        # Sanitize request data
+        safe_ip = sanitize_log_input(request.remote_addr) if request.remote_addr else None
+        safe_user_agent = sanitize_log_input(request.headers.get('User-Agent', ''))
+        safe_method = sanitize_log_input(request.method) if request.method else None
+        safe_path = sanitize_log_input(request.path) if request.path else None
+        safe_referrer = sanitize_log_input(request.referrer) if request.referrer else None
+        
         log_data.update({
-            "ip_address": request.remote_addr,
-            "user_agent": request.headers.get('User-Agent', ''),
-            "method": request.method,
-            "path": request.path,
-            "referrer": request.referrer
+            "ip_address": safe_ip,
+            "user_agent": safe_user_agent,
+            "method": safe_method,
+            "path": safe_path,
+            "referrer": safe_referrer
         })
 
     # Log with extra fields for Graylog - use parameterized logging
     logger.info("Security event: %s", safe_event_type, extra={
         'event_type': safe_event_type,
-        'user_id': user_id,
-        'details': details or {},
+        'user_id': safe_user_id,
+        'details': safe_details,
         'request_data': {
-            'ip_address': request.remote_addr if request else None,
-            'user_agent': request.headers.get('User-Agent', '') if request else None,
-            'method': request.method if request else None,
-            'path': request.path if request else None,
-            'referrer': request.referrer if request else None
+            'ip_address': safe_ip if request else None,
+            'user_agent': safe_user_agent if request else None,
+            'method': safe_method if request else None,
+            'path': safe_path if request else None,
+            'referrer': safe_referrer if request else None
         } if request else {}
     })
 
@@ -142,24 +166,26 @@ def log_application_event(event_type, level="info", details=None, user_id=None):
     """Log application events with standardized format"""
     logger = logging.getLogger("application")
 
-    # Sanitize the event_type to prevent log injection
+    # Sanitize all user-provided inputs
     safe_event_type = sanitize_log_input(event_type)
+    safe_user_id = sanitize_log_input(user_id) if user_id else None
+    safe_details = sanitize_dict(details) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
-        "user_id": user_id,
-        "details": details or {},
+        "user_id": safe_user_id,
+        "details": safe_details,
         "hostname": socket.gethostname()
     }
 
     log_method = getattr(logger, level, logger.info)
 
-    # Log with extra fields for Graylog - use parameterized logging
+    # Log with extra fields for Graylog using parameterized logging
     log_method("Application event: %s", safe_event_type, extra={
         'event_type': safe_event_type,
-        'user_id': user_id,
-        'details': details or {}
+        'user_id': safe_user_id,
+        'details': safe_details
     })
 
 
@@ -167,16 +193,18 @@ def log_database_event(event_type, table=None, user_id=None, details=None):
     """Log database events with standardized format"""
     logger = logging.getLogger("database")
 
-    # Sanitize the event_type to prevent log injection
+    # Sanitize all user-provided inputs
     safe_event_type = sanitize_log_input(event_type)
     safe_table = sanitize_log_input(table) if table else None
+    safe_user_id = sanitize_log_input(user_id) if user_id else None
+    safe_details = sanitize_dict(details) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
         "timestamp": datetime.now().isoformat(),
         "table": safe_table,
-        "user_id": user_id,
-        "details": details or {},
+        "user_id": safe_user_id,
+        "details": safe_details,
         "hostname": socket.gethostname()
     }
 
@@ -184,6 +212,6 @@ def log_database_event(event_type, table=None, user_id=None, details=None):
     logger.info("Database event: %s", safe_event_type, extra={
         'event_type': safe_event_type,
         'table': safe_table,
-        'user_id': user_id,
-        'details': details or {}
+        'user_id': safe_user_id,
+        'details': safe_details
     })
