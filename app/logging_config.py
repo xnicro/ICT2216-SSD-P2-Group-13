@@ -24,20 +24,25 @@ def sanitize_log_input(value):
     return value_str
 
 
-def sanitize_dict(data):
+def sanitize_dict(data, sanitize_keys=False):
     """Recursively sanitize all string values in a dictionary"""
     if data is None:
         return None
     
     if isinstance(data, dict):
-        return {key: sanitize_dict(value) for key, value in data.items()}
+        result = {}
+        for key, value in data.items():
+            # Sanitize keys if requested (for untrusted dictionary keys)
+            safe_key = sanitize_log_input(str(key)) if sanitize_keys else key
+            result[safe_key] = sanitize_dict(value, sanitize_keys)
+        return result
     elif isinstance(data, list):
-        return [sanitize_dict(item) for item in data]
+        return [sanitize_dict(item, sanitize_keys) for item in data]
     elif isinstance(data, str):
         return sanitize_log_input(data)
     else:
-        # For non-string types (int, float, bool, etc.), return as-is
-        return data
+        # For non-string types (int, float, bool, etc.), convert to string and sanitize
+        return sanitize_log_input(str(data))
 
 
 def setup_graylog_logging(app):
@@ -85,7 +90,7 @@ def setup_graylog_logging(app):
             console_handler.setFormatter(formatter)
             app.logger.addHandler(console_handler)
 
-            # Add console handler to specific loggers
+            # Also add console handler to specific loggers
             for logger_name in ['security', 'application', 'database']:
                 logger = logging.getLogger(logger_name)
                 logger.addHandler(console_handler)
@@ -120,7 +125,8 @@ def log_security_event(event_type, user_id=None, details=None, request=None):
     # Sanitize all user-provided inputs
     safe_event_type = sanitize_log_input(event_type)
     safe_user_id = sanitize_log_input(user_id) if user_id else None
-    safe_details = sanitize_dict(details) if details else {}
+    # Sanitize both keys and values for user-provided details
+    safe_details = sanitize_dict(details, sanitize_keys=True) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
@@ -130,36 +136,43 @@ def log_security_event(event_type, user_id=None, details=None, request=None):
         "hostname": socket.gethostname()
     }
 
-    # Add request information if available
+    # Build safe request data if request is available
+    safe_request_data = {}
     if request:
-        # Sanitize request data
-        safe_ip = sanitize_log_input(request.remote_addr) if request.remote_addr else None
-        safe_user_agent = sanitize_log_input(request.headers.get('User-Agent', ''))
-        safe_method = sanitize_log_input(request.method) if request.method else None
-        safe_path = sanitize_log_input(request.path) if request.path else None
-        safe_referrer = sanitize_log_input(request.referrer) if request.referrer else None
+        # Sanitize request data - be extra careful with request attributes
+        try:
+            safe_request_data = {
+                'ip_address': sanitize_log_input(str(request.remote_addr)) if hasattr(request, 'remote_addr') and request.remote_addr else None,
+                'user_agent': sanitize_log_input(str(request.headers.get('User-Agent', ''))) if hasattr(request, 'headers') else None,
+                'method': sanitize_log_input(str(request.method)) if hasattr(request, 'method') and request.method else None,
+                'path': sanitize_log_input(str(request.path)) if hasattr(request, 'path') and request.path else None,
+                'referrer': sanitize_log_input(str(request.referrer)) if hasattr(request, 'referrer') and request.referrer else None
+            }
+        except Exception:
+            # If any exception occurs while accessing request attributes, use safe defaults
+            safe_request_data = {'error': 'Failed to parse request data'}
         
         log_data.update({
-            "ip_address": safe_ip,
-            "user_agent": safe_user_agent,
-            "method": safe_method,
-            "path": safe_path,
-            "referrer": safe_referrer
+            "ip_address": safe_request_data.get('ip_address'),
+            "user_agent": safe_request_data.get('user_agent'),
+            "method": safe_request_data.get('method'),
+            "path": safe_request_data.get('path'),
+            "referrer": safe_request_data.get('referrer')
         })
 
-    # Log with extra fields for Graylog - use parameterized logging
-    logger.info("Security event: %s", safe_event_type, extra={
+    # Create extra dict with only safe, sanitized data
+    extra_data = {
         'event_type': safe_event_type,
         'user_id': safe_user_id,
-        'details': safe_details,
-        'request_data': {
-            'ip_address': safe_ip if request else None,
-            'user_agent': safe_user_agent if request else None,
-            'method': safe_method if request else None,
-            'path': safe_path if request else None,
-            'referrer': safe_referrer if request else None
-        } if request else {}
-    })
+        'details': safe_details
+    }
+    
+    # Only add request_data if we have a request
+    if request:
+        extra_data['request_data'] = safe_request_data
+
+    # Log with extra fields for Graylog - use parameterized logging
+    logger.info("Security event: %s", safe_event_type, extra=extra_data)
 
 
 def log_application_event(event_type, level="info", details=None, user_id=None):
@@ -169,7 +182,8 @@ def log_application_event(event_type, level="info", details=None, user_id=None):
     # Sanitize all user-provided inputs
     safe_event_type = sanitize_log_input(event_type)
     safe_user_id = sanitize_log_input(user_id) if user_id else None
-    safe_details = sanitize_dict(details) if details else {}
+    # Sanitize both keys and values for user-provided details
+    safe_details = sanitize_dict(details, sanitize_keys=True) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
@@ -179,9 +193,12 @@ def log_application_event(event_type, level="info", details=None, user_id=None):
         "hostname": socket.gethostname()
     }
 
-    log_method = getattr(logger, level, logger.info)
+    # Validate log level to prevent injection through level parameter
+    valid_levels = ['debug', 'info', 'warning', 'error', 'critical']
+    safe_level = level.lower() if level and level.lower() in valid_levels else 'info'
+    log_method = getattr(logger, safe_level, logger.info)
 
-    # Log with extra fields for Graylog using parameterized logging
+    # Log with extra fields for Graylog - use parameterized logging
     log_method("Application event: %s", safe_event_type, extra={
         'event_type': safe_event_type,
         'user_id': safe_user_id,
@@ -197,7 +214,8 @@ def log_database_event(event_type, table=None, user_id=None, details=None):
     safe_event_type = sanitize_log_input(event_type)
     safe_table = sanitize_log_input(table) if table else None
     safe_user_id = sanitize_log_input(user_id) if user_id else None
-    safe_details = sanitize_dict(details) if details else {}
+    # Sanitize both keys and values for user-provided details
+    safe_details = sanitize_dict(details, sanitize_keys=True) if details else {}
 
     log_data = {
         "event_type": safe_event_type,
