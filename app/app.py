@@ -20,12 +20,9 @@ from extensions import limiter
 from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, otp_verified_required, role_required
 
 # Import logging configuration
-from logging_config import setup_graylog_logging, log_security_event, log_application_event, log_database_event
+from logging_config importlog_security_event, log_application_event, log_database_event
 
 app = Flask(__name__)
-
-# Setup Graylog logging early
-setup_graylog_logging(app)
 
 limiter.init_app(app)
 
@@ -887,26 +884,6 @@ def internal_error(error):
                           details={"path": request.path, "error": str(error)})
     return render_template('errors/500.html'), 500
 
-
-@app.route('/test-docker-logs')
-def test_docker_logs():
-    """Test route for Docker logging"""
-    app.logger.info("Testing from Docker container", extra={
-        'event_type': 'docker_container_test',
-        'container': 'flask_app'
-    })
-
-    log_application_event("docker_app_test", details={
-        "message": "Hello from Flask in Docker!",
-        "container": "flask_app"
-    })
-
-    log_security_event("docker_security_test",
-                       user_id=session.get('user_id'),
-                       details={"test_type": "docker_logging"},
-                       request=request)
-
-    return "Docker logs sent! Check Graylog for: event_type:docker_*"
 
 
 if __name__ == '__main__':
