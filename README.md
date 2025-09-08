@@ -77,3 +77,4 @@ docker exec -it mysql_db mysql -u {username} -p{password}
 - If permission commands fail on Windows, run PowerShell as Admin
 - If no logs appear, check the input shows "RUNNING" status
 # Deployment test Mon Sep  8 17:30:29 UTC 2025
+# Retry after disk cleanup Mon Sep  8 17:41:46 UTC 2025
