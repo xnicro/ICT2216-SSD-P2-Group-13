@@ -20,7 +20,7 @@ from extensions import limiter
 from access_control import ROLE_PERMISSIONS, ROLE_REDIRECT_MAP, permission_required, login_required, otp_verified_required, role_required
 
 # Import logging configuration
-from logging_config importlog_security_event, log_application_event, log_database_event
+from logging_config import log_security_event, log_application_event, log_database_event
 
 app = Flask(__name__)
 

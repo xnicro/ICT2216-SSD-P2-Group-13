@@ -116,13 +116,6 @@ jobs:
           SENDER_EMAIL=${{ secrets.SENDER_EMAIL }}
           SENDER_PASSWORD=${{ secrets.SENDER_PASSWORD }}
           APP_NAME=${{ secrets.APP_NAME }}
-
-          # Graylog
-          GRAYLOG_MONGO_PASSWORD=${{ secrets.GRAYLOG_MONGO_PASSWORD }}
-          GRAYLOG_PASSWORD_SECRET=${{ secrets.GRAYLOG_PASSWORD_SECRET }}
-          GRAYLOG_ROOT_PASSWORD_SHA2=${{ secrets.GRAYLOG_ROOT_PASSWORD_SHA2 }}
-          GRAYLOG_HOST=${{ secrets.GRAYLOG_HOST }}
-          GRAYLOG_PORT=${{ secrets.GRAYLOG_PORT }}
           EOF
 
       - name: Transfer .env file to server
@@ -144,9 +137,6 @@ jobs:
             # Remove any dangling containers with the same names
             docker rm -f $(docker ps -aq --filter "name=mysql_db") 2>/dev/null || true
             docker rm -f $(docker ps -aq --filter "name=flask") 2>/dev/null || true
-            docker rm -f $(docker ps -aq --filter "name=mongo") 2>/dev/null || true
-            docker rm -f $(docker ps -aq --filter "name=opensearch") 2>/dev/null || true
-            docker rm -f $(docker ps -aq --filter "name=graylog") 2>/dev/null || true
             
             # Build Docker image directly on server
             docker build -f FlaskApp.Dockerfile -t flask-app:latest .
@@ -240,7 +230,7 @@ jobs:
       - name: Health check main site
         run: |
           for i in {1..12}; do
-            if curl -sSf https://wesitsecure.zapto.org/; then
+            if curl -sSf http://${{ secrets.SSH_HOST }}/; then
               echo "✅ Main site is healthy!"
               break
             fi
@@ -248,25 +238,11 @@ jobs:
             sleep 5
           done
 
-      - name: Health check Graylog
-        run: |
-          echo "Waiting 20 seconds for Graylog to fully load..."
-          sleep 20
-          
-          for i in {1..6}; do
-            if curl -sSf https://wesitsecure.zapto.org/graylog/; then
-              echo "✅ Graylog is healthy!"
-              break
-            fi
-            echo "Waiting for Graylog... (attempt $i)"
-            sleep 10
-          done
-
       - name: Send notification
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment to https://wesitsecure.zapto.org/ succeeded"
+            echo "✅ Deployment to ${{ secrets.SSH_HOST }} succeeded"
           else
             echo "❌ Deployment failed!"
           fi
