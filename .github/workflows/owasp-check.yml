@@ -47,7 +47,7 @@ jobs:
 
     - name: Upload vulnerability reports
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: vulnerability-reports
         path: |
@@ -69,7 +69,7 @@ jobs:
 
     - name: Upload OWASP reports
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: owasp-dependency-check-reports
         path: reports/
